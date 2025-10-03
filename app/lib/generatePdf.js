@@ -28,10 +28,10 @@ export const generatePdf = async (entry, businessName = 'Nama Usaha Belum Diatur
         const blob = await img.blob();
         const reader = new FileReader();
         
-        // Menggunakan Promise agar proses async bisa ditunggu
         await new Promise((resolve, reject) => {
             reader.onload = (e) => {
-                doc.addImage(e.target.result, 'PNG', margin, 10, 20, 20);
+                // PERBAIKAN UKURAN FILE: Tambahkan format 'JPEG' dan kompresi 'MEDIUM'
+                doc.addImage(e.target.result, 'JPEG', margin, 12, 18, 18, undefined, 'MEDIUM');
                 resolve();
             };
             reader.onerror = reject;
@@ -42,21 +42,22 @@ export const generatePdf = async (entry, businessName = 'Nama Usaha Belum Diatur
         console.error("Gagal memuat logo:", error);
     }
     
+    // PERBAIKAN TAMPILAN: Ukuran font disesuaikan
     doc.setFontSize(14).setFont('helvetica', 'bold');
     doc.text('LAPORAN JEJAK KARBON', pageWidth / 2, 18, { align: 'center' });
     
     doc.setFontSize(10).setFont('helvetica', 'normal');
     doc.text('Indonesia Tourism Carbon Track & Reporting', pageWidth / 2, 24, { align: 'center' });
     
-    doc.setDrawColor(200); // Warna garis abu-abu
-    doc.line(margin, 35, pageWidth - margin, 35); // Garis horizontal
+    doc.setDrawColor(220); // Warna garis lebih terang
+    doc.line(margin, 35, pageWidth - margin, 35);
     
     currentY = 45;
 
     // --- 2. INFORMASI DOKUMEN ---
-    doc.setFontSize(12).setFont('helvetica', 'bold');
+    doc.setFontSize(11).setFont('helvetica', 'bold');
     doc.text('Informasi Laporan', margin, currentY);
-    currentY += 8;
+    currentY += 7;
 
     doc.setFontSize(10).setFont('helvetica', 'normal');
     doc.text(`Periode Laporan: ${entry.calculation_title.replace('Laporan Emisi - ', '')}`, margin, currentY);
@@ -67,55 +68,56 @@ export const generatePdf = async (entry, businessName = 'Nama Usaha Belum Diatur
     currentY += 12;
 
     // --- 3. RINGKASAN TOTAL EMISI ---
-    doc.setFillColor(236, 253, 245); // Warna hijau muda (emerald-50)
-    doc.rect(margin, currentY, pageWidth - (margin * 2), 20, 'F');
+    doc.setFillColor(236, 253, 245);
+    doc.rect(margin, currentY, pageWidth - (margin * 2), 16, 'F');
     
-    doc.setFontSize(10).setFont('helvetica', 'bold').setTextColor(2, 44, 34); // emerald-900
-    doc.text('Total Estimasi Emisi Karbon', margin + 5, currentY + 8);
+    doc.setFontSize(10).setFont('helvetica', 'bold').setTextColor(2, 44, 34);
+    // PERBAIKAN TAMPILAN: Posisikan teks agar lebih rapi di dalam kotak
+    doc.text('Total Estimasi Emisi Karbon', margin + 4, currentY + 9);
     
-    doc.setFontSize(16).setFont('helvetica', 'bold');
-    doc.text(`${entry.total_co2e_kg.toFixed(2)} kg CO₂e`, pageWidth - margin - 5, currentY + 14, { align: 'right' });
-    currentY += 30;
+    doc.setFontSize(14).setFont('helvetica', 'bold');
+    // PERBAIKAN TAMPILAN: Ganti "CO₂e" menjadi "CO2e" agar tidak error rendering
+    doc.text(`${entry.total_co2e_kg.toFixed(2)} kg CO2e`, pageWidth - margin - 4, currentY + 10, { align: 'right' });
+    currentY += 26;
 
     // --- 4. DETAIL PER KATEGORI ---
-    doc.setFontSize(12).setFont('helvetica', 'bold').setTextColor(0, 0, 0);
+    doc.setFontSize(11).setFont('helvetica', 'bold').setTextColor(0, 0, 0);
     doc.text('Rincian Emisi per Kategori', margin, currentY);
-    currentY += 8;
+    currentY += 7;
 
-    // Listrik
+    const detailFontSize = 9;
+    
     if (entry.electricity_co2e > 0) {
-        doc.setFontSize(10).setFont('helvetica', 'bold');
-        doc.text(`• Listrik: ${entry.electricity_co2e.toFixed(2)} kg CO₂e`, margin, currentY);
+        doc.setFontSize(detailFontSize).setFont('helvetica', 'bold');
+        doc.text(`• Listrik: ${entry.electricity_co2e.toFixed(2)} kg CO2e`, margin, currentY);
         currentY += 5;
         doc.setFont('helvetica', 'normal');
         doc.text(`  - Konsumsi: ${entry.electricity_details.kwh} kWh`, margin + 3, currentY);
-        currentY += 8;
+        currentY += 7;
     }
 
-    // Transportasi
     if (entry.transport_co2e > 0 && entry.transport_details) {
-        doc.setFontSize(10).setFont('helvetica', 'bold');
-        doc.text(`• Transportasi: ${entry.transport_co2e.toFixed(2)} kg CO₂e`, margin, currentY);
+        doc.setFontSize(detailFontSize).setFont('helvetica', 'bold');
+        doc.text(`• Transportasi: ${entry.transport_co2e.toFixed(2)} kg CO2e`, margin, currentY);
         currentY += 5;
         doc.setFont('helvetica', 'normal');
         entry.transport_details.forEach(v => {
             doc.text(`  - ${formatName(v.type, 'transport')} (x${v.quantity}): ${v.km} km, ${v.frequency}x / minggu`, margin + 3, currentY);
             currentY += 5;
         });
-        currentY += 3;
+        currentY += 2;
     }
 
-    // Sampah
     if (entry.waste_co2e > 0 && entry.waste_details) {
-        doc.setFontSize(10).setFont('helvetica', 'bold');
-        doc.text(`• Sampah: ${entry.waste_co2e.toFixed(2)} kg CO₂e`, margin, currentY);
+        doc.setFontSize(detailFontSize).setFont('helvetica', 'bold');
+        doc.text(`• Sampah: ${entry.waste_co2e.toFixed(2)} kg CO2e`, margin, currentY);
         currentY += 5;
         doc.setFont('helvetica', 'normal');
         entry.waste_details.forEach(item => {
             doc.text(`  - ${formatName(item.type, 'waste')}: ${item.weight} kg`, margin + 3, currentY);
             currentY += 5;
         });
-        currentY += 3;
+        currentY += 2;
     }
 
     // --- 5. FOOTER ---
@@ -124,7 +126,7 @@ export const generatePdf = async (entry, businessName = 'Nama Usaha Belum Diatur
         doc.setPage(i);
         doc.setFontSize(8).setTextColor(150);
         doc.text(
-            `Halaman ${i} dari ${pageCount}`,
+            `Halaman ${i} dari ${pageCount} | Dokumen ini dibuat secara otomatis oleh sistem Indonesia Tourism Carbon Track & Reporting.`,
             pageWidth / 2,
             doc.internal.pageSize.getHeight() - 10,
             { align: 'center' }
