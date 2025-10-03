@@ -1,11 +1,50 @@
-import EmissionReportPage from './EmissionReportPage'; // Impor komponen baru
+import EmissionReportPage from './EmissionReportPage';
+import DashboardChart from './DashboardChart';
 import {
 HomeIcon, BellIcon, ChartPieIcon, BuildingOfficeIcon,
 DocumentChartBarIcon, PlusCircleIcon, AcademicCapIcon,
 QuestionMarkCircleIcon, UserCircleIcon
 } from './Icons.jsx';
 
-// Komponen Dasbor (Diperbarui dengan struktur halaman baru)
+// Komponen PageContent dipisahkan agar state-nya dikelola React dengan lebih baik.
+const PageContent = ({ activeDashboardPage, supabase, user, sidebarLinks }) => {
+switch (activeDashboardPage) {
+case 'beranda':
+return (
+<div className="max-w-4xl mx-auto">
+<h1 className="text-3xl font-bold">Selamat datang kembali!</h1>
+<p className="text-slate-600 mt-2">Anda masuk sebagai: <span className="font-mono text-sm bg-slate-200 p-1 rounded">{user?.email}</span></p>
+</div>
+);
+case 'dashboard-utama':
+// Komponen grafik sekarang berada di dalam wrapper-nya sendiri.
+return (
+<div className="max-w-4xl mx-auto">
+<DashboardChart supabase={supabase} user={user} />
+</div>
+);
+case 'laporan-emisi':
+return <EmissionReportPage supabase={supabase} user={user} />;
+
+    // Halaman lain yang belum dikembangkan
+    case 'notifikasi':
+    case 'profil-usaha':
+    case 'sertifikasi':
+    case 'pembelajaran':
+    case 'panduan':
+        return (
+            <div className="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-md border text-center">
+                <h2 className="text-2xl font-bold mb-4">Halaman dalam Pengembangan</h2>
+                <p className="text-slate-500">Fitur untuk "{sidebarLinks.find(link => link.id === activeDashboardPage)?.text}" sedang kami siapkan.</p>
+            </div>
+        );
+    default:
+        return <div className="max-w-4xl mx-auto">Halaman tidak ditemukan.</div>;
+}
+
+};
+
+// Komponen Dasbor Utama (telah di-refactor)
 export default function Dashboard({
 supabase,
 user,
@@ -27,39 +66,6 @@ const sidebarLinks = [
     { id: 'pembelajaran', text: 'Pembelajaran', icon: <AcademicCapIcon /> },
     { id: 'panduan', text: 'Panduan', icon: <QuestionMarkCircleIcon /> },
 ];
-
-const PageContent = () => {
-    switch (activeDashboardPage) {
-        case 'beranda':
-            return <div>
-                <h1 className="text-3xl font-bold">Selamat datang kembali!</h1>
-                <p className="text-slate-600 mt-2">Anda masuk sebagai: <span className="font-mono text-sm bg-slate-200 p-1 rounded">{user?.email}</span></p>
-            </div>;
-        case 'dashboard-utama':
-            return (
-                <div>
-                    <h1 className="text-3xl font-bold mb-6">Visualisasi Data Emisi</h1>
-                    <div className="bg-white p-8 rounded-xl shadow-md border text-center">
-                        <p className="text-slate-500">Grafik dan ringkasan data emisi bulanan akan ditampilkan di sini.</p>
-                    </div>
-                </div>
-            );
-        case 'laporan-emisi':
-            // Gunakan komponen "wadah" yang baru
-            return <EmissionReportPage supabase={supabase} user={user} />;
-        case 'notifikasi':
-        case 'profil-usaha':
-        case 'sertifikasi':
-        case 'pembelajaran':
-        case 'panduan':
-            return <div className="bg-white p-8 rounded-xl shadow-md border text-center">
-                <h2 className="text-2xl font-bold mb-4">Halaman dalam Pengembangan</h2>
-                <p className="text-slate-500">Fitur untuk "{sidebarLinks.find(link => link.id === activeDashboardPage)?.text}" sedang kami siapkan.</p>
-            </div>;
-        default:
-            return <div>Halaman tidak ditemukan.</div>;
-    }
-}
 
 const pageTitle = sidebarLinks.find(link => link.id === activeDashboardPage)?.text || 'Dasbor';
 
@@ -113,7 +119,12 @@ return (
                 </div>
             </header>
             <main className="flex-1 p-10 overflow-y-auto bg-slate-50">
-                <PageContent />
+                <PageContent 
+                    activeDashboardPage={activeDashboardPage}
+                    supabase={supabase}
+                    user={user}
+                    sidebarLinks={sidebarLinks}
+                />
             </main>
         </div>
     </div>
