@@ -1,0 +1,78 @@
+"use client";
+
+import { useState } from 'react';
+
+export default function AuthPage({ setActivePage, isLogin, setIsLogin }) {
+  const [loginError, setLoginError] = useState(false);
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    const email = e.target.elements['login-email'].value;
+    const password = e.target.elements['login-password'].value;
+    if (email.trim() !== '' && password.trim() !== '') {
+      setLoginError(false);
+      setActivePage('app');
+    } else {
+      setLoginError(true);
+    }
+  };
+  
+  const handleRegister = (e) => {
+    e.preventDefault();
+    setActivePage('app');
+  };
+
+  return (
+    <div id="auth-page" className="flex items-center justify-center min-h-screen bg-slate-100">
+      <div className="w-full max-w-md p-4">
+        <div className="relative bg-white p-10 rounded-2xl shadow-lg">
+          <button onClick={() => setActivePage('landing')} className="absolute top-6 left-6 text-slate-500 hover:text-[#348567] font-medium text-sm transition-colors">&larr; Kembali</button>
+
+          {isLogin ? (
+            // Form Login
+            <div id="login-form-container">
+              <h2 className="text-center text-3xl font-bold mb-2 pt-8">Selamat Datang Kembali</h2>
+              <p className="text-center text-slate-500 mb-8">Masuk untuk melanjutkan ke dasbor Anda.</p>
+              <form onSubmit={handleLogin}>
+                <div className="mb-5">
+                  <label htmlFor="login-email" className="block mb-2 text-sm font-medium">Email</label>
+                  <input type="email" id="login-email" placeholder="nama@email.com" defaultValue="pengguna@contoh.com" className="w-full px-4 py-3 text-base border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348567] focus:border-transparent" />
+                </div>
+                <div className="mb-5">
+                  <label htmlFor="login-password" className="block mb-2 text-sm font-medium">Password</label>
+                  <input type="password" id="login-password" placeholder="••••••••" defaultValue="password123" className="w-full px-4 py-3 text-base border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348567] focus:border-transparent" />
+                </div>
+                <button type="submit" className="w-full py-3 text-base font-semibold text-white bg-[#348567] rounded-lg hover:bg-[#2A6A52] transition-colors">Masuk</button>
+                {loginError && <p className="mt-4 text-sm text-center text-red-500">Email atau password tidak boleh kosong.</p>}
+              </form>
+              <p className="mt-6 text-sm text-center text-slate-500">Belum punya akun? <button onClick={() => setIsLogin(false)} className="font-semibold text-[#348567] hover:underline">Daftar di sini</button></p>
+            </div>
+          ) : (
+            // Form Registrasi
+            <div id="register-form-container">
+               <h2 className="text-center text-3xl font-bold mb-2 pt-8">Buat Akun Baru</h2>
+              <p className="text-center text-slate-500 mb-8">Daftarkan bisnis Anda untuk memulai.</p>
+              <form onSubmit={handleRegister}>
+                  {/* Form fields for registration */}
+                  <div className="mb-5">
+                    <label htmlFor="register-name" className="block mb-2 text-sm font-medium">Nama Bisnis</label>
+                    <input type="text" id="register-name" placeholder="Pesona Alam Resort" className="w-full px-4 py-3 text-base border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348567] focus:border-transparent" />
+                  </div>
+                   <div className="mb-5">
+                    <label htmlFor="register-email" className="block mb-2 text-sm font-medium">Email</label>
+                    <input type="email" id="register-email" placeholder="nama@email.com" className="w-full px-4 py-3 text-base border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348567] focus:border-transparent" />
+                  </div>
+                  <div className="mb-5">
+                    <label htmlFor="register-password" className="block mb-2 text-sm font-medium">Password</label>
+                    <input type="password" id="register-password" placeholder="Minimal 8 karakter" className="w-full px-4 py-3 text-base border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348567] focus:border-transparent" />
+                  </div>
+                <button type="submit" className="w-full py-3 text-base font-semibold text-white bg-[#348567] rounded-lg hover:bg-[#2A6A52] transition-colors">Daftar</button>
+              </form>
+              <p className="mt-6 text-sm text-center text-slate-500">Sudah punya akun? <button onClick={() => setIsLogin(true)} className="font-semibold text-[#348567] hover:underline">Masuk di sini</button></p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
