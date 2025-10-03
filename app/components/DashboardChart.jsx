@@ -2,161 +2,158 @@
 
 import { useState, useEffect } from 'react';
 
-// Konfigurasi untuk setiap kategori emisi
 const CATEGORY_CONFIG = {
-electricity: { name: 'Listrik', color: '#FBBF24' }, // yellow-400
-transport: { name: 'Transportasi', color: '#60A5FA' }, // blue-400
-waste: { name: 'Sampah', color: '#F87171' }, // red-400
+    electricity_co2e: { name: 'Listrik', color: '#FBBF24' },
+    transport_co2e: { name: 'Transportasi', color: '#60A5FA' },
+    waste_co2e: { name: 'Sampah', color: '#F87171' },
 };
 
-// Komponen untuk menampilkan grafik di dasbor
 export default function DashboardChart({ supabase, user, dataVersion }) {
-const [chartData, setChartData] = useState([]);
-const [loading, setLoading] = useState(true);
-const [error, setError] = useState('');
-const [maxValue, setMaxValue] = useState(0);
+    const [chartData, setChartData] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [maxValue, setMaxValue] = useState(100); // Default ke 100
 
-useEffect(() => {
-    const fetchAndProcessData = async () => {
-        if (!user) return;
+    useEffect(() => {
+        const fetchAndProcessData = async () => {
+            if (!user) return;
+            setLoading(true);
+            setError('');
 
-        setLoading(true);
-        setError('');
+            const { data, error } = await supabase
+                .from('carbon_entries')
+                .select('report_month, electricity_co2e, transport_co2e, waste_co2e')
+                .eq('user_id', user.id)
+                .order('report_month', { ascending: true });
 
-        const { data, error } = await supabase
-            .from('carbon_entries')
-            .select('report_month, category, total_co2e_kg')
-            .eq('user_id', user.id)
-            .order('report_month', { ascending: true });
+            if (error) {
+                console.error('Error fetching chart data:', error);
+                setError(`Gagal memuat data grafik: ${error.message}`);
+                setLoading(false);
+                return;
+            }
 
-        if (error) {
-            console.error('Error fetching chart data:', error);
-            setError(`Gagal memuat data grafik: ${error.message}`);
+            if (!data || data.length === 0) {
+                setChartData([]);
+                setLoading(false);
+                return;
+            }
+
+            const formattedData = data.map(entry => ({
+                monthLabel: new Date(entry.report_month + '-02').toLocaleString('id-ID', { month: 'short', year: '2-digit' }),
+                electricity_co2e: entry.electricity_co2e || 0,
+                transport_co2e: entry.transport_co2e || 0,
+                waste_co2e: entry.waste_co2e || 0,
+            }));
+
+            setChartData(formattedData);
+
+            const maxEmission = formattedData.reduce((max, monthData) => {
+                const monthMax = Math.max(monthData.electricity_co2e, monthData.transport_co2e, monthData.waste_co2e);
+                return Math.max(max, monthMax);
+            }, 0);
+            
+            setMaxValue(Math.max(100, Math.ceil(maxEmission / 100) * 100));
             setLoading(false);
-            return;
-        }
+        };
 
-        // --- Proses data untuk grafik garis ---
-        const processedData = {};
+        fetchAndProcessData();
+    }, [user, supabase, dataVersion]);
 
-        data.forEach(entry => {
-            const { report_month, category, total_co2e_kg } = entry;
-            
-            if (!processedData[report_month]) {
-                processedData[report_month] = {
-                    monthLabel: new Date(report_month + '-02').toLocaleString('id-ID', { month: 'short', year: '2-digit' }),
-                    electricity: 0,
-                    transport: 0,
-                    waste: 0,
-                };
-            }
-            
-            if (category && processedData[report_month][category] !== undefined) {
-                processedData[report_month][category] += total_co2e_kg;
-            }
-        });
+    if (loading) {
+        return <div className="h-96 bg-slate-200 rounded-lg animate-pulse"></div>;
+    }
 
-        const chartDataArray = Object.values(processedData);
-        setChartData(chartDataArray);
+    if (error) {
+        return <div className="text-center p-4 text-red-500 bg-red-50 rounded-lg">{error}</div>;
+    }
 
-        // Cari nilai emisi maksimum untuk skala Y-axis
-        const maxEmission = chartDataArray.reduce((max, monthData) => {
-            const monthMax = Math.max(monthData.electricity, monthData.transport, monthData.waste);
-            return Math.max(max, monthMax);
-        }, 0);
-        
-        // Atur nilai maksimum dengan sedikit padding, minimal 100
-        setMaxValue(Math.max(100, Math.ceil(maxEmission / 100) * 100));
+    if (chartData.length === 0) {
+        return (
+            <div className="bg-white p-6 rounded-lg shadow-sm border w-full text-center">
+                <h3 className="text-xl font-bold mb-2">Grafik Emisi Bulanan</h3>
+                <p className="text-slate-500">Belum ada data laporan untuk ditampilkan di grafik.</p>
+            </div>
+        );
+    }
 
-        setLoading(false);
-    };
-
-    fetchAndProcessData();
-}, [user, supabase, dataVersion]); // Tambahkan dataVersion ke dependency array
-
-if (loading) {
-    return <div className="text-center p-4">Memuat data grafik...</div>;
-}
-
-if (error) {
-    return <div className="text-center p-4 text-red-500 bg-red-50 rounded-lg">{error}</div>;
-}
-
-if (chartData.length < 2) {
     return (
-        <div className="text-center p-8 bg-white rounded-lg shadow-sm border">
-            <h3 className="text-xl font-bold mb-2">Grafik Emisi Bulanan</h3>
-            <p className="text-slate-500">Data tidak cukup untuk menampilkan grafik garis. Dibutuhkan minimal 2 bulan laporan.</p>
+        <div className="bg-white p-6 rounded-lg shadow-sm border w-full">
+            <h3 className="text-xl font-bold mb-1">Grafik Emisi Bulanan</h3>
+            <p className="text-sm text-slate-500 mb-6">Perbandingan total emisi (kg CO2e) per kategori dari waktu ke waktu.</p>
+            
+            <div className="flex h-80">
+                <div className="flex flex-col justify-between text-xs text-slate-500 pr-4 border-r">
+                    <span>{maxValue}</span>
+                    <span>{Math.round(maxValue * 0.75)}</span>
+                    <span>{Math.round(maxValue * 0.5)}</span>
+                    <span>{Math.round(maxValue * 0.25)}</span>
+                    <span>0</span>
+                </div>
+
+                <div className="relative flex-1 pl-4">
+                    <div className="absolute top-0 left-4 right-0 h-full">
+                        {[0.25, 0.5, 0.75].map(val => (
+                            <div key={val} className="absolute w-full border-t border-dashed border-slate-200" style={{ bottom: `${val * 100}%` }}></div>
+                        ))}
+                    </div>
+
+                    <svg className="absolute top-0 left-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                        {Object.keys(CATEGORY_CONFIG).map(categoryKey => {
+                            // --- LOGIKA PERBAIKAN UTAMA ADA DI SINI ---
+                            const points = chartData.map((d, i) => {
+                                // Jika hanya ada 1 data, gambar di tengah (posisi x = 50).
+                                // Jika lebih, hitung posisi x secara normal untuk menghindari pembagian dengan nol.
+                                const x = chartData.length > 1 ? (i / (chartData.length - 1)) * 100 : 50;
+                                
+                                // Pastikan maxValue tidak nol untuk menghindari pembagian dengan nol
+                                const y = maxValue > 0 ? 100 - (d[categoryKey] / maxValue) * 100 : 100;
+                                return `${x},${y}`;
+                            }).join(' ');
+
+                            // Jika hanya ada 1 data, tampilkan sebagai titik, bukan garis.
+                            if (chartData.length === 1) {
+                                const [cx, cy] = points.split(',');
+                                return (
+                                    <circle
+                                        key={categoryKey}
+                                        cx={cx}
+                                        cy={cy}
+                                        r="2"
+                                        fill={CATEGORY_CONFIG[categoryKey].color}
+                                    />
+                                );
+                            }
+
+                            return (
+                                <polyline
+                                    key={categoryKey}
+                                    fill="none"
+                                    stroke={CATEGORY_CONFIG[categoryKey].color}
+                                    strokeWidth="2"
+                                    points={points}
+                                    style={{ vectorEffect: 'non-scaling-stroke' }}
+                                />
+                            );
+                        })}
+                    </svg>
+                </div>
+            </div>
+
+            <div className="flex justify-around text-xs text-slate-600 mt-2 ml-10">
+                {chartData.map((data, index) => (
+                    <span key={index}>{data.monthLabel}</span>
+                ))}
+            </div>
+
+             <div className="flex justify-center items-center gap-6 mt-6">
+                {Object.keys(CATEGORY_CONFIG).map(key => (
+                    <div key={key} className="flex items-center gap-2">
+                        <span className="w-3 h-3 rounded-full" style={{ backgroundColor: CATEGORY_CONFIG[key].color }}></span>
+                        <span className="text-sm text-slate-600">{CATEGORY_CONFIG[key].name}</span>
+                    </div>
+                ))}
+            </div>
         </div>
     );
-}
-
-// --- Render Grafik Garis ---
-return (
-    <div className="bg-white p-6 rounded-lg shadow-sm border w-full">
-        <h3 className="text-xl font-bold mb-1">Grafik Emisi Bulanan</h3>
-        <p className="text-sm text-slate-500 mb-6">Perbandingan total emisi (kg CO2e) per kategori dari waktu ke waktu.</p>
-        
-        <div className="flex h-80">
-            {/* Sumbu Y (Nilai) */}
-            <div className="flex flex-col justify-between text-xs text-slate-500 pr-4 border-r">
-                <span>{maxValue}</span>
-                <span>{Math.round(maxValue * 0.75)}</span>
-                <span>{Math.round(maxValue * 0.5)}</span>
-                <span>{Math.round(maxValue * 0.25)}</span>
-                <span>0</span>
-            </div>
-
-            {/* Area Grafik */}
-            <div className="relative flex-1 pl-4">
-                {/* Garis Latar Belakang */}
-                <div className="absolute top-0 left-4 right-0 h-full">
-                    {[0.25, 0.5, 0.75].map(val => (
-                        <div key={val} className="absolute w-full border-t border-dashed border-slate-200" style={{ bottom: `${val * 100}%` }}></div>
-                    ))}
-                </div>
-
-                {/* Path SVG untuk setiap kategori */}
-                <svg className="absolute top-0 left-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                    {Object.keys(CATEGORY_CONFIG).map(categoryKey => {
-                        const points = chartData.map((d, i) => {
-                            const x = (i / (chartData.length - 1)) * 100;
-                            const y = 100 - (d[categoryKey] / maxValue) * 100;
-                            return `${x},${y}`;
-                        }).join(' ');
-
-                        return (
-                            <polyline
-                                key={categoryKey}
-                                fill="none"
-                                stroke={CATEGORY_CONFIG[categoryKey].color}
-                                strokeWidth="2"
-                                points={points}
-                                style={{ vectorEffect: 'non-scaling-stroke' }}
-                            />
-                        );
-                    })}
-                </svg>
-            </div>
-        </div>
-
-        {/* Sumbu X (Bulan) */}
-        <div className="flex justify-around text-xs text-slate-600 mt-2 ml-10">
-            {chartData.map((data, index) => (
-                <span key={index}>{data.monthLabel}</span>
-            ))}
-        </div>
-
-         {/* Legenda */}
-         <div className="flex justify-center items-center gap-6 mt-6">
-            {Object.keys(CATEGORY_CONFIG).map(key => (
-                <div key={key} className="flex items-center gap-2">
-                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: CATEGORY_CONFIG[key].color }}></span>
-                    <span className="text-sm text-slate-600">{CATEGORY_CONFIG[key].name}</span>
-                </div>
-            ))}
-        </div>
-    </div>
-);
-
 }
