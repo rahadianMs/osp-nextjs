@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import EmissionReportPage from './EmissionReportPage';
-// Impor untuk DashboardChart dan DashboardSummary dihapus untuk sementara
+import DashboardSummary from './DashboardSummary';
+import DashboardPieChart from './DashboardPieChart'; // PERUBAHAN: Mengimpor komponen pie chart yang baru
 import {
     HomeIcon, BellIcon, ChartPieIcon, BuildingOfficeIcon,
     DocumentChartBarIcon, PlusCircleIcon, AcademicCapIcon,
@@ -21,13 +22,12 @@ const PageContent = ({ activeDashboardPage, supabase, user, sidebarLinks, dataVe
                 </div>
             );
         
-        // --- PERUBAHAN UTAMA DI SINI ---
-        // Kita ganti konten dasbor utama dengan pesan sementara untuk menghindari error
         case 'dashboard-utama':
             return (
-                <div className="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-md border text-center">
-                    <h2 className="text-2xl font-bold mb-4">Dasbor Utama</h2>
-                    <p className="text-slate-500">Ringkasan dan grafik analitik akan ditampilkan di sini. Fitur ini sedang dalam perbaikan untuk memastikan kestabilan.</p>
+                <div className="space-y-8">
+                    {/* Menampilkan ringkasan dan pie chart */}
+                    <DashboardSummary supabase={supabase} user={user} dataVersion={dataVersion} />
+                    <DashboardPieChart supabase={supabase} user={user} dataVersion={dataVersion} />
                 </div>
             );
 
@@ -74,14 +74,6 @@ export default function Dashboard({
 
     const pageTitle = sidebarLinks.find(link => link.id === activeDashboardPage)?.text || 'Dasbor';
 
-    // Periksa apakah userMenuRef null sebelum mengakses properti 'current'
-    const handleClickOutside = (event) => {
-        if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
-            setIsUserMenuOpen(false);
-        }
-    };
-
-    // Fungsi handleLogout dan useEffect tidak perlu diubah, tapi saya sertakan untuk kelengkapan
     return (
         <div id="app-wrapper" className="flex min-h-screen">
             <aside className="fixed top-0 left-0 z-40 flex flex-col h-screen p-6 bg-white border-r w-64 border-slate-200">
