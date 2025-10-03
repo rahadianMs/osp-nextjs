@@ -20,54 +20,53 @@ export default function DashboardChart({ supabase, user, dataVersion }) {
             setLoading(true);
             setError('');
 
-            const { data, error } = await supabase
-                .from('carbon_entries')
-                .select('report_month, electricity_co2e, transport_co2e, waste_co2e')
-                .eq('user_id', user.id)
-                .order('report_month', { ascending: true });
+            try {
+                const { data, error: dbError } = await supabase
+                    .from('carbon_entries')
+                    .select('report_month, electricity_co2e, transport_co2e, waste_co2e')
+                    .eq('user_id', user.id)
+                    .order('report_month', { ascending: true });
 
-            if (error) {
-                console.error('Error fetching chart data:', error);
-                setError(`Gagal memuat data grafik: ${error.message}`);
+                if (dbError) throw dbError;
+
+                if (!data || data.length === 0) {
+                    setChartData([]);
+                    setMaxValue(100);
+                    setLoading(false);
+                    return;
+                }
+
+                const formattedData = data.map(entry => ({
+                    monthLabel: new Date(entry.report_month + '-02').toLocaleString('id-ID', { month: 'short', year: '2-digit' }),
+                    electricity_co2e: entry.electricity_co2e || 0,
+                    transport_co2e: entry.transport_co2e || 0,
+                    waste_co2e: entry.waste_co2e || 0,
+                }));
+
+                const maxEmission = formattedData.reduce((max, monthData) => {
+                    const monthMax = Math.max(monthData.electricity_co2e, monthData.transport_co2e, monthData.waste_co2e);
+                    return Math.max(max, monthMax);
+                }, 0);
+                
+                setMaxValue(Math.max(100, Math.ceil(maxEmission / 100) * 100));
+                setChartData(formattedData);
+
+            } catch (err) {
+                console.error('Error in DashboardChart:', err);
+                setError(`Terjadi kesalahan saat memuat grafik: ${err.message}`);
+            } finally {
                 setLoading(false);
-                return;
             }
-
-            if (!data || data.length === 0) {
-                setChartData([]);
-                setLoading(false);
-                return;
-            }
-
-            const formattedData = data.map(entry => ({
-                monthLabel: new Date(entry.report_month + '-02').toLocaleString('id-ID', { month: 'short', year: '2-digit' }),
-                electricity_co2e: entry.electricity_co2e || 0,
-                transport_co2e: entry.transport_co2e || 0,
-                waste_co2e: entry.waste_co2e || 0,
-            }));
-
-            setChartData(formattedData);
-
-            const maxEmission = formattedData.reduce((max, monthData) => {
-                const monthMax = Math.max(monthData.electricity_co2e, monthData.transport_co2e, monthData.waste_co2e);
-                return Math.max(max, monthMax);
-            }, 0);
-            
-            setMaxValue(Math.max(100, Math.ceil(maxEmission / 100) * 100));
-            setLoading(false);
         };
 
         fetchAndProcessData();
     }, [user, supabase, dataVersion]);
 
-    if (loading) {
-        return <div className="h-96 bg-slate-200 rounded-lg animate-pulse"></div>;
-    }
+    // Tampilan Loading dan Error
+    if (loading) return <div className="h-96 bg-slate-200 rounded-lg animate-pulse"></div>;
+    if (error) return <div className="text-center p-4 text-red-500 bg-red-50 rounded-lg">{error}</div>;
 
-    if (error) {
-        return <div className="text-center p-4 text-red-500 bg-red-50 rounded-lg">{error}</div>;
-    }
-
+    // Tampilan jika tidak ada data sama sekali
     if (chartData.length === 0) {
         return (
             <div className="bg-white p-6 rounded-lg shadow-sm border w-full text-center">
@@ -76,13 +75,14 @@ export default function DashboardChart({ supabase, user, dataVersion }) {
             </div>
         );
     }
-
+    
     return (
         <div className="bg-white p-6 rounded-lg shadow-sm border w-full">
             <h3 className="text-xl font-bold mb-1">Grafik Emisi Bulanan</h3>
             <p className="text-sm text-slate-500 mb-6">Perbandingan total emisi (kg CO2e) per kategori dari waktu ke waktu.</p>
             
             <div className="flex h-80">
+                {/* Sumbu Y */}
                 <div className="flex flex-col justify-between text-xs text-slate-500 pr-4 border-r">
                     <span>{maxValue}</span>
                     <span>{Math.round(maxValue * 0.75)}</span>
@@ -91,39 +91,39 @@ export default function DashboardChart({ supabase, user, dataVersion }) {
                     <span>0</span>
                 </div>
 
+                {/* Area Grafik */}
                 <div className="relative flex-1 pl-4">
+                    {/* Garis Latar */}
                     <div className="absolute top-0 left-4 right-0 h-full">
                         {[0.25, 0.5, 0.75].map(val => (
                             <div key={val} className="absolute w-full border-t border-dashed border-slate-200" style={{ bottom: `${val * 100}%` }}></div>
                         ))}
                     </div>
 
+                    {/* Gambar SVG */}
                     <svg className="absolute top-0 left-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                         {Object.keys(CATEGORY_CONFIG).map(categoryKey => {
-                            // --- LOGIKA PERBAIKAN UTAMA ADA DI SINI ---
-                            const points = chartData.map((d, i) => {
-                                // Jika hanya ada 1 data, gambar di tengah (posisi x = 50).
-                                // Jika lebih, hitung posisi x secara normal untuk menghindari pembagian dengan nol.
-                                const x = chartData.length > 1 ? (i / (chartData.length - 1)) * 100 : 50;
-                                
-                                // Pastikan maxValue tidak nol untuk menghindari pembagian dengan nol
-                                const y = maxValue > 0 ? 100 - (d[categoryKey] / maxValue) * 100 : 100;
-                                return `${x},${y}`;
-                            }).join(' ');
-
-                            // Jika hanya ada 1 data, tampilkan sebagai titik, bukan garis.
+                            // Jika data hanya 1, tampilkan sebagai titik-titik
                             if (chartData.length === 1) {
-                                const [cx, cy] = points.split(',');
+                                const d = chartData[0];
+                                const y = maxValue > 0 ? 100 - (d[categoryKey] / maxValue) * 100 : 100;
                                 return (
                                     <circle
                                         key={categoryKey}
-                                        cx={cx}
-                                        cy={cy}
+                                        cx="50"
+                                        cy={y}
                                         r="2"
                                         fill={CATEGORY_CONFIG[categoryKey].color}
                                     />
                                 );
                             }
+                            
+                            // Jika data lebih dari 1, gambar garis
+                            const points = chartData.map((d, i) => {
+                                const x = (i / (chartData.length - 1)) * 100;
+                                const y = maxValue > 0 ? 100 - (d[categoryKey] / maxValue) * 100 : 100;
+                                return `${x},${y}`;
+                            }).join(' ');
 
                             return (
                                 <polyline
@@ -140,12 +140,14 @@ export default function DashboardChart({ supabase, user, dataVersion }) {
                 </div>
             </div>
 
+            {/* Sumbu X */}
             <div className="flex justify-around text-xs text-slate-600 mt-2 ml-10">
                 {chartData.map((data, index) => (
                     <span key={index}>{data.monthLabel}</span>
                 ))}
             </div>
 
+             {/* Legenda */}
              <div className="flex justify-center items-center gap-6 mt-6">
                 {Object.keys(CATEGORY_CONFIG).map(key => (
                     <div key={key} className="flex items-center gap-2">
