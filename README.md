@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+-----
 
-## Getting Started
+# Wonderful Indonesia Net Zero Hub (WINZ Hub)
 
-First, run the development server:
+**Wonderful Indonesia Net Zero Hub (WINZ Hub)** adalah platform online nasional yang dirancang untuk membantu bisnis di sektor pariwisata Indonesia dalam mengukur, melaporkan, dan mengurangi jejak karbon mereka. Proyek ini merupakan inisiatif dari Kementerian Pariwisata dan Ekonomi Kreatif/Badan Pariwisata dan Ekonomi Kreatif Republik Indonesia untuk mendukung komitmen Indonesia dalam **Deklarasi Glasgow tentang Aksi Iklim di Sektor Pariwisata**.
+
+## ✨ Fitur Utama
+
+  - **Kalkulator Jejak Karbon**: Hitung emisi dari berbagai sumber, termasuk penggunaan listrik, transportasi, dan pengelolaan limbah.
+  - **Dasbor Interaktif**: Pantau dan analisis data emisi dari waktu ke waktu melalui dasbor yang mudah digunakan.
+  - **Pelaporan & Analisis**: Hasilkan laporan emisi dalam format PDF dan lihat riwayat laporan Anda.
+  - **Pusat Pembelajaran**: Akses materi edukasi, studi kasus, dan panduan praktik terbaik untuk pariwisata berkelanjutan.
+  - **Sertifikasi**: Dapatkan sertifikat apresiasi sebagai pengakuan atas komitmen Anda terhadap pariwisata ramah lingkungan.
+
+## 🚀 Teknologi yang Digunakan
+
+  - **Framework**: [Next.js](https://nextjs.org/)
+  - **Bahasa**: JavaScript (dengan JSX)
+  - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+  - **Backend & Database**: [Supabase](https://supabase.io/)
+  - **Animasi**: [Framer Motion](https://www.framer.com/motion/)
+  - **PDF Generation**: [jsPDF](https://github.com/parallax/jsPDF)
+
+## 📂 Struktur Proyek
+
+```
+/app
+|-- /components     # Komponen React yang dapat digunakan kembali
+|-- /lib            # Fungsi bantuan (misalnya, untuk menghasilkan PDF)
+|-- layout.js       # Layout utama aplikasi
+|-- page.jsx        # Halaman utama aplikasi
+/public             # Aset statis (gambar, ikon, dll.)
+/...
+```
+
+## 🛠️ Memulai
+
+### Prasyarat
+
+  - Node.js (versi 20.x direkomendasikan)
+  - npm, yarn, atau pnpm
+
+### Instalasi
+
+1.  Clone repositori ini:
+    ```bash
+    git clone https://github.com/rahadianms/osp-nextjs.git
+    ```
+2.  Masuk ke direktori proyek:
+    ```bash
+    cd osp-nextjs
+    ```
+3.  Instal dependensi:
+    ```bash
+    npm install
+    ```
+
+### Menjalankan Server Pengembangan
+
+Untuk menjalankan server pengembangan secara lokal, gunakan perintah berikut:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Buka [http://localhost:3000](https://www.google.com/search?q=http://localhost:3000) di browser Anda untuk melihat hasilnya.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## 📄 Lisensi
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Proyek ini dilisensikan di bawah [Lisensi MIT](https://choosealicense.com/licenses/mit/).
