@@ -35,9 +35,10 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
         accentHover: '#b38b40'
     };
 
+    // --- PERUBAHAN JUDUL DI SINI ---
     const featureCards = [
         { icon: <DashboardIcon />, title: "Dashboard Pemantauan Emisi", description: "Hitung dan lacak jejak karbon bisnis Anda secara akurat melalui dasbor interaktif." },
-        { icon: <BookOpenIcon />, title: "Pusat Edukasi & Kapasitas", description: "Akses materi pembelajaran dan panduan praktik rendah emisi untuk pariwisata." },
+        { icon: <BookOpenIcon />, title: "Pusat Edukasi Terpadu", description: "Akses materi pembelajaran dan panduan praktik rendah emisi untuk pariwisata." },
         { icon: <HandshakeIcon />, title: "Kolaborasi Vendor Berkelanjutan", description: "Temukan dan terhubung dengan penyedia solusi dan produk ramah lingkungan." },
         { icon: <IncentiveIcon />, title: "Insentif Keikutsertaan", description: "Dapatkan pengakuan, akses pasar, dan dukungan kebijakan sebagai pionir pariwisata hijau." },
     ];
@@ -59,6 +60,9 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
     return (
         <>
             <style jsx global>{`
+                html {
+                  scroll-behavior: smooth;
+                }
                 @keyframes marquee {
                     0% { transform: translateX(0%); }
                     100% { transform: translateX(-100%); }
@@ -85,7 +89,6 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
                     </div>
                 </header>
 
-                {/* --- HERO SECTION - DIPERBARUI --- */}
                 <main id="home" className="relative flex items-center min-h-screen px-[5%] py-24 text-white bg-cover bg-center" style={{ backgroundImage: "url('https://indonesia.travel/contentassets/ad62b2d07c3b463694923e90a9701331/borobudur_2.jpg')" }}>
                     <div className="absolute inset-0 bg-black opacity-50"></div>
                     <div className="relative z-10 max-w-2xl text-left">
@@ -97,7 +100,6 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
                     </div>
                 </main>
 
-                {/* --- BAGIAN TENTANG - DIPERBARUI --- */}
                 <section id="about" className="py-24 px-[5%]">
                     <div className="container mx-auto max-w-6xl">
                         <div className="text-center mb-16">
@@ -118,6 +120,7 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
                                 </div>
                             </div>
                         </div>
+
                         <div className="mt-24">
                              <h3 className={`text-3xl font-bold text-${colors.primary} mb-12 text-center`}>Lingkup Usaha</h3>
                              <div className="grid md:grid-cols-3 gap-8">
@@ -168,7 +171,6 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
                     </div>
                 </section>
 
-                {/* --- BAGIAN PORTAL GLASGOW - POSISI BARU --- */}
                 <section id="glasgow-portal" className="py-20 px-[5%] bg-zinc-100">
                     <div className="container mx-auto max-w-4xl bg-white p-10 rounded-2xl shadow-lg border flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
                         <div className="flex-shrink-0">
