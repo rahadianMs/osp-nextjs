@@ -4,10 +4,11 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Impor semua komponen halaman
-import BerandaPage from './BerandaPage'; // <- Diperbarui
+import BerandaPage from './BerandaPage';
 import EmissionReportPage from './EmissionReportPage';
 import DashboardSummary from './DashboardSummary';
 import DashboardPieChart from './DashboardPieChart';
+import DashboardTrends from './DashboardTrends';
 import ProfilUsahaPage from './ProfilUsahaPage';
 import NotificationPage from './NotificationPage';
 import AboutPage from './AboutPage';
@@ -27,13 +28,16 @@ import {
 const PageContent = ({ activeDashboardPage, setActiveDashboardPage, supabase, user, sidebarLinks, dataVersion, onDataUpdate }) => {
     switch (activeDashboardPage) {
         case 'beranda':
-            // --- PERUBAHAN DI SINI: Menambahkan props supabase dan dataVersion ---
             return <BerandaPage user={user} supabase={supabase} setActiveDashboardPage={setActiveDashboardPage} dataVersion={dataVersion} />;
         case 'dashboard-utama':
+            // --- PERUBAHAN TATA LETAK DI SINI ---
             return (
                 <div className="space-y-8">
                     <DashboardSummary supabase={supabase} user={user} dataVersion={dataVersion} />
-                    <DashboardPieChart supabase={supabase} user={user} dataVersion={dataVersion} />
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                        <DashboardTrends supabase={supabase} user={user} dataVersion={dataVersion} />
+                        <DashboardPieChart supabase={supabase} user={user} dataVersion={dataVersion} />
+                    </div>
                 </div>
             );
         case 'laporan-emisi':

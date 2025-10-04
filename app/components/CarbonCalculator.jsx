@@ -85,7 +85,6 @@ export default function CarbonCalculator({ supabase, user, onReportSubmitted }) 
         setWasteItems(wasteItems.map(item => {
             if (item.id === id) {
                 const newItem = { ...item, [field]: value };
-                // Jika tipe limbah berubah, reset tipe pengolahan ke opsi valid pertama
                 if (field === 'type') {
                     const firstValidTreatment = Object.keys(WASTE_EMISSION_FACTORS[value].treatments).find(
                         key => WASTE_EMISSION_FACTORS[value].treatments[key] !== null
@@ -96,6 +95,13 @@ export default function CarbonCalculator({ supabase, user, onReportSubmitted }) 
             }
             return item;
         }));
+    };
+
+    // --- FUNGSI BARU UNTUK PERBAIKAN BUG ---
+    const handleTabChange = (tab) => {
+        setActiveTab(tab);
+        setCalculationResult(null); // Membersihkan hasil kalkulasi sebelumnya
+        setMessage({ type: '', text: '' }); // Membersihkan pesan sukses/error
     };
 
     // --- Fungsi utama untuk submit data (diperbarui) ---
@@ -185,7 +191,6 @@ export default function CarbonCalculator({ supabase, user, onReportSubmitted }) 
     const renderForm = () => {
         switch (activeTab) {
             case 'electricity':
-                // ... (kode form listrik tetap sama)
                 return (
                     <div className="space-y-4">
                         <div>
@@ -222,7 +227,6 @@ export default function CarbonCalculator({ supabase, user, onReportSubmitted }) 
                     </div>
                 );
             case 'transport':
-                 // ... (kode form transportasi tetap sama)
                 return (
                     <div className="space-y-4">
                         {vehicles.map((vehicle) => (
@@ -321,9 +325,10 @@ export default function CarbonCalculator({ supabase, user, onReportSubmitted }) 
                 </div>
                 <div className="mb-6">
                     <div className="flex border-b border-slate-200">
-                        <button type="button" onClick={() => setActiveTab('electricity')} className={`px-4 py-2 text-sm font-medium ${activeTab === 'electricity' ? 'border-b-2 border-[#348567] text-[#348567]' : 'text-slate-500'}`}>Listrik</button>
-                        <button type="button" onClick={() => setActiveTab('transport')} className={`px-4 py-2 text-sm font-medium ${activeTab === 'transport' ? 'border-b-2 border-[#348567] text-[#348567]' : 'text-slate-500'}`}>Transportasi</button>
-                        <button type="button" onClick={() => setActiveTab('waste')} className={`px-4 py-2 text-sm font-medium ${activeTab === 'waste' ? 'border-b-2 border-[#348567] text-[#348567]' : 'text-slate-500'}`}>Limbah</button>
+                        {/* --- PERUBAHAN DI SINI: Menggunakan handleTabChange --- */}
+                        <button type="button" onClick={() => handleTabChange('electricity')} className={`px-4 py-2 text-sm font-medium ${activeTab === 'electricity' ? 'border-b-2 border-[#348567] text-[#348567]' : 'text-slate-500'}`}>Listrik</button>
+                        <button type="button" onClick={() => handleTabChange('transport')} className={`px-4 py-2 text-sm font-medium ${activeTab === 'transport' ? 'border-b-2 border-[#348567] text-[#348567]' : 'text-slate-500'}`}>Transportasi</button>
+                        <button type="button" onClick={() => handleTabChange('waste')} className={`px-4 py-2 text-sm font-medium ${activeTab === 'waste' ? 'border-b-2 border-[#348567] text-[#348567]' : 'text-slate-500'}`}>Limbah</button>
                     </div>
                 </div>
                 <div className="min-h-[200px] mb-6">
