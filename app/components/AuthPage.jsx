@@ -14,6 +14,7 @@ export default function AuthPage({ supabase, setActivePage, isLogin, setIsLogin 
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ type: '', content: '' });
     const [registrationStep, setRegistrationStep] = useState(1);
+    const [isExiting, setIsExiting] = useState(false); // State baru untuk animasi keluar
 
     // Palet Warna
      const colors = {
@@ -71,11 +72,11 @@ export default function AuthPage({ supabase, setActivePage, isLogin, setIsLogin 
         setLoading(false);
     };
     
-    // --- PERUBAHAN: Varian animasi disempurnakan ---
+    // Varian animasi disempurnakan
     const formVariants = {
         hidden: (direction) => ({
             opacity: 0,
-            x: direction > 0 ? 50 : -50, // Muncul dari kanan, keluar ke kiri
+            x: direction > 0 ? 50 : -50,
         }),
         visible: {
             opacity: 1,
@@ -84,7 +85,7 @@ export default function AuthPage({ supabase, setActivePage, isLogin, setIsLogin 
         },
         exit: (direction) => ({
             opacity: 0,
-            x: direction > 0 ? -50 : 50, // Keluar ke kiri, muncul dari kanan
+            x: direction > 0 ? -50 : 50,
             transition: { duration: 0.3, ease: "easeIn" }
         })
     };
@@ -101,6 +102,15 @@ export default function AuthPage({ supabase, setActivePage, isLogin, setIsLogin 
         setDirection(value > registrationStep ? 1 : -1);
         setRegistrationStep(value);
     }
+    
+    // Fungsi baru untuk menangani klik tombol "Kembali"
+    const handleGoBack = () => {
+        if (!isLogin && registrationStep === 2) {
+            handleSetRegStep(1);
+        } else {
+            setIsExiting(true); // Memulai animasi keluar
+        }
+    };
 
 
     return (
@@ -112,16 +122,20 @@ export default function AuthPage({ supabase, setActivePage, isLogin, setIsLogin 
             <motion.div 
                 className="relative w-full max-w-md"
                 initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
+                animate={isExiting ? { opacity: 0, scale: 0.95 } : { opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, ease: "easeOut" }}
+                onAnimationComplete={() => {
+                    if (isExiting) {
+                        setActivePage('landing');
+                    }
+                }}
             >
-                {/* --- PERUBAHAN: Tambahkan properti 'layout' untuk animasi ukuran --- */}
                 <motion.div 
                     layout 
                     transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                    className="relative bg-white/90 backdrop-blur-sm p-8 md:p-10 rounded-3xl shadow-2xl overflow-hidden" // Tambah overflow-hidden
+                    className="relative bg-white/90 backdrop-blur-sm p-8 md:p-10 rounded-3xl shadow-2xl overflow-hidden"
                 >
-                    <button onClick={() => isLogin || registrationStep === 1 ? setActivePage('landing') : handleSetRegStep(1)} className="absolute top-6 left-6 text-slate-500 hover:text-slate-800 font-medium text-sm transition-colors z-10">
+                    <button onClick={handleGoBack} className="absolute top-6 left-6 text-slate-500 hover:text-slate-800 font-medium text-sm transition-colors z-10">
                         ← Kembali
                     </button>
 

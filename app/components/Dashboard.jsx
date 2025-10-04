@@ -2,16 +2,25 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+
+// Impor semua komponen halaman
 import EmissionReportPage from './EmissionReportPage';
 import DashboardSummary from './DashboardSummary';
-import DashboardPieChart from './DashboardPieChart'; // PERUBAHAN: Mengimpor komponen pie chart yang baru
+import DashboardPieChart from './DashboardPieChart';
+import ProfilUsahaPage from './ProfilUsahaPage';
+import NotificationPage from './NotificationPage';
+import AboutPage from './AboutPage';
+import AccountPage from './AccountPage';
+import FaqPage from './FaqPage';
+import PembelajaranPage from './PembelajaranPage'; // <- Tambahan Baru
+
 import {
     HomeIcon, BellIcon, ChartPieIcon, BuildingOfficeIcon,
     DocumentChartBarIcon, PlusCircleIcon, AcademicCapIcon,
     QuestionMarkCircleIcon, UserCircleIcon
 } from './Icons.jsx';
 
-// Komponen PageContent dipisahkan
+// Komponen PageContent yang mengatur halaman mana yang tampil
 const PageContent = ({ activeDashboardPage, supabase, user, sidebarLinks, dataVersion, onDataUpdate }) => {
     switch (activeDashboardPage) {
         case 'beranda':
@@ -21,19 +30,27 @@ const PageContent = ({ activeDashboardPage, supabase, user, sidebarLinks, dataVe
                     <p className="text-slate-600 mt-2">Anda masuk sebagai: <span className="font-mono text-sm bg-slate-200 p-1 rounded">{user?.email}</span></p>
                 </div>
             );
-        
         case 'dashboard-utama':
             return (
                 <div className="space-y-8">
-                    {/* Menampilkan ringkasan dan pie chart */}
                     <DashboardSummary supabase={supabase} user={user} dataVersion={dataVersion} />
                     <DashboardPieChart supabase={supabase} user={user} dataVersion={dataVersion} />
                 </div>
             );
-
         case 'laporan-emisi':
             return <EmissionReportPage supabase={supabase} user={user} onDataUpdate={onDataUpdate} />;
-
+        case 'notifikasi':
+            return <NotificationPage />;
+        case 'profil-usaha':
+            return <ProfilUsahaPage />;
+        case 'pembelajaran': // <- Tambahan Baru
+            return <PembelajaranPage />;
+        case 'tentang':
+            return <AboutPage />;
+        case 'akun':
+            return <AccountPage user={user} supabase={supabase} />;
+        case 'faq':
+            return <FaqPage />;
         default:
              return (
                 <div className="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-md border text-center">
@@ -55,7 +72,13 @@ export default function Dashboard({
     userMenuRef,
     handleLogout
 }) {
+    // ... (Sisa kode Dashboard.jsx tetap sama, tidak perlu diubah) ...
+
     const [dataVersion, setDataVersion] = useState(Date.now());
+    
+    const logoKemenparPutih = "https://bob.kemenparekraf.go.id/wp-content/uploads/2025/02/Kementerian-Pariwisata-RI_Bahasa-Indonesia-Putih.png";
+    const logoWiseSteps = "https://cdn-lgbgj.nitrocdn.com/ItTrnTtgyWTkOHFuOZYyLNqTCVGqVARe/assets/images/optimized/rev-7dc1829/wisesteps.id/wp-content/uploads/revslider/home-desktop-tablet-12/Wise-Steps-Consulting-Logo-White.png";
+
 
     const handleDataUpdate = () => {
         setDataVersion(Date.now());
@@ -72,56 +95,63 @@ export default function Dashboard({
         { id: 'panduan', text: 'Panduan', icon: <QuestionMarkCircleIcon /> },
     ];
 
-    const pageTitle = sidebarLinks.find(link => link.id === activeDashboardPage)?.text || 'Dasbor';
+    const pageTitle = sidebarLinks.find(link => link.id === activeDashboardPage)?.text || 
+                      (activeDashboardPage === 'akun' && 'Akun Saya') ||
+                      (activeDashboardPage === 'faq' && 'FAQ') ||
+                      (activeDashboardPage === 'tentang' && 'Tentang') ||
+                      'Dasbor';
 
     return (
         <div id="app-wrapper" className="flex min-h-screen">
-            <aside className="fixed top-0 left-0 z-40 flex flex-col h-screen p-6 bg-white border-r w-64 border-slate-200">
-            <div className="pb-6 mb-4 border-b border-slate-200">
-                <div className="flex items-center gap-3">
-                    <img src="https://cdn-biofo.nitrocdn.com/pguRNgUGRHgHBjvClHTnuzLuMOCPhzJi/assets/images/optimized/rev-a721222/wisestepsconsulting.id/wp-content/uploads/2022/09/WSG_Masterfiles_Logo-02-1024x264.png" alt="Wise Steps Consulting Logo" className="h-9" />
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/f/fc/Lambang_Kementerian_Pariwisata_Republik_Indonesia_%282024%29.png" alt="Logo Kemenpar" className="h-10" />
+            <aside 
+                className="fixed top-0 left-0 z-40 flex flex-col h-screen p-6 w-64 text-white"
+                style={{backgroundColor: '#22543d'}}
+            >
+               <div className="pb-6 mb-4 border-b border-white/20">
+                    <div className="flex items-center gap-4">
+                        <img src={logoWiseSteps} alt="Wise Steps Consulting Logo" className="h-8" />
+                        <img src={logoKemenparPutih} alt="Logo Kemenpar" className="h-9" />
+                    </div>
                 </div>
-            </div>
-            <nav className="flex flex-col flex-grow gap-1">
-                {sidebarLinks.map(link => (
+                <nav className="flex flex-col flex-grow gap-1">
+                    {sidebarLinks.map(link => (
+                        <button
+                            key={link.id}
+                            onClick={() => setActiveDashboardPage(link.id)}
+                            className={`flex items-center gap-4 p-3 rounded-lg text-sm font-medium transition-colors ${activeDashboardPage === link.id ? 'bg-white/10 text-white font-semibold' : 'text-white/70 hover:bg-white/5 hover:text-white'}`}
+                        >
+                            {link.icon}
+                            <span>{link.text}</span>
+                        </button>
+                    ))}
+                </nav>
+                <div className="mt-auto">
                     <button
-                        key={link.id}
-                        onClick={() => setActiveDashboardPage(link.id)}
-                        className={`flex items-center gap-4 p-3 rounded-lg text-sm font-medium transition-colors ${activeDashboardPage === link.id ? 'bg-emerald-100 text-[#348567] font-semibold' : 'text-slate-500 hover:bg-slate-100'}`}
+                        onClick={handleLogout}
+                        className="flex items-center w-full gap-4 p-3 text-sm font-medium text-red-400 rounded-lg hover:bg-red-500/20 hover:text-white transition-colors"
                     >
-                        {link.icon}
-                        <span>{link.text}</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" /></svg>
+                        <span>Logout</span>
                     </button>
-                ))}
-            </nav>
-            <div className="mt-auto">
-                <button
-                    onClick={handleLogout}
-                    className="flex items-center w-full gap-4 p-3 text-sm font-medium text-red-500 rounded-lg hover:bg-red-50"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" /></svg>
-                    <span>Logout</span>
-                </button>
-            </div>
+                </div>
             </aside>
             <div className="flex flex-col flex-1 w-full ml-64">
                 <header className="sticky top-0 z-30 flex items-center justify-between h-16 px-10 bg-white border-b border-slate-200">
                     <h2 className="text-2xl font-bold">{pageTitle}</h2>
                     <div className="relative" ref={userMenuRef}>
-                    <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="flex items-center justify-center w-10 h-10 rounded-full text-slate-500 hover:bg-slate-100">
-                        <UserCircleIcon />
-                    </button>
-                    {isUserMenuOpen && (
-                        <div className="absolute right-0 w-48 mt-2 origin-top-right bg-white rounded-xl shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                            <div className="py-1">
-                                <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Tentang Dashboard</a>
-                                <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Akun</a>
-                                <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">FAQ</a>
+                        <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="flex items-center justify-center w-10 h-10 rounded-full text-slate-500 hover:bg-slate-100">
+                            <UserCircleIcon />
+                        </button>
+                        {isUserMenuOpen && (
+                            <div className="absolute right-0 w-48 mt-2 origin-top-right bg-white rounded-xl shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                <div className="py-1">
+                                    <button onClick={() => { setActiveDashboardPage('tentang'); setIsUserMenuOpen(false); }} className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Tentang</button>
+                                    <button onClick={() => { setActiveDashboardPage('akun'); setIsUserMenuOpen(false); }} className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Akun</button>
+                                    <button onClick={() => { setActiveDashboardPage('faq'); setIsUserMenuOpen(false); }} className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">FAQ</button>
+                                </div>
                             </div>
-                        </div>
-                    )}
-                </div>
+                        )}
+                    </div>
                 </header>
                 <main className="flex-1 p-10 overflow-y-auto bg-slate-50">
                     <AnimatePresence mode="wait">
