@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Impor semua komponen halaman
+import BerandaPage from './BerandaPage'; // <- Diperbarui
 import EmissionReportPage from './EmissionReportPage';
 import DashboardSummary from './DashboardSummary';
 import DashboardPieChart from './DashboardPieChart';
@@ -12,7 +13,9 @@ import NotificationPage from './NotificationPage';
 import AboutPage from './AboutPage';
 import AccountPage from './AccountPage';
 import FaqPage from './FaqPage';
-import SertifikasiPage from './SertifikasiPage'; // <- Tambahan Baru
+import SertifikasiPage from './SertifikasiPage';
+import PembelajaranPage from './PembelajaranPage';
+import PanduanPage from './PanduanPage';
 
 import {
     HomeIcon, BellIcon, ChartPieIcon, BuildingOfficeIcon,
@@ -21,15 +24,11 @@ import {
 } from './Icons.jsx';
 
 // Komponen PageContent yang mengatur halaman mana yang tampil
-const PageContent = ({ activeDashboardPage, supabase, user, sidebarLinks, dataVersion, onDataUpdate }) => {
+const PageContent = ({ activeDashboardPage, setActiveDashboardPage, supabase, user, sidebarLinks, dataVersion, onDataUpdate }) => {
     switch (activeDashboardPage) {
         case 'beranda':
-            return (
-                <div className="max-w-4xl mx-auto">
-                    <h1 className="text-3xl font-bold">Selamat datang kembali!</h1>
-                    <p className="text-slate-600 mt-2">Anda masuk sebagai: <span className="font-mono text-sm bg-slate-200 p-1 rounded">{user?.email}</span></p>
-                </div>
-            );
+            // --- PERUBAHAN DI SINI: Menambahkan props supabase dan dataVersion ---
+            return <BerandaPage user={user} supabase={supabase} setActiveDashboardPage={setActiveDashboardPage} dataVersion={dataVersion} />;
         case 'dashboard-utama':
             return (
                 <div className="space-y-8">
@@ -43,10 +42,12 @@ const PageContent = ({ activeDashboardPage, supabase, user, sidebarLinks, dataVe
             return <NotificationPage />;
         case 'profil-usaha':
             return <ProfilUsahaPage />;
-        case 'sertifikasi': // <- Tambahan Baru
+        case 'sertifikasi':
             return <SertifikasiPage supabase={supabase} user={user} />;
         case 'pembelajaran':
-            return <p>Halaman Pembelajaran dalam pengembangan.</p>; // Placeholder sementara
+            return <PembelajaranPage />;
+        case 'panduan':
+            return <PanduanPage />;
         case 'tentang':
             return <AboutPage />;
         case 'akun':
@@ -74,8 +75,6 @@ export default function Dashboard({
     userMenuRef,
     handleLogout
 }) {
-    // ... (Sisa kode Dashboard.jsx tetap sama, tidak perlu diubah) ...
-
     const [dataVersion, setDataVersion] = useState(Date.now());
     
     const logoKemenparPutih = "https://bob.kemenparekraf.go.id/wp-content/uploads/2025/02/Kementerian-Pariwisata-RI_Bahasa-Indonesia-Putih.png";
@@ -166,6 +165,7 @@ export default function Dashboard({
                         >
                             <PageContent
                                 activeDashboardPage={activeDashboardPage}
+                                setActiveDashboardPage={setActiveDashboardPage}
                                 supabase={supabase}
                                 user={user}
                                 sidebarLinks={sidebarLinks}

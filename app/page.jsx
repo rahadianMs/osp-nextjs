@@ -18,7 +18,7 @@ export default function HomePage() {
     const [session, setSession] = useState(null);
     const [activePage, setActivePage] = useState('landing');
     const [isLogin, setIsLogin] = useState(true);
-    const [activeDashboardPage, setActiveDashboardPage] = useState('dashboard-utama');
+    const [activeDashboardPage, setActiveDashboardPage] = useState('beranda');
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const userMenuRef = useRef(null);
     const [loading, setLoading] = useState(true);
@@ -40,7 +40,7 @@ export default function HomePage() {
             if (session) {
                 // Jika ada sesi (berhasil login/register), arahkan ke dasbor
                 setActivePage('app');
-                setActiveDashboardPage('dashboard-utama'); // Reset ke halaman utama dasbor
+                setActiveDashboardPage('beranda'); // Reset ke halaman utama dasbor
             } else {
                 // Jika tidak ada sesi (logout), arahkan ke landing page
                 setActivePage('landing');

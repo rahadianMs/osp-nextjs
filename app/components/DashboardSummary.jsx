@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from 'react'; // Import React hooks: useState for state management, useEffect for side effects, and useRef for referencing DOM elements or storing mutable values.

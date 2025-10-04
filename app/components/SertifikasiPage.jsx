@@ -104,11 +104,11 @@ export default function SertifikasiPage({ supabase, user }) {
                     </p>
                     
                     <div className="relative w-full group">
+                        {/* --- PERUBAHAN DI SINI --- */}
                         <button 
                             onClick={handleDownload}
                             disabled={!isEligible || isLoading || isDownloading}
-                            className="w-full py-4 text-lg font-semibold text-white rounded-lg transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed"
-                            style={{backgroundColor: '#22543d'}}
+                            className="w-full py-4 text-lg font-semibold text-white bg-slate-400 rounded-lg transition-colors enabled:hover:bg-[#22543d] disabled:cursor-not-allowed"
                         >
                             {isLoading ? 'Memeriksa Kelayakan...' : (isDownloading ? 'Membuat PDF...' : 'Unduh Sertifikat (.pdf)')}
                         </button>
