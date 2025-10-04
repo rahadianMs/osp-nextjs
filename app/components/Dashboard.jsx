@@ -12,7 +12,7 @@ import NotificationPage from './NotificationPage';
 import AboutPage from './AboutPage';
 import AccountPage from './AccountPage';
 import FaqPage from './FaqPage';
-import PembelajaranPage from './PembelajaranPage'; // <- Tambahan Baru
+import SertifikasiPage from './SertifikasiPage'; // <- Tambahan Baru
 
 import {
     HomeIcon, BellIcon, ChartPieIcon, BuildingOfficeIcon,
@@ -43,8 +43,10 @@ const PageContent = ({ activeDashboardPage, supabase, user, sidebarLinks, dataVe
             return <NotificationPage />;
         case 'profil-usaha':
             return <ProfilUsahaPage />;
-        case 'pembelajaran': // <- Tambahan Baru
-            return <PembelajaranPage />;
+        case 'sertifikasi': // <- Tambahan Baru
+            return <SertifikasiPage supabase={supabase} user={user} />;
+        case 'pembelajaran':
+            return <p>Halaman Pembelajaran dalam pengembangan.</p>; // Placeholder sementara
         case 'tentang':
             return <AboutPage />;
         case 'akun':

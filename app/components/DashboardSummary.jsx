@@ -133,7 +133,7 @@ export default function DashboardSummary({ supabase, user, dataVersion }) {
                     colorClass={{ bg: 'bg-blue-100', text: 'text-blue-800' }}
                 />
                 <SummaryCard
-                    title="Total dari Sampah"
+                    title="Total dari Limbah"
                     value={summary.total_waste.toFixed(2)}
                     unit="kg CO₂e"
                     icon={<TrashCanIcon className="w-6 h-6" />}
