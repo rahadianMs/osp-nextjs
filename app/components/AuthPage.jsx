@@ -130,7 +130,7 @@ export default function AuthPage({ supabase, setActivePage, isLogin, setIsLogin 
         <div 
             id="auth-page" 
             className="flex items-center justify-center min-h-screen bg-cover bg-center px-4"
-            style={{ backgroundImage: "url('https://indonesia.travel/contentassets/ad62b2d07c3b463694923e90a9701331/borobudur_2.jpg')" }}
+            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1608387371413-f2566ac510e0?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1170')" }}
         >
             <motion.div 
                 className="relative w-full max-w-2xl"

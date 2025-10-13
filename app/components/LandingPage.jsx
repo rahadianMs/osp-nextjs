@@ -98,7 +98,7 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
                     </div>
                 </header>
 
-                <main id="home" className="relative flex items-center min-h-screen px-[5%] py-24 text-white bg-cover bg-center" style={{ backgroundImage: "url('https://indonesia.travel/contentassets/ad62b2d07c3b463694923e90a9701331/borobudur_2.jpg')" }}>
+                <main id="home" className="relative flex items-center min-h-screen px-[5%] py-24 text-white bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1608387371413-f2566ac510e0?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1170')" }}>
                     <div className="absolute inset-0 bg-black opacity-50"></div>
                     <div className="relative z-10 max-w-2xl text-left">
                         <p className="mb-4 text-lg md:text-xl opacity-95">Selamat datang di “Wonderful Indonesia Net Zero Hub”</p>
