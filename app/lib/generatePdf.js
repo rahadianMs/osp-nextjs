@@ -39,7 +39,7 @@ export const generatePdf = async (entry, businessName = 'Nama Usaha Belum Diatur
         
         await new Promise((resolve, reject) => {
             reader.onload = (e) => {
-                doc.addImage(e.target.result, 'JPEG', margin, 12, 18, 18, undefined, 'MEDIUM');
+                doc.addImage(e.target.result, 'PNG', margin, 12, 18, 18, undefined, 'MEDIUM');
                 resolve();
             };
             reader.onerror = reject;
@@ -82,7 +82,8 @@ export const generatePdf = async (entry, businessName = 'Nama Usaha Belum Diatur
     doc.text('Total Estimasi Emisi Karbon', margin + 4, currentY + 9);
     
     doc.setFontSize(14).setFont('helvetica', 'bold');
-    doc.text(`${(entry.total_co2e_kg || 0).toFixed(2)} kg CO2e`, pageWidth - margin - 4, currentY + 10, { align: 'right' });
+    // PERUBAHAN DI SINI
+    doc.text(`${(entry.total_co2e_kg || 0).toFixed(2)} ton CO2e`, pageWidth - margin - 4, currentY + 10, { align: 'right' });
     currentY += 26;
 
     // --- 4. DETAIL PER KATEGORI ---
@@ -94,7 +95,8 @@ export const generatePdf = async (entry, businessName = 'Nama Usaha Belum Diatur
     
     if (entry.electricity_co2e > 0 && entry.electricity_details) {
         doc.setFontSize(detailFontSize).setFont('helvetica', 'bold');
-        doc.text(`• Listrik: ${entry.electricity_co2e.toFixed(2)} kg CO2e`, margin, currentY);
+        // PERUBAHAN DI SINI
+        doc.text(`• Listrik: ${entry.electricity_co2e.toFixed(2)} ton CO2e`, margin, currentY);
         currentY += 5;
         doc.setFont('helvetica', 'normal');
         doc.text(`  - Konsumsi: ${entry.electricity_details.kwh} kWh`, margin + 3, currentY);
@@ -103,33 +105,34 @@ export const generatePdf = async (entry, businessName = 'Nama Usaha Belum Diatur
 
     if (entry.transport_co2e > 0 && entry.transport_details) {
         doc.setFontSize(detailFontSize).setFont('helvetica', 'bold');
-        doc.text(`• Transportasi: ${entry.transport_co2e.toFixed(2)} kg CO2e`, margin, currentY);
+        // PERUBAHAN DI SINI
+        doc.text(`• Transportasi: ${entry.transport_co2e.toFixed(2)} ton CO2e`, margin, currentY);
         currentY += 5;
         doc.setFont('helvetica', 'normal');
         entry.transport_details.forEach(v => {
-            doc.text(`  - ${formatName(v.type, 'transport')} (x${v.quantity || 1}): ${v.km} km, ${v.frequency}x / minggu`, margin + 3, currentY);
+            // PERUBAHAN DI SINI
+            doc.text(`  - ${formatName(v.type, 'transport')}: ${v.km} km, ${v.frequency}x / bulan`, margin + 3, currentY);
             currentY += 5;
         });
         currentY += 2;
     }
 
-    // --- PERBAIKAN DI SINI ---
     if (entry.waste_co2e > 0 && entry.waste_details) {
         doc.setFontSize(detailFontSize).setFont('helvetica', 'bold');
-        doc.text(`• Sampah: ${entry.waste_co2e.toFixed(2)} kg CO2e`, margin, currentY);
+        // PERUBAHAN DI SINI
+        doc.text(`• Sampah: ${entry.waste_co2e.toFixed(2)} ton CO2e`, margin, currentY);
         currentY += 5;
         doc.setFont('helvetica', 'normal');
         
-        // Cek struktur baru (objek dengan properti 'items')
         if (entry.waste_details.items && Array.isArray(entry.waste_details.items)) {
             entry.waste_details.items.forEach(item => {
                 doc.text(`  - ${formatName(item.type, 'waste')}: ${item.weight} ton`, margin + 3, currentY);
                 currentY += 5;
             });
         } 
-        // Fallback untuk struktur lama (array)
         else if (Array.isArray(entry.waste_details)) {
             entry.waste_details.forEach(item => {
+                // Mengasumsikan data lama dalam kg, jika perlu konversi bisa ditambahkan di sini
                 doc.text(`  - ${formatName(item.type, 'waste')}: ${item.weight} kg`, margin + 3, currentY);
                 currentY += 5;
             });

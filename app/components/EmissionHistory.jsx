@@ -3,7 +3,6 @@ import { BoltIcon, TransportIcon, TrashCanIcon } from './Icons';
 const ChevronRightIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" /></svg>;
 
 export default function EmissionHistory({ entries, loading, error, onReportClick }) {
-    // ... (kode lainnya tetap sama)
     if (loading) {
         return (
             <div>
@@ -45,7 +44,7 @@ export default function EmissionHistory({ entries, loading, error, onReportClick
                                 <div className="flex items-center gap-4">
                                     <div className="text-right">
                                         <p className="text-2xl font-bold text-[#348567]">{entry.total_co2e_kg.toFixed(2)}</p>
-                                        <p className="text-sm text-slate-500 -mt-1">kg CO₂e</p>
+                                        <p className="text-sm text-slate-500 -mt-1">ton CO₂e</p>
                                     </div>
                                     <ChevronRightIcon className="text-slate-400" />
                                 </div>
@@ -54,15 +53,15 @@ export default function EmissionHistory({ entries, loading, error, onReportClick
                             <div className="grid grid-cols-3 gap-4 text-sm items-center">
                                 <div className="flex items-center gap-3 text-slate-600">
                                     <BoltIcon className="w-8 h-8 text-slate-500" />
-                                    <span className="font-medium">{(entry.electricity_co2e || 0).toFixed(2)} kg</span>
+                                    <span className="font-medium">{(entry.electricity_co2e || 0).toFixed(2)} ton</span>
                                 </div>
                                 <div className="flex items-center gap-3 text-slate-600">
                                     <TransportIcon className="w-8 h-8 text-slate-500" />
-                                    <span className="font-medium">{(entry.transport_co2e || 0).toFixed(2)} kg</span>
+                                    <span className="font-medium">{(entry.transport_co2e || 0).toFixed(2)} ton</span>
                                 </div>
                                 <div className="flex items-center gap-3 text-slate-600">
                                     <TrashCanIcon className="w-8 h-8 text-slate-500" />
-                                    <span className="font-medium">{(entry.waste_co2e || 0).toFixed(2)} kg</span>
+                                    <span className="font-medium">{(entry.waste_co2e || 0).toFixed(2)} ton</span>
                                 </div>
                             </div>
                         </button>

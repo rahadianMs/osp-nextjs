@@ -1,43 +1,68 @@
 "use client";
 import { useState, useEffect } from 'react';
-import { generateCertificatePdf } from '../lib/generateCertificatePdf'; // Impor fungsi PDF
+import { generateCertificatePdf } from '../lib/generateCertificatePdf';
 
-// --- Komponen Halaman Sertifikasi ---
+// Komponen Halaman Sertifikasi
 export default function SertifikasiPage({ supabase, user }) {
     const [isEligible, setIsEligible] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isDownloading, setIsDownloading] = useState(false);
     const [businessName, setBusinessName] = useState("Nama Bisnis Anda");
 
-    // Cek kelayakan pengguna
+    // Cek kelayakan dan ambil nama bisnis
     useEffect(() => {
-        const checkEligibility = async () => {
-            if (!user) return;
+        const checkData = async () => {
+            if (!user) {
+                setIsLoading(false);
+                return;
+            }
             
-            const { data: { user: userData } } = await supabase.auth.getUser();
-            setBusinessName(userData?.user_metadata?.business_name || "Nama Bisnis Anda");
+            setIsLoading(true);
+            try {
+                // 1. Ambil nama bisnis dari tabel profiles
+                const { data: profileData, error: profileError } = await supabase
+                    .from('profiles')
+                    .select('business_name')
+                    .eq('id', user.id)
+                    .single();
 
-            const { data: entries, error } = await supabase
-                .from('carbon_entries')
-                .select('electricity_co2e, waste_co2e, transport_co2e')
-                .eq('user_id', user.id)
-                .order('created_at', { ascending: false })
-                .limit(1);
+                if (profileError && profileError.code !== 'PGRST116') throw profileError;
+                
+                if (profileData?.business_name) {
+                    setBusinessName(profileData.business_name);
+                } else if (user.user_metadata?.business_name) {
+                    // Fallback ke metadata lama jika ada
+                    setBusinessName(user.user_metadata.business_name);
+                }
 
-            if (error || !entries || entries.length === 0) {
-                setIsEligible(false);
-            } else {
-                const lastEntry = entries[0];
-                if (lastEntry.electricity_co2e > 0 && lastEntry.waste_co2e > 0 && lastEntry.transport_co2e > 0) {
+                // 2. Cek kelayakan untuk sertifikat
+                const { data: entries, error: entriesError } = await supabase
+                    .from('carbon_entries')
+                    .select('electricity_co2e, waste_co2e, transport_co2e')
+                    .eq('user_id', user.id)
+                    .gt('electricity_co2e', 0)
+                    .gt('waste_co2e', 0)
+                    .gt('transport_co2e', 0)
+                    .limit(1);
+
+                if (entriesError) throw entriesError;
+
+                // Jika ada setidaknya satu laporan yang memenuhi syarat, pengguna berhak
+                if (entries && entries.length > 0) {
                     setIsEligible(true);
                 } else {
                     setIsEligible(false);
                 }
+
+            } catch (error) {
+                console.error("Error checking eligibility:", error);
+                setIsEligible(false);
+            } finally {
+                setIsLoading(false);
             }
-            setIsLoading(false);
         };
 
-        checkEligibility();
+        checkData();
     }, [supabase, user]);
 
     // Fungsi untuk memanggil pembuatan PDF
@@ -52,7 +77,7 @@ export default function SertifikasiPage({ supabase, user }) {
     const generateCertNumber = () => {
         const date = new Date();
         const ddmmyyyy = `${date.getDate().toString().padStart(2, '0')}${(date.getMonth() + 1).toString().padStart(2, '0')}${date.getFullYear()}`;
-        const randomChars = "BVGFHRY"; // Contoh statis untuk konsistensi pratinjau
+        const randomChars = "BVGFHRY";
         return `${randomChars}-${ddmmyyyy}`;
     };
 
@@ -64,7 +89,7 @@ export default function SertifikasiPage({ supabase, user }) {
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-                {/* Kolom Kiri: Pratinjau Sertifikat (Visual JSX) */}
+                {/* Kolom Kiri: Pratinjau Sertifikat */}
                 <div className="bg-white p-4 aspect-[1/1.414] shadow-lg flex flex-col relative overflow-hidden">
                     <div className="absolute top-0 left-0 h-full w-12 bg-[#00A79D]"></div>
                     <div className="absolute top-0 right-0 h-16 w-full bg-[#E0F2F1]"></div>
@@ -100,15 +125,14 @@ export default function SertifikasiPage({ supabase, user }) {
                 <div className="space-y-6">
                     <h2 className="text-3xl font-bold text-slate-800">Unduh Sertifikat Anda</h2>
                     <p className="text-slate-600">
-                        Sertifikat ini adalah bukti nyata dari partisipasi dan komitmen Anda dalam program dekarbonisasi pariwisata. Untuk dapat mengunduh, Anda harus terlebih dahulu melengkapi laporan emisi bulanan untuk ketiga kategori: Listrik, Transportasi, dan Limbah.
+                        Sertifikat ini adalah bukti nyata dari partisipasi dan komitmen Anda dalam program dekarbonisasi pariwisata. Untuk dapat mengunduh, Anda harus terlebih dahulu memiliki setidaknya satu laporan emisi yang sudah mencakup ketiga kategori: Listrik, Transportasi, dan Limbah.
                     </p>
                     
                     <div className="relative w-full group">
-                        {/* --- PERUBAHAN DI SINI --- */}
                         <button 
                             onClick={handleDownload}
                             disabled={!isEligible || isLoading || isDownloading}
-                            className="w-full py-4 text-lg font-semibold text-white bg-slate-400 rounded-lg transition-colors enabled:hover:bg-[#22543d] disabled:cursor-not-allowed"
+                            className={`w-full py-4 text-lg font-semibold text-white rounded-lg transition-colors ${isEligible ? 'bg-[#22543d] hover:bg-[#1c4532]' : 'bg-slate-400 cursor-not-allowed'}`}
                         >
                             {isLoading ? 'Memeriksa Kelayakan...' : (isDownloading ? 'Membuat PDF...' : 'Unduh Sertifikat (.pdf)')}
                         </button>

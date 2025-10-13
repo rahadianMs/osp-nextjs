@@ -2,41 +2,49 @@
 
 import { useState } from 'react';
 
-// --- DATA FAKTOR EMISI (diupdate sesuai dokumen) ---
+// --- DATA FAKTOR EMISI (diupdate sesuai permintaan) ---
 
+// Dipecah per provinsi, satuan diubah ke ton CO2e / kWh
 const ELECTRICITY_EMISSION_FACTORS = {
-    "Jamali": { city: "Jakarta, Bandung, Surabaya, Semarang", factor: 0.80 },
-    "3 Nusa": { city: "Denpasar (Bali)", factor: 0.52 },
-    "Sumatera": { city: "Medan, Palembang, Padang, Pekanbaru", factor: 0.77 },
-    "Sulselbar": { city: "Makassar", factor: 0.73 },
-    "Sulutgo": { city: "Manado", factor: 0.67 },
-    "Barito": { city: "Banjarmasin", factor: 1.20 },
-    "Khatulistiwa": { city: "Pontianak", factor: 1.67 },
-    "Mahakam": { city: "Balikpapan, Samarinda", factor: 1.12 },
-    "Jayapura": { city: "Jayapura", factor: 0.50 },
-    "Ambon": { city: "Ambon", factor: 0.65 },
-    "Batam-Tanjung Pinang": { city: "Batam", factor: 0.76 },
-    "Lombok": { city: "Lombok", factor: 1.27 },
-    "Sorong": { city: "Sorong", factor: 0.56 },
-    "Kendari": { city: "Kendari", factor: 0.87 },
-    "Bangka": { city: "Bangka", factor: 1.04 },
-    "Belitung": { city: "Belitung", factor: 1.40 },
-    "Timor": { city: "Nusa Tenggara Timur (Kupang)", factor: 0.79 },
-    "Ternate - Tidore": { city: "Ternate", factor: 0.42 },
-    "Kota Bani": { city: "Bengkulu", factor: 0.70 },
-    "Buli (Halmahera Timur)": { city: "Maluku Utara (lainnya)", factor: 0.65 }
+    "DKI Jakarta": { factor: 0.00080 },
+    "Jawa Barat": { factor: 0.00080 },
+    "Banten": { factor: 0.00080 },
+    "Jawa Tengah": { factor: 0.00080 },
+    "DI Yogyakarta": { factor: 0.00080 },
+    "Jawa Timur": { factor: 0.00080 },
+    "Bali": { factor: 0.00052 },
+    "Sumatera Utara": { factor: 0.00077 },
+    "Sumatera Selatan": { factor: 0.00077 },
+    "Sumatera Barat": { factor: 0.00077 },
+    "Riau": { factor: 0.00077 },
+    "Sulawesi Selatan": { factor: 0.00073 },
+    "Sulawesi Utara": { factor: 0.00067 },
+    "Gorontalo": { factor: 0.00067 },
+    "Kalimantan Selatan": { factor: 0.00120 },
+    "Kalimantan Barat": { factor: 0.00167 },
+    "Kalimantan Timur": { factor: 0.00112 },
+    "Papua": { factor: 0.00050 },
+    "Maluku": { factor: 0.00065 },
+    "Kepulauan Riau": { factor: 0.00076 },
+    "Nusa Tenggara Barat": { factor: 0.00127 },
+    "Papua Barat": { factor: 0.00056 },
+    "Sulawesi Tenggara": { factor: 0.00087 },
+    "Kepulauan Bangka Belitung": { factor: 0.00104 },
+    "Nusa Tenggara Timur": { factor: 0.00079 },
+    "Maluku Utara": { factor: 0.00042 },
+    "Bengkulu": { factor: 0.00070 },
 };
 
-// --- DATA BARU: Faktor Emisi Limbah (kg CO2e / ton) ---
+// Faktor emisi limbah (ton CO2e / ton limbah)
 const WASTE_EMISSION_FACTORS = {
-    food_waste: { name: 'Limbah makanan & minuman', treatments: { recycled: null, combustion: 6.41061, composting: 8.88386, landfill: 700.20961 } },
-    garden_waste: { name: 'Limbah taman', treatments: { recycled: 6.41061, combustion: 6.41061, composting: 8.88386, landfill: 646.60632 } },
-    plastic: { name: 'Plastik', treatments: { recycled: 6.41061, combustion: 6.41061, composting: null, landfill: 8.88386 } },
-    paper_cardboard: { name: 'Kertas dan Karton', treatments: { recycled: 6.41061, combustion: 6.41061, composting: 8.88386, landfill: 1164.39015 } },
-    metal: { name: 'Logam', treatments: { recycled: 6.41061, combustion: 6.41061, composting: null, landfill: 8.88386 } },
-    glass: { name: 'Kaca', treatments: { recycled: 6.41061, combustion: 6.41061, composting: null, landfill: 8.88386 } },
-    electronics: { name: 'Alat Elektronik', treatments: { recycled: 6.41061, combustion: 6.41061, composting: null, landfill: 8.88386 } },
-    fabric: { name: 'Kain', treatments: { recycled: 6.41061, combustion: 6.41061, composting: 496.68303, landfill: null } },
+    food_waste: { name: 'Limbah makanan & minuman', treatments: { recycled: null, combustion: 0.00641061, composting: 0.00888386, landfill: 0.70020961 } },
+    garden_waste: { name: 'Limbah taman', treatments: { recycled: 0.00641061, combustion: 0.00641061, composting: 0.00888386, landfill: 0.64660632 } },
+    plastic: { name: 'Plastik', treatments: { recycled: 0.00641061, combustion: 0.00641061, composting: null, landfill: 0.00888386 } },
+    paper_cardboard: { name: 'Kertas dan Karton', treatments: { recycled: 0.00641061, combustion: 0.00641061, composting: 0.00888386, landfill: 1.16439015 } },
+    metal: { name: 'Logam', treatments: { recycled: 0.00641061, combustion: 0.00641061, composting: null, landfill: 0.00888386 } },
+    glass: { name: 'Kaca', treatments: { recycled: 0.00641061, combustion: 0.00641061, composting: null, landfill: 0.00888386 } },
+    electronics: { name: 'Alat Elektronik', treatments: { recycled: 0.00641061, combustion: 0.00641061, composting: null, landfill: 0.00888386 } },
+    fabric: { name: 'Kain', treatments: { recycled: 0.00641061, combustion: 0.00641061, composting: 0.49668303, landfill: null } },
 };
 
 const WASTE_TREATMENTS = {
@@ -46,12 +54,10 @@ const WASTE_TREATMENTS = {
     landfill: 'Tempat Pembuangan Akhir (TPA)'
 };
 
-
+// Faktor emisi transportasi (ton CO2e / km)
 const TRANSPORT_EMISSION_FACTORS = {
-    diesel: 0.16984, petrol: 0.1645, motorcycle: 0.11367
+    diesel: 0.00016984, petrol: 0.0001645, motorcycle: 0.00011367
 };
-
-const WEEKS_IN_MONTH = 4.345;
 
 export default function CarbonCalculator({ supabase, user, onReportSubmitted }) {
     const [activeTab, setActiveTab] = useState('electricity');
@@ -60,26 +66,16 @@ export default function CarbonCalculator({ supabase, user, onReportSubmitted }) 
     const [message, setMessage] = useState({ type: '', text: '' });
     const [calculationResult, setCalculationResult] = useState(null);
 
-    // State untuk Listrik
-    const [electricity, setElectricity] = useState({ kwh: '', location: 'Jamali', area: '', occupiedNights: '' });
-
-    // State untuk Transportasi
-    const [vehicles, setVehicles] = useState([{ id: Date.now(), type: 'petrol', km: '', frequency: '', quantity: 1 }]);
-    
-    // --- State Baru untuk Limbah ---
+    const [electricity, setElectricity] = useState({ kwh: '', location: 'DKI Jakarta', area: '', occupiedNights: '' });
+    const [vehicles, setVehicles] = useState([{ id: Date.now(), type: 'petrol', km: '', frequency: '' }]);
     const [wasteItems, setWasteItems] = useState([{ id: Date.now(), type: 'food_waste', treatment: 'landfill', weight: '' }]);
 
-
-    // --- Helper Functions ---
     const handleElectricityChange = (field, value) => setElectricity(prev => ({ ...prev, [field]: value }));
-    const handleAddVehicle = () => setVehicles([...vehicles, { id: Date.now(), type: 'petrol', km: '', frequency: '', quantity: 1 }]);
+    const handleAddVehicle = () => setVehicles([...vehicles, { id: Date.now(), type: 'petrol', km: '', frequency: '' }]);
     const handleRemoveVehicle = (id) => setVehicles(vehicles.filter(v => v.id !== id));
     const handleVehicleChange = (id, field, value) => setVehicles(vehicles.map(v => v.id === id ? { ...v, [field]: value } : v));
     
-    // --- Helper Baru untuk Limbah ---
-    const handleAddWasteItem = () => {
-        setWasteItems([...wasteItems, { id: Date.now(), type: 'food_waste', treatment: 'landfill', weight: '' }]);
-    };
+    const handleAddWasteItem = () => setWasteItems([...wasteItems, { id: Date.now(), type: 'food_waste', treatment: 'landfill', weight: '' }]);
     const handleRemoveWasteItem = (id) => setWasteItems(wasteItems.filter(i => i.id !== id));
     const handleWasteChange = (id, field, value) => {
         setWasteItems(wasteItems.map(item => {
@@ -97,14 +93,12 @@ export default function CarbonCalculator({ supabase, user, onReportSubmitted }) 
         }));
     };
 
-    // --- FUNGSI BARU UNTUK PERBAIKAN BUG ---
     const handleTabChange = (tab) => {
         setActiveTab(tab);
-        setCalculationResult(null); // Membersihkan hasil kalkulasi sebelumnya
-        setMessage({ type: '', text: '' }); // Membersihkan pesan sukses/error
+        setCalculationResult(null);
+        setMessage({ type: '', text: '' });
     };
 
-    // --- Fungsi utama untuk submit data (diperbarui) ---
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -127,9 +121,10 @@ export default function CarbonCalculator({ supabase, user, onReportSubmitted }) 
             const area = parseFloat(electricity.area) || 0;
             const occupiedNights = parseFloat(electricity.occupiedNights) || 0;
             const emissionFactor = ELECTRICITY_EMISSION_FACTORS[electricity.location]?.factor || 0;
-            const totalEmission = kwh * emissionFactor;
-            const areaIntensity = area > 0 ? totalEmission / area : 0;
-            const occupancyIntensity = occupiedNights > 0 ? totalEmission / occupiedNights : 0;
+            const totalEmission = kwh * emissionFactor; // Hasil sudah dalam ton
+            const areaIntensity = area > 0 ? (totalEmission * 1000) / area : 0; // Intensitas tetap dalam kg/m²
+            const occupancyIntensity = occupiedNights > 0 ? (totalEmission * 1000) / occupiedNights : 0; // Intensitas tetap dalam kg/kamar
+            
             newData.electricity_co2e = totalEmission;
             newData.electricity_details = { kwh, location: electricity.location, area, occupiedNights, emissionFactor, areaIntensity, occupancyIntensity };
             setCalculationResult({ totalEmission, areaIntensity, occupancyIntensity });
@@ -139,29 +134,21 @@ export default function CarbonCalculator({ supabase, user, onReportSubmitted }) 
             const detailedWasteItems = wasteItems.map(item => {
                 const weight = parseFloat(item.weight) || 0;
                 const factor = WASTE_EMISSION_FACTORS[item.type]?.treatments[item.treatment] || 0;
-                const emission = weight * factor;
+                const emission = weight * factor; // Hasil sudah dalam ton
                 totalWasteCo2e += emission;
                 return { ...item, weight, factor, emission };
             }).filter(item => item.weight > 0);
 
-            const annualProjection = totalWasteCo2e * 12;
-
             newData.waste_co2e = totalWasteCo2e;
-            newData.waste_details = {
-                items: detailedWasteItems,
-                monthlyTotal: totalWasteCo2e,
-                annualProjection: annualProjection
-            };
-
-            setCalculationResult({ items: detailedWasteItems, monthlyTotal: totalWasteCo2e, annualProjection });
+            newData.waste_details = { items: detailedWasteItems };
+            setCalculationResult({ items: detailedWasteItems, monthlyTotal: totalWasteCo2e });
 
         } else if (activeTab === 'transport') {
             let totalTransportCo2e = 0;
             vehicles.forEach(v => {
                 const km = parseFloat(v.km) || 0;
-                const frequency = parseFloat(v.frequency) || 0;
-                const quantity = parseInt(v.quantity, 10) || 1;
-                totalTransportCo2e += km * (TRANSPORT_EMISSION_FACTORS[v.type] || 0) * frequency * WEEKS_IN_MONTH * quantity;
+                const frequency = parseFloat(v.frequency) || 0; // Ini sekarang frekuensi bulanan
+                totalTransportCo2e += km * (TRANSPORT_EMISSION_FACTORS[v.type] || 0) * frequency;
             });
             newData.transport_co2e = totalTransportCo2e;
             newData.transport_details = vehicles;
@@ -180,9 +167,9 @@ export default function CarbonCalculator({ supabase, user, onReportSubmitted }) 
             setMessage({ type: 'error', text: `Gagal menyimpan laporan: ${submissionError.message}` });
         } else {
             setMessage({ type: 'success', text: `Sukses! Data ${activeTab} untuk ${monthName} telah disimpan.` });
-            if (activeTab === 'electricity') setElectricity({ kwh: '', location: 'Jamali', area: '', occupiedNights: '' });
+            if (activeTab === 'electricity') setElectricity({ kwh: '', location: 'DKI Jakarta', area: '', occupiedNights: '' });
             if (activeTab === 'waste') setWasteItems([{ id: Date.now(), type: 'food_waste', treatment: 'landfill', weight: '' }]);
-            if (activeTab === 'transport') setVehicles([{ id: Date.now(), type: 'petrol', km: '', frequency: '', quantity: 1 }]);
+            if (activeTab === 'transport') setVehicles([{ id: Date.now(), type: 'petrol', km: '', frequency: '' }]);
             if (onReportSubmitted) onReportSubmitted();
         }
         setLoading(false);
@@ -194,10 +181,10 @@ export default function CarbonCalculator({ supabase, user, onReportSubmitted }) 
                 return (
                     <div className="space-y-4">
                         <div>
-                            <label htmlFor="location" className="block text-sm font-medium text-slate-700 mb-1">1. Lokasi Properti</label>
+                            <label htmlFor="location" className="block text-sm font-medium text-slate-700 mb-1">1. Lokasi Properti (Provinsi)</label>
                             <select id="location" value={electricity.location} onChange={(e) => handleElectricityChange('location', e.target.value)} className="w-full p-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348567]">
-                                {Object.entries(ELECTRICITY_EMISSION_FACTORS).map(([grid, { city }]) => (
-                                    <option key={grid} value={grid}>{city} ({grid})</option>
+                                {Object.keys(ELECTRICITY_EMISSION_FACTORS).map((province) => (
+                                    <option key={province} value={province}>{province}</option>
                                 ))}
                             </select>
                         </div>
@@ -219,9 +206,9 @@ export default function CarbonCalculator({ supabase, user, onReportSubmitted }) 
                                  <p className="text-xs text-slate-500 mt-1">Total luas lantai yang menggunakan listrik.</p>
                             </div>
                             <div>
-                                <label htmlFor="occupiedNights" className="block text-sm font-medium text-slate-700 mb-1">4. Total Malam Kamar Terokupansi</label>
+                                <label htmlFor="occupiedNights" className="block text-sm font-medium text-slate-700 mb-1">4. Total Malam Kamar Terokupansi (Occupied Room Nights)</label>
                                 <input type="number" id="occupiedNights" value={electricity.occupiedNights} onChange={(e) => handleElectricityChange('occupiedNights', e.target.value)} placeholder="e.g., 60000" required className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348567]" />
-                                <p className="text-xs text-slate-500 mt-1">Jumlah total kamar yang terjual/terisi.</p>
+                                <p className="text-xs text-slate-500 mt-1">Jumlah total kamar yang terjual/terisi dalam sebulan.</p>
                             </div>
                         </div>
                     </div>
@@ -230,8 +217,8 @@ export default function CarbonCalculator({ supabase, user, onReportSubmitted }) 
                 return (
                     <div className="space-y-4">
                         {vehicles.map((vehicle) => (
-                            <div key={vehicle.id} className="grid grid-cols-2 md:grid-cols-5 gap-4 items-end p-4 border rounded-lg bg-slate-50">
-                                <div className="md:col-span-1">
+                            <div key={vehicle.id} className="grid grid-cols-1 md:grid-cols-7 gap-4 items-start p-4 border rounded-lg bg-slate-50">
+                                <div className="md:col-span-2">
                                     <label className="block text-xs font-medium text-slate-600 mb-1">Jenis Kendaraan</label>
                                     <select value={vehicle.type} onChange={(e) => handleVehicleChange(vehicle.id, 'type', e.target.value)} className="w-full p-2 border border-slate-300 rounded-lg text-sm">
                                         <option value="petrol">Mobil Bensin</option>
@@ -239,24 +226,19 @@ export default function CarbonCalculator({ supabase, user, onReportSubmitted }) 
                                         <option value="motorcycle">Motor</option>
                                     </select>
                                 </div>
-                                <div className="md:col-span-1">
+                                <div className="md:col-span-2">
                                     <label className="block text-xs font-medium text-slate-600 mb-1">Jarak Tempuh</label>
                                     <input type="number" placeholder="0" value={vehicle.km} onChange={(e) => handleVehicleChange(vehicle.id, 'km', e.target.value)} className="w-full p-2 border border-slate-300 rounded-lg text-sm" />
                                      <span className="text-xs text-slate-500">km / penggunaan</span>
                                 </div>
-                                <div className="md:col-span-1">
+                                <div className="md:col-span-2">
                                     <label className="block text-xs font-medium text-slate-600 mb-1">Frekuensi</label>
                                     <input type="number" placeholder="0" value={vehicle.frequency} onChange={(e) => handleVehicleChange(vehicle.id, 'frequency', e.target.value)} className="w-full p-2 border border-slate-300 rounded-lg text-sm" />
-                                     <span className="text-xs text-slate-500">Total penggunaan/minggu</span>
+                                     <span className="text-xs text-slate-500">Total penggunaan/bulan</span>
                                 </div>
-                                <div className="md:col-span-1">
-                                    <label className="block text-xs font-medium text-slate-600 mb-1">Jumlah</label>
-                                    <input type="number" placeholder="1" min="1" value={vehicle.quantity} onChange={(e) => handleVehicleChange(vehicle.id, 'quantity', e.target.value)} className="w-full p-2 border border-slate-300 rounded-lg text-sm" />
-                                     <span className="text-xs text-slate-500">unit</span>
-                                </div>
-                                <div className="col-span-2 md:col-span-1 flex justify-end">
+                                <div className="md:col-span-1 flex items-end justify-end h-full">
                                     {vehicles.length > 1 && (
-                                        <button type="button" onClick={() => handleRemoveVehicle(vehicle.id)} className="text-red-500 hover:text-red-700 text-sm font-semibold">Hapus</button>
+                                        <button type="button" onClick={() => handleRemoveVehicle(vehicle.id)} className="text-red-500 hover:text-red-700 text-sm font-semibold p-2">Hapus</button>
                                     )}
                                 </div>
                             </div>
@@ -325,7 +307,6 @@ export default function CarbonCalculator({ supabase, user, onReportSubmitted }) 
                 </div>
                 <div className="mb-6">
                     <div className="flex border-b border-slate-200">
-                        {/* --- PERUBAHAN DI SINI: Menggunakan handleTabChange --- */}
                         <button type="button" onClick={() => handleTabChange('electricity')} className={`px-4 py-2 text-sm font-medium ${activeTab === 'electricity' ? 'border-b-2 border-[#348567] text-[#348567]' : 'text-slate-500'}`}>Listrik</button>
                         <button type="button" onClick={() => handleTabChange('transport')} className={`px-4 py-2 text-sm font-medium ${activeTab === 'transport' ? 'border-b-2 border-[#348567] text-[#348567]' : 'text-slate-500'}`}>Transportasi</button>
                         <button type="button" onClick={() => handleTabChange('waste')} className={`px-4 py-2 text-sm font-medium ${activeTab === 'waste' ? 'border-b-2 border-[#348567] text-[#348567]' : 'text-slate-500'}`}>Limbah</button>
@@ -345,7 +326,7 @@ export default function CarbonCalculator({ supabase, user, onReportSubmitted }) 
                 <div className="mt-6 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
                     <h3 className="font-bold text-lg text-emerald-800 mb-2">Hasil Analisis Jejak Karbon Listrik</h3>
                     <div className="space-y-2 text-sm text-slate-700">
-                        <p><strong>Total Emisi dari Listrik:</strong> <span className="font-semibold text-emerald-700">{calculationResult.totalEmission.toFixed(2)} kg CO₂e</span></p>
+                        <p><strong>Total Emisi dari Listrik:</strong> <span className="font-semibold text-emerald-700">{calculationResult.totalEmission.toFixed(2)} ton CO₂e</span></p>
                         <hr className="my-2"/>
                         <p className="font-semibold">Intensitas Karbon Properti Anda:</p>
                         <ul className="list-disc list-inside pl-2">
@@ -359,28 +340,7 @@ export default function CarbonCalculator({ supabase, user, onReportSubmitted }) 
             {calculationResult && activeTab === 'waste' && (
                  <div className="mt-6 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
                     <h3 className="font-bold text-lg text-emerald-800 mb-2">Hasil Analisis Jejak Karbon dari Limbah</h3>
-                    <div className="space-y-3 text-sm text-slate-700">
-                        <div>
-                            <p><strong>Total Emisi Bulan Ini:</strong></p> 
-                            <p className="font-bold text-xl text-emerald-700">{calculationResult.monthlyTotal.toFixed(2)} kg CO₂e</p>
-                        </div>
-                        <hr/>
-                        <div>
-                            <p className="font-semibold">Rincian Emisi per Jenis Limbah:</p>
-                            <ul className="list-disc list-inside pl-2 mt-1 space-y-1">
-                                {calculationResult.items.map(item => (
-                                    <li key={item.id}>
-                                        {WASTE_EMISSION_FACTORS[item.type].name} ({WASTE_TREATMENTS[item.treatment]}): <span className="font-semibold">{item.emission.toFixed(2)} kg CO₂e</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                         <hr/>
-                        <div>
-                             <p><strong>Proyeksi Emisi Tahunan dari Limbah:</strong></p>
-                             <p className="font-bold text-xl text-emerald-700">{calculationResult.annualProjection.toFixed(2)} kg CO₂e</p>
-                        </div>
-                    </div>
+                    <p className="font-bold text-xl text-emerald-700">{calculationResult.monthlyTotal.toFixed(2)} ton CO₂e</p>
                 </div>
             )}
         </div>

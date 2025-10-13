@@ -9,19 +9,20 @@ import EmissionReportPage from './EmissionReportPage';
 import DashboardSummary from './DashboardSummary';
 import DashboardPieChart from './DashboardPieChart';
 import DashboardTrends from './DashboardTrends';
-import ProfilUsahaPage from './ProfilUsahaPage'; // Pastikan ini diimpor
+import ProfilUsahaPage from './ProfilUsahaPage';
 import NotificationPage from './NotificationPage';
 import AboutPage from './AboutPage';
-import AccountPage from './AccountPage'; // Ini sekarang halaman edit
+import AccountPage from './AccountPage';
 import FaqPage from './FaqPage';
 import SertifikasiPage from './SertifikasiPage';
 import PembelajaranPage from './PembelajaranPage';
 import PanduanPage from './PanduanPage';
+import SustainabilityPage from './SustainabilityPage'; // Impor halaman baru
 
 import {
     HomeIcon, BellIcon, ChartPieIcon, BuildingOfficeIcon,
     DocumentChartBarIcon, PlusCircleIcon, AcademicCapIcon,
-    QuestionMarkCircleIcon, UserCircleIcon
+    QuestionMarkCircleIcon, UserCircleIcon, BookOpenIcon // Tambahkan BookOpenIcon jika belum ada
 } from './Icons.jsx';
 
 // Komponen PageContent yang mengatur halaman mana yang tampil
@@ -41,9 +42,11 @@ const PageContent = ({ activeDashboardPage, setActiveDashboardPage, supabase, us
             );
         case 'laporan-emisi':
             return <EmissionReportPage supabase={supabase} user={user} onDataUpdate={onDataUpdate} />;
+        // --- ROUTE BARU ---
+        case 'laporan-keberlanjutan':
+            return <SustainabilityPage supabase={supabase} user={user} />;
         case 'notifikasi':
             return <NotificationPage />;
-        // PERUBAHAN DI SINI
         case 'profil-usaha':
             return <ProfilUsahaPage user={user} supabase={supabase} setActiveDashboardPage={setActiveDashboardPage} />;
         case 'sertifikasi':
@@ -54,7 +57,6 @@ const PageContent = ({ activeDashboardPage, setActiveDashboardPage, supabase, us
             return <PanduanPage />;
         case 'tentang':
             return <AboutPage />;
-        // 'akun' sekarang menjadi halaman edit
         case 'akun':
             return <AccountPage user={user} supabase={supabase} />;
         case 'faq':
@@ -81,13 +83,14 @@ export default function Dashboard({
 
     const handleDataUpdate = () => setDataVersion(Date.now());
 
-    // PERUBAHAN: 'Akun' sekarang berada di dropdown pengguna, 'Profil Usaha' ada di sidebar
+    // --- PENAMBAHAN MENU SIDEBAR DI SINI ---
     const sidebarLinks = [
         { id: 'beranda', text: 'Beranda', icon: <HomeIcon /> },
         { id: 'notifikasi', text: 'Notifikasi', icon: <BellIcon /> },
         { id: 'dashboard-utama', text: 'Dasbor Utama', icon: <ChartPieIcon /> },
         { id: 'profil-usaha', text: 'Profil Usaha', icon: <BuildingOfficeIcon /> },
         { id: 'laporan-emisi', text: 'Laporan Emisi', icon: <DocumentChartBarIcon /> },
+        { id: 'laporan-keberlanjutan', text: 'Laporan Keberlanjutan', icon: <BookOpenIcon /> },
         { id: 'sertifikasi', text: 'Sertifikasi', icon: <PlusCircleIcon /> },
         { id: 'pembelajaran', text: 'Pembelajaran', icon: <AcademicCapIcon /> },
         { id: 'panduan', text: 'Panduan', icon: <QuestionMarkCircleIcon /> },

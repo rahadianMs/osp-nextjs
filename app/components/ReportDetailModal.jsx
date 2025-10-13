@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { generatePdf } from '../lib/generatePdf';
 
-// --- Data Konstanta untuk Nama Tampilan ---
 const WASTE_EMISSION_FACTORS = {
     food_waste: { name: 'Limbah makanan & minuman' },
     garden_waste: { name: 'Limbah taman' },
@@ -44,27 +43,14 @@ export default function ReportDetailModal({ entry, onClose, onDelete }) {
         setIsDownloading(false);
     };
 
-    // Helper untuk render detail limbah
     const renderWasteDetails = (details) => {
-        // Cek struktur lama (array) vs struktur baru (objek)
-        if (Array.isArray(details)) { // Struktur lama
-            return (
-                <ul className="space-y-1 text-sm text-slate-600">
-                    {details.map(item => (
-                        <li key={item.id} className="flex justify-between items-center border-t pt-2 first:border-t-0">
-                            <span>{item.type}</span>
-                            <span className="font-semibold">{item.weight} kg</span>
-                        </li>
-                    ))}
-                </ul>
-            );
-        } else if (details && details.items) { // Struktur baru
+        if (details && details.items) {
             return (
                  <ul className="space-y-2 text-sm text-slate-600">
                     <li className="grid grid-cols-3 gap-2 font-semibold text-xs text-slate-500">
                         <span>Jenis Limbah</span>
                         <span className="text-center">Pengolahan</span>
-                        <span className="text-right">Emisi (kg CO₂e)</span>
+                        <span className="text-right">Emisi (ton CO₂e)</span>
                     </li>
                     {details.items.map(item => (
                         <li key={item.id} className="grid grid-cols-3 gap-2 border-t pt-2">
@@ -76,7 +62,7 @@ export default function ReportDetailModal({ entry, onClose, onDelete }) {
                 </ul>
             );
         }
-        return null;
+        return <p className="text-sm text-slate-500">Tidak ada rincian limbah.</p>;
     };
 
 
@@ -94,7 +80,7 @@ export default function ReportDetailModal({ entry, onClose, onDelete }) {
                 <main className="flex-1 p-6 overflow-y-auto space-y-6">
                     <div className="bg-emerald-50 border-l-4 border-emerald-400 p-4 rounded-lg">
                         <p className="text-sm font-semibold text-emerald-700">Total Emisi Bulan Ini</p>
-                        <p className="text-3xl font-extrabold text-emerald-800">{entry.total_co2e_kg.toFixed(2)} <span className="text-xl font-medium">kg CO₂e</span></p>
+                        <p className="text-3xl font-extrabold text-emerald-800">{(entry.total_co2e_kg || 0).toFixed(2)} <span className="text-xl font-medium">ton CO₂e</span></p>
                     </div>
 
                     <div className="space-y-4">
@@ -102,11 +88,12 @@ export default function ReportDetailModal({ entry, onClose, onDelete }) {
                              <div className="border border-slate-200 p-4 rounded-lg">
                                 <div className="flex justify-between items-start mb-2">
                                      <h3 className="font-bold text-lg text-slate-700">Listrik</h3>
-                                     <p className="font-bold text-lg text-slate-600">{entry.electricity_co2e.toFixed(2)} kg CO₂e</p>
+                                     <p className="font-bold text-lg text-slate-600">{(entry.electricity_co2e || 0).toFixed(2)} ton CO₂e</p>
                                 </div>
                                 <div className="text-sm text-slate-600 space-y-1 border-t pt-2">
                                     <p><strong>Konsumsi:</strong> <span className="font-semibold">{entry.electricity_details.kwh || 0} kWh</span></p>
                                     <p><strong>Lokasi (Grid):</strong> <span className="font-semibold">{entry.electricity_details.location}</span></p>
+                                    {/* PERBAIKAN SATUAN HANYA DI TAMPILAN INI */}
                                     {entry.electricity_details.areaIntensity !== undefined && ( <p><strong>Intensitas Area:</strong> <span className="font-semibold">{entry.electricity_details.areaIntensity.toFixed(2)}</span> kg CO₂e/m²</p>)}
                                     {entry.electricity_details.occupancyIntensity !== undefined && ( <p><strong>Intensitas Hunian:</strong> <span className="font-semibold">{entry.electricity_details.occupancyIntensity.toFixed(2)}</span> kg CO₂e/kamar terisi</p>)}
                                 </div>
@@ -115,28 +102,27 @@ export default function ReportDetailModal({ entry, onClose, onDelete }) {
                         
                         {entry.transport_details && entry.transport_details.length > 0 && entry.transport_co2e > 0 && (
                             <div className="border border-slate-200 p-4 rounded-lg">
-                                <h3 className="font-bold text-lg text-slate-700 mb-2">Transportasi ({entry.transport_co2e.toFixed(2)} kg CO₂e)</h3>
+                                <h3 className="font-bold text-lg text-slate-700 mb-2">Transportasi ({(entry.transport_co2e || 0).toFixed(2)} ton CO₂e)</h3>
                                  <ul className="space-y-2 text-sm text-slate-600">
                                     <li className="grid grid-cols-3 gap-2 font-semibold text-xs text-slate-500">
-                                        <span>Kendaraan (Jml)</span>
+                                        <span>Kendaraan</span>
                                         <span className="text-center">Jarak</span>
                                         <span className="text-center">Frekuensi</span>
                                     </li>
-                                    {entry.transport_details.map(v => (
-                                        <li key={v.id} className="grid grid-cols-3 gap-2 border-t pt-2">
-                                            <span>{formatName(v.type, 'transport')} (x{v.quantity})</span>
+                                    {entry.transport_details.map((v, index) => (
+                                        <li key={v.id || index} className="grid grid-cols-3 gap-2 border-t pt-2">
+                                            <span>{formatName(v.type, 'transport')}</span>
                                             <span className="text-center">{v.km} km</span>
-                                            <span className="text-center">{v.frequency}x / minggu</span>
+                                            <span className="text-center">{v.frequency}x / bulan</span>
                                         </li>
                                     ))}
                                 </ul>
                             </div>
                         )}
                         
-                        {/* --- Tampilan Detail Limbah Diperbarui --- */}
                         {entry.waste_details && entry.waste_co2e > 0 && (
                            <div className="border border-slate-200 p-4 rounded-lg">
-                                <h3 className="font-bold text-lg text-slate-700 mb-2">Limbah ({entry.waste_co2e.toFixed(2)} kg CO₂e)</h3>
+                                <h3 className="font-bold text-lg text-slate-700 mb-2">Limbah ({(entry.waste_co2e || 0).toFixed(2)} ton CO₂e)</h3>
                                 {renderWasteDetails(entry.waste_details)}
                             </div>
                         )}
