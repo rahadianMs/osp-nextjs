@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { BookOpenIcon, DashboardIcon, HandshakeIcon, IncentiveIcon } from './Icons.jsx';
+import { BookOpenIcon, DashboardIcon, HandshakeIcon, IncentiveIcon, InstagramIcon, LinkedinIcon, FacebookIcon } from './Icons.jsx';
 
 export default function LandingPage({ setActivePage, setIsLogin }) {
     const [isScrolled, setIsScrolled] = useState(false);
@@ -9,8 +9,7 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
     // URL Logo
     const logoKemenparPutih = "https://bob.kemenparekraf.go.id/wp-content/uploads/2025/02/Kementerian-Pariwisata-RI_Bahasa-Indonesia-Putih.png";
     const logoKemenparBerwarna = "https://upload.wikimedia.org/wikipedia/commons/f/fc/Lambang_Kementerian_Pariwisata_Republik_Indonesia_%282024%29.png";
-    const logoWiseSteps = "https://cdn-lgbgj.nitrocdn.com/ItTrnTtgyWTkOHFuOZYyLNqTCVGqVARe/assets/images/optimized/rev-7dc1829/wisesteps.id/wp-content/uploads/revslider/home-desktop-tablet-12/Wise-Steps-Consulting-Logo-White.png";
-    const logoWiseStepsBerwarna = "https://cdn-biofo.nitrocdn.com/pguRNgUGRHgHBjvClHTnuzLuMOCPhzJi/assets/images/optimized/rev-a721222/wisestepsconsulting.id/wp-content/uploads/2022/09/WSG_Masterfiles_Logo-02-1024x264.png";
+    const logoWiseSteps = "https://github.com/rahadianMs/gstc-fix/blob/main/asset/WSG_Masterfiles_Logo-02-1024x264.png?raw=true";
 
     useEffect(() => {
         const handleScroll = () => {
@@ -35,7 +34,6 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
         accentHover: '#b38b40'
     };
 
-    // --- PERUBAHAN JUDUL DI SINI ---
     const featureCards = [
         { icon: <DashboardIcon />, title: "Dashboard Pemantauan Emisi", description: "Hitung dan lacak jejak karbon bisnis Anda secara akurat melalui dasbor interaktif." },
         { icon: <BookOpenIcon />, title: "Pusat Edukasi Terpadu", description: "Akses materi pembelajaran dan panduan praktik rendah emisi untuk pariwisata." },
@@ -48,13 +46,13 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
         { name: "Traveloka", url: "https://ik.imagekit.io/tvlk/image/imageResource/2024/08/09/1723192761223-35bd6fefad235fbb690b6d79b050343f.png?tr=q-75", heightClass: "h-24" },
         { name: "Exo Travel", url: "https://www.exotravel.com/images/w3_images/logo222.png", heightClass: "h-16" },
         { name: "Tiket.com", url: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Tiket.com_logo.png/1200px-Tiket.com_logo.png", heightClass: "h-12" },
-        { name: "Ekosistem Hotels", url: "https://ekosistemhotels.com/wp-content/themes/ekosistem1.1/images/Logo-Ekosistem.png", heightClass: "h-20" },
+        { name: "Ekosistem Hotels", url: "https://images.glints.com/unsafe/glints-dashboard.oss-ap-southeast-1.aliyuncs.com/company-logo/f983fb3ffcdf2510d5529deafaccfc27.png", heightClass: "h-20" },
     ];
 
      const scopeCards = [
-        { title: "Akomodasi", imageUrl: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8YmFsaSUyMGhvdGVsfGVufDB8fDB8fHww" },
-        { title: "Operator Jasa Perjalanan", imageUrl: "https://images.unsplash.com/photo-1616895727759-dd84a2690433?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" },
-        { title: "Pengelola Atraksi Wisata", imageUrl: "https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" }
+        { title: "Akomodasi", imageUrl: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?fm=jpg&q=60&w=3000&ixlib-rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8YmFsaSUyMGhvdGVsfGVufDB8fDB8fHww" },
+        { title: "Operator Jasa Perjalanan", imageUrl: "https://images.unsplash.com/photo-1616895727759-dd84a2690433?q=80&w=1170&auto=format&fit=crop&ixlib-rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" },
+        { title: "Pengelola Atraksi Wisata", imageUrl: "https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?q=80&w=1171&auto=format&fit=crop&ixlib-rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" }
     ];
 
     return (
@@ -70,13 +68,24 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
                 .animate-marquee {
                     animation: marquee 40s linear infinite;
                 }
+                .logo-white {
+                    filter: brightness(0) invert(1) grayscale(1);
+                }
             `}</style>
             <div id="landing-page" className={`bg-white text-${colors.primary}`}>
                 <header className={`fixed top-0 left-0 z-50 w-full px-[5%] py-4 transition-all duration-300 ${isScrolled ? 'bg-white shadow-md' : 'bg-transparent'}`}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                            <img src={isScrolled ? logoWiseStepsBerwarna : logoWiseSteps} alt="Wise Steps Consulting Logo" className="h-8 md:h-9" />
-                            <img src={isScrolled ? logoKemenparBerwarna : logoKemenparPutih} alt="Kemenparekraf Logo" className="h-9 md:h-10" />
+                            <img 
+                                src={logoWiseSteps} 
+                                alt="Wise Steps Consulting Logo" 
+                                className={`h-8 md:h-9 transition-all duration-300 ${!isScrolled && 'logo-white'}`} 
+                            />
+                            <img 
+                                src={isScrolled ? logoKemenparBerwarna : logoKemenparPutih} 
+                                alt="Kemenparekraf Logo" 
+                                className="h-9 md:h-10" 
+                            />
                         </div>
                         <nav className="hidden md:flex items-center gap-8">
                             <a href="#home" className={`font-medium transition-colors duration-200 ${isScrolled ? `text-${colors.secondary} hover:text-[${colors.brand}]` : 'text-white hover:opacity-80'}`}>Home</a>
@@ -174,7 +183,7 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
                 <section id="glasgow-portal" className="py-20 px-[5%] bg-zinc-100">
                     <div className="container mx-auto max-w-4xl bg-white p-10 rounded-2xl shadow-lg border flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
                         <div className="flex-shrink-0">
-                            <img src="https://terraverde-solutions.com/wp-content/uploads/2025/05/GlasgowDeclarationLogo_ok-02.png" alt="Glasgow Declaration Logo" className="h-24" />
+                            <img src="https://kindlejourneys.com/files/Recurso-2-e1635510867617.png" alt="Glasgow Declaration Logo" className="h-24" />
                         </div>
                         <div>
                             <h3 className={`text-2xl font-bold text-${colors.primary}`}>Bagian dari Komitmen Global</h3>
@@ -188,16 +197,24 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
 
                 <footer style={{backgroundColor: colors.brand}} className="text-white/80 py-16 px-[5%]">
                     <div className="container mx-auto max-w-6xl">
-                         <div className="flex flex-col md:flex-row justify-between">
-                            <div className="mb-8 md:mb-0">
-                                <img src={logoKemenparBerwarna} alt="Logo Kemenpar" className="h-16 mb-4"/>
+                         <div className="grid md:grid-cols-12 gap-12">
+                            <div className="md:col-span-4">
+                                <img src={logoKemenparPutih} alt="Logo Kemenpar" className="h-16 mb-4"/>
                                 <h3 className="text-white text-xl font-semibold mb-2">Kementerian Pariwisata Republik Indonesia</h3>
                                 <p className="text-sm max-w-sm">Jl. Medan Merdeka Barat No. 17, RT/RW 02/03, Gambir, Daerah Khusus Ibukota Jakarta 10110, Indonesia.</p>
                             </div>
-                            <div className="text-sm">
+                            <div className="md:col-span-4 text-sm">
                                 <h4 className="text-white font-semibold mb-4 text-base">Kontak</h4>
                                 <p>Whatsapp Contact Center: 0811-895-6767</p>
                                 <p className="mt-2">Email: info@kemenpar.go.id</p>
+                            </div>
+                            <div className="md:col-span-4">
+                                <h4 className="text-white font-semibold mb-4 text-base">Ikuti Kami</h4>
+                                <div className="flex items-center gap-5">
+                                    <a href="https://www.instagram.com/kemenpar.ri/?hl=en" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors"><InstagramIcon className="w-6 h-6" /></a>
+                                    <a href="https://www.linkedin.com/company/ministry-of-tourism-and-creative-economy/?originalSubdomain=id" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors"><LinkedinIcon className="w-6 h-6" /></a>
+                                    <a href="https://web.facebook.com/KemenPariwisata/?_rdc=1&_rdr" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors"><FacebookIcon className="w-6 h-6" /></a>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -9,10 +9,10 @@ import EmissionReportPage from './EmissionReportPage';
 import DashboardSummary from './DashboardSummary';
 import DashboardPieChart from './DashboardPieChart';
 import DashboardTrends from './DashboardTrends';
-import ProfilUsahaPage from './ProfilUsahaPage';
+import ProfilUsahaPage from './ProfilUsahaPage'; // Pastikan ini diimpor
 import NotificationPage from './NotificationPage';
 import AboutPage from './AboutPage';
-import AccountPage from './AccountPage';
+import AccountPage from './AccountPage'; // Ini sekarang halaman edit
 import FaqPage from './FaqPage';
 import SertifikasiPage from './SertifikasiPage';
 import PembelajaranPage from './PembelajaranPage';
@@ -30,7 +30,6 @@ const PageContent = ({ activeDashboardPage, setActiveDashboardPage, supabase, us
         case 'beranda':
             return <BerandaPage user={user} supabase={supabase} setActiveDashboardPage={setActiveDashboardPage} dataVersion={dataVersion} />;
         case 'dashboard-utama':
-            // --- PERUBAHAN TATA LETAK DI SINI ---
             return (
                 <div className="space-y-8">
                     <DashboardSummary supabase={supabase} user={user} dataVersion={dataVersion} />
@@ -44,8 +43,9 @@ const PageContent = ({ activeDashboardPage, setActiveDashboardPage, supabase, us
             return <EmissionReportPage supabase={supabase} user={user} onDataUpdate={onDataUpdate} />;
         case 'notifikasi':
             return <NotificationPage />;
+        // PERUBAHAN DI SINI
         case 'profil-usaha':
-            return <ProfilUsahaPage />;
+            return <ProfilUsahaPage user={user} supabase={supabase} setActiveDashboardPage={setActiveDashboardPage} />;
         case 'sertifikasi':
             return <SertifikasiPage supabase={supabase} user={user} />;
         case 'pembelajaran':
@@ -54,6 +54,7 @@ const PageContent = ({ activeDashboardPage, setActiveDashboardPage, supabase, us
             return <PanduanPage />;
         case 'tentang':
             return <AboutPage />;
+        // 'akun' sekarang menjadi halaman edit
         case 'akun':
             return <AccountPage user={user} supabase={supabase} />;
         case 'faq':
@@ -70,25 +71,17 @@ const PageContent = ({ activeDashboardPage, setActiveDashboardPage, supabase, us
 
 // Komponen Dasbor Utama
 export default function Dashboard({
-    supabase,
-    user,
-    activeDashboardPage,
-    setActiveDashboardPage,
-    isUserMenuOpen,
-    setIsUserMenuOpen,
-    userMenuRef,
-    handleLogout
+    supabase, user, activeDashboardPage, setActiveDashboardPage,
+    isUserMenuOpen, setIsUserMenuOpen, userMenuRef, handleLogout
 }) {
     const [dataVersion, setDataVersion] = useState(Date.now());
     
     const logoKemenparPutih = "https://bob.kemenparekraf.go.id/wp-content/uploads/2025/02/Kementerian-Pariwisata-RI_Bahasa-Indonesia-Putih.png";
     const logoWiseSteps = "https://cdn-lgbgj.nitrocdn.com/ItTrnTtgyWTkOHFuOZYyLNqTCVGqVARe/assets/images/optimized/rev-7dc1829/wisesteps.id/wp-content/uploads/revslider/home-desktop-tablet-12/Wise-Steps-Consulting-Logo-White.png";
 
+    const handleDataUpdate = () => setDataVersion(Date.now());
 
-    const handleDataUpdate = () => {
-        setDataVersion(Date.now());
-    };
-
+    // PERUBAHAN: 'Akun' sekarang berada di dropdown pengguna, 'Profil Usaha' ada di sidebar
     const sidebarLinks = [
         { id: 'beranda', text: 'Beranda', icon: <HomeIcon /> },
         { id: 'notifikasi', text: 'Notifikasi', icon: <BellIcon /> },
@@ -101,7 +94,7 @@ export default function Dashboard({
     ];
 
     const pageTitle = sidebarLinks.find(link => link.id === activeDashboardPage)?.text || 
-                      (activeDashboardPage === 'akun' && 'Akun Saya') ||
+                      (activeDashboardPage === 'akun' && 'Edit Akun & Profil') ||
                       (activeDashboardPage === 'faq' && 'FAQ') ||
                       (activeDashboardPage === 'tentang' && 'Tentang') ||
                       'Dasbor';
@@ -150,8 +143,8 @@ export default function Dashboard({
                         {isUserMenuOpen && (
                             <div className="absolute right-0 w-48 mt-2 origin-top-right bg-white rounded-xl shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                                 <div className="py-1">
-                                    <button onClick={() => { setActiveDashboardPage('tentang'); setIsUserMenuOpen(false); }} className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Tentang</button>
                                     <button onClick={() => { setActiveDashboardPage('akun'); setIsUserMenuOpen(false); }} className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Akun</button>
+                                    <button onClick={() => { setActiveDashboardPage('tentang'); setIsUserMenuOpen(false); }} className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Tentang</button>
                                     <button onClick={() => { setActiveDashboardPage('faq'); setIsUserMenuOpen(false); }} className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">FAQ</button>
                                 </div>
                             </div>
