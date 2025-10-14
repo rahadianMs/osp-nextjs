@@ -10,58 +10,50 @@ const EmissionMap = () => {
   const [selectedYear, setSelectedYear] = useState('2025');
   const availableYears = ['2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025'];
 
+  // Fungsi untuk menentukan warna provinsi berdasarkan nilai emisi
   const getColor = (value) => {
-    if (value === null || value === undefined) return '#d1d5db';
-    return value > 10000000 ? '#085839'
+    if (value === null || value === undefined) return '#d1d5db'; // Abu-abu
+    return value > 10000000 ? '#085839'  // Sangat Tinggi
          : value > 5000000  ? '#1a7553'
          : value > 1000000  ? '#2b926d'
          : value > 500000   ? '#43b089'
          : value > 100000   ? '#62cea5'
-         : value > 10000    ? '#89e0b9'
-         : '#b8f2d5';
+         : value > 10000    ? '#89e0b9'  // Rendah
+         : '#b8f2d5';       // Sangat Rendah
   };
   
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
+        // 1. Ambil data GeoJSON asli Anda
         const geoResponse = await fetch('/data/indonesia-provinces.json');
         const geoJsonData = await geoResponse.json();
 
-        const emissionResponse = await fetch('/data/emisiCO2.csv');
-        const csvText = await emissionResponse.text();
+        // 2. Ambil data emisi dari file JSON yang sudah kita buat
+        const emissionResponse = await fetch('/data/emisiCO2.json');
+        const emissionData = await emissionResponse.json();
         
-        const lines = csvText.trim().split('\n');
-        const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-        const emissionDataByYear = {};
-
-        for (let i = 1; i < lines.length; i++) {
-          const currentline = lines[i].split(',');
-          let provinceName = currentline[0].replace(/"/g, '').toUpperCase().trim();
-          
-          headers.forEach((year, index) => {
-            if (availableYears.includes(year)) {
-              if (!emissionDataByYear[year]) emissionDataByYear[year] = {};
-              const emissionValue = parseFloat(currentline[index] || "0");
-              emissionDataByYear[year][provinceName] = isNaN(emissionValue) ? 0 : emissionValue;
-            }
-          });
-        }
-
+        // 3. Gabungkan data emisi ke dalam GeoJSON
         const combinedFeatures = geoJsonData.features.map(feature => {
-            let geoProvinceName = feature.properties.Propinsi?.toUpperCase().trim();
+            // [FIX] Kunci properti di file asli adalah "PROVINSI" (huruf besar)
+            // Normalisasi nama: ubah ke huruf besar dan hilangkan spasi ekstra
+            const geoProvinceName = feature.properties.PROVINSI?.toUpperCase().trim();
             
-            let emissionsByYear = {};
-            availableYears.forEach(year => {
-                emissionsByYear[year] = emissionDataByYear[year]?.[geoProvinceName];
-            });
+            // Cari data emisi yang cocok dengan nama yang sudah dinormalisasi
+            const emissionsForProvince = emissionData[geoProvinceName];
 
+            // Buat properti 'emissions' baru di dalam GeoJSON
             return {
                 ...feature,
-                properties: { ...feature.properties, emissions: emissionsByYear },
+                properties: { 
+                    ...feature.properties, 
+                    emissions: emissionsForProvince || {} // Beri objek kosong jika tidak ada data
+                },
             };
         });
 
+        // Simpan data GeoJSON yang sudah digabung ke dalam state
         setGeoData({ ...geoJsonData, features: combinedFeatures });
 
       } catch (error) {
@@ -74,6 +66,7 @@ const EmissionMap = () => {
     fetchData();
   }, []);
 
+  // Fungsi untuk styling GeoJSON berdasarkan nilai emisi tahun yang dipilih
   const style = (feature) => {
     const emissionValue = feature.properties.emissions?.[selectedYear];
     return {
@@ -85,15 +78,21 @@ const EmissionMap = () => {
     };
   };
 
+  // Fungsi untuk interaksi pada setiap provinsi (popup & hover)
   const onEachFeature = (feature, layer) => {
     if (feature.properties) {
-        const { Propinsi, emissions } = feature.properties;
+        // [FIX] Gunakan "PROVINSI" sesuai file asli
+        const { PROVINSI, emissions } = feature.properties;
         const emissionValue = emissions?.[selectedYear];
+        
         const emissionText = emissionValue !== null && emissionValue !== undefined 
             ? `${emissionValue.toLocaleString('id-ID')} ton CO₂e` 
             : 'Data tidak tersedia';
-        layer.bindPopup(`<strong>${Propinsi}</strong><br/>Emisi ${selectedYear}: ${emissionText}`);
         
+        // Popup saat di-klik
+        layer.bindPopup(`<strong>${PROVINSI}</strong><br/>Emisi ${selectedYear}: ${emissionText}`);
+        
+        // Efek hover
         layer.on({
             mouseover: (e) => e.target.setStyle({ weight: 2.5, color: '#333', fillOpacity: 1 }),
             mouseout: (e) => layer.setStyle(style(feature)),

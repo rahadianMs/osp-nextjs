@@ -99,6 +99,8 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
                             <a href="#home" className={`font-medium transition-colors duration-200 ${isScrolled ? `text-${colors.secondary} hover:text-[${colors.brand}]` : 'text-white hover:opacity-80'}`}>Home</a>
                             <a href="#about" className={`font-medium transition-colors duration-200 ${isScrolled ? `text-${colors.secondary} hover:text-[${colors.brand}]` : 'text-white hover:opacity-80'}`}>Tentang</a>
                             <a href="#features" className={`font-medium transition-colors duration-200 ${isScrolled ? `text-${colors.secondary} hover:text-[${colors.brand}]` : 'text-white hover:opacity-80'}`}>Fitur</a>
+                            {/* -- UPDATE DI SINI -- */}
+                            <a href="#map" className={`font-medium transition-colors duration-200 ${isScrolled ? `text-${colors.secondary} hover:text-[${colors.brand}]` : 'text-white hover:opacity-80'}`}>Peta Emisi</a>
                             <button onClick={() => handleGoToAuth(true)} className={`px-5 py-2 font-semibold border-2 rounded-lg transition-all duration-300 ${isScrolled ? `text-[${colors.brand}] border-[${colors.brand}] hover:bg-green-50` : 'text-white border-white hover:bg-white/10'}`}>
                                 Login
                             </button>
@@ -155,7 +157,6 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
                     </div>
                 </section>
                 
-                {/* SECTION PETA BARU DIMULAI DI SINI */}
                 <section id="map" className="py-24 px-[5%] bg-white">
                     <div className="container mx-auto max-w-6xl">
                         <div className="text-center mb-16">
@@ -165,7 +166,6 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
                         <EmissionMap />
                     </div>
                 </section>
-                {/* SECTION PETA BERAKHIR DI SINI */}
 
                 <section id="features" className="py-24 px-[5%] bg-zinc-50">
                     <div className="container mx-auto max-w-6xl text-center">
