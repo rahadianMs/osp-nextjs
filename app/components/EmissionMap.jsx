@@ -8,11 +8,16 @@ const EmissionMap = () => {
   const [geoData, setGeoData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState('2025');
+  // [BARU] State untuk menyimpan sumber data yang dipilih
+  const [selectedDataSource, setSelectedDataSource] = useState('SIPONGI KEMENHUT'); 
+
   const availableYears = ['2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025'];
+  // [BARU] Daftar sumber data yang tersedia
+  const availableDataSources = ['SIPONGI KEMENHUT', 'Akomodasi', 'Operator Jasa Perjalanan', 'Pengelola Atraksi Wisata'];
 
   // Fungsi untuk menentukan warna provinsi berdasarkan nilai emisi
   const getColor = (value) => {
-    if (value === null || value === undefined) return '#d1d5db'; // Abu-abu
+    if (value === null || value === undefined) return '#d1d5db'; // Abu-abu (Tidak ada data)
     return value > 10000000 ? '#085839'  // Sangat Tinggi
          : value > 5000000  ? '#1a7553'
          : value > 1000000  ? '#2b926d'
@@ -26,34 +31,40 @@ const EmissionMap = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // 1. Ambil data GeoJSON asli Anda
+        // 1. Selalu ambil data GeoJSON dasar (peta provinsi)
         const geoResponse = await fetch('/data/indonesia-provinces.json');
         const geoJsonData = await geoResponse.json();
 
-        // 2. Ambil data emisi dari file JSON yang sudah kita buat
-        const emissionResponse = await fetch('/data/emisiCO2.json');
-        const emissionData = await emissionResponse.json();
-        
-        // 3. Gabungkan data emisi ke dalam GeoJSON
-        const combinedFeatures = geoJsonData.features.map(feature => {
-            // [FIX] Kunci properti di file asli adalah "PROVINSI" (huruf besar)
-            // Normalisasi nama: ubah ke huruf besar dan hilangkan spasi ekstra
-            const geoProvinceName = feature.properties.PROVINSI?.toUpperCase().trim();
+        let combinedFeatures = geoJsonData.features;
+
+        // 2. [MODIFIKASI] Hanya ambil dan gabungkan data emisi jika sumbernya SIPONGI
+        if (selectedDataSource === 'SIPONGI KEMENHUT') {
+            const emissionResponse = await fetch('/data/emisiCO2.json');
+            const emissionData = await emissionResponse.json();
             
-            // Cari data emisi yang cocok dengan nama yang sudah dinormalisasi
-            const emissionsForProvince = emissionData[geoProvinceName];
-
-            // Buat properti 'emissions' baru di dalam GeoJSON
-            return {
+            combinedFeatures = geoJsonData.features.map(feature => {
+                const geoProvinceName = feature.properties.PROVINSI?.toUpperCase().trim();
+                const emissionsForProvince = emissionData[geoProvinceName];
+                return {
+                    ...feature,
+                    properties: { 
+                        ...feature.properties, 
+                        emissions: emissionsForProvince || {}
+                    },
+                };
+            });
+        } else {
+            // 3. [BARU] Jika sumber data lain dipilih, kosongkan data emisi
+            // Ini akan membuat semua provinsi berwarna abu-abu (tidak ada data)
+            combinedFeatures = geoJsonData.features.map(feature => ({
                 ...feature,
-                properties: { 
-                    ...feature.properties, 
-                    emissions: emissionsForProvince || {} // Beri objek kosong jika tidak ada data
-                },
-            };
-        });
+                properties: {
+                    ...feature.properties,
+                    emissions: {} // Objek emisi kosong
+                }
+            }));
+        }
 
-        // Simpan data GeoJSON yang sudah digabung ke dalam state
         setGeoData({ ...geoJsonData, features: combinedFeatures });
 
       } catch (error) {
@@ -64,10 +75,12 @@ const EmissionMap = () => {
     };
 
     fetchData();
-  }, []);
+  // [MODIFIKASI] Tambahkan selectedDataSource sebagai dependency
+  }, [selectedDataSource]); 
 
-  // Fungsi untuk styling GeoJSON berdasarkan nilai emisi tahun yang dipilih
+  // Fungsi untuk styling GeoJSON
   const style = (feature) => {
+    // Logika ini tetap sama, karena akan otomatis menangani data kosong
     const emissionValue = feature.properties.emissions?.[selectedYear];
     return {
       fillColor: getColor(emissionValue),
@@ -81,18 +94,18 @@ const EmissionMap = () => {
   // Fungsi untuk interaksi pada setiap provinsi (popup & hover)
   const onEachFeature = (feature, layer) => {
     if (feature.properties) {
-        // [FIX] Gunakan "PROVINSI" sesuai file asli
         const { PROVINSI, emissions } = feature.properties;
         const emissionValue = emissions?.[selectedYear];
         
-        const emissionText = emissionValue !== null && emissionValue !== undefined 
-            ? `${emissionValue.toLocaleString('id-ID')} ton CO₂e` 
-            : 'Data tidak tersedia';
+        let contentText = 'Data tidak tersedia';
+
+        // [MODIFIKASI] Tampilkan data emisi hanya jika sumbernya SIPONGI
+        if (selectedDataSource === 'SIPONGI KEMENHUT' && emissionValue !== null && emissionValue !== undefined) {
+            contentText = `Emisi ${selectedYear}: ${emissionValue.toLocaleString('id-ID')} ton CO₂e`;
+        }
         
-        // Popup saat di-klik
-        layer.bindPopup(`<strong>${PROVINSI}</strong><br/>Emisi ${selectedYear}: ${emissionText}`);
+        layer.bindPopup(`<strong>${PROVINSI}</strong><br/>${contentText}`);
         
-        // Efek hover
         layer.on({
             mouseover: (e) => e.target.setStyle({ weight: 2.5, color: '#333', fillOpacity: 1 }),
             mouseout: (e) => layer.setStyle(style(feature)),
@@ -101,7 +114,7 @@ const EmissionMap = () => {
   };
 
   if (loading) {
-    return <div className="h-[550px] bg-zinc-200 rounded-lg animate-pulse flex items-center justify-center"><p className="text-zinc-500">Memuat Peta Emisi...</p></div>;
+    return <div className="h-[550px] bg-zinc-200 rounded-lg animate-pulse flex items-center justify-center"><p className="text-zinc-500">Memuat Peta...</p></div>;
   }
 
   return (
@@ -111,19 +124,37 @@ const EmissionMap = () => {
             url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
           />
-          {geoData && <GeoJSON key={selectedYear} data={geoData} style={style} onEachFeature={onEachFeature} />}
+          {/* [MODIFIKASI] Tambahkan selectedDataSource ke key untuk memicu render ulang */}
+          {geoData && <GeoJSON key={`${selectedYear}-${selectedDataSource}`} data={geoData} style={style} onEachFeature={onEachFeature} />}
         </MapContainer>
         
-        <div className="absolute bottom-4 left-4 bg-white/80 backdrop-blur-sm p-2 rounded-lg shadow-md z-10 flex items-center gap-2">
-            <label htmlFor="year-select" className="text-sm font-semibold text-zinc-700">Tahun:</label>
-            <select 
-                id="year-select"
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(e.target.value)}
-                className="bg-white border border-zinc-300 rounded-md p-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#22543d]"
-            >
-                {availableYears.map(year => <option key={year} value={year}>{year}</option>)}
-            </select>
+        {/* [MODIFIKASI] Wrapper untuk filter tahun dan sumber data */}
+        <div className="absolute top-4 left-4 bg-white/80 backdrop-blur-sm p-2 rounded-lg shadow-md z-10 flex items-center gap-4">
+            {/* Filter Tahun */}
+            <div className="flex items-center gap-2">
+                <label htmlFor="year-select" className="text-sm font-semibold text-zinc-700">Tahun:</label>
+                <select 
+                    id="year-select"
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(e.target.value)}
+                    className="bg-white border border-zinc-300 rounded-md p-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#22543d]"
+                >
+                    {availableYears.map(year => <option key={year} value={year}>{year}</option>)}
+                </select>
+            </div>
+            
+            {/* [BARU] Filter Sumber Data */}
+            <div className="flex items-center gap-2">
+                <label htmlFor="source-select" className="text-sm font-semibold text-zinc-700">Sumber Data:</label>
+                <select 
+                    id="source-select"
+                    value={selectedDataSource}
+                    onChange={(e) => setSelectedDataSource(e.target.value)}
+                    className="bg-white border border-zinc-300 rounded-md p-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#22543d]"
+                >
+                    {availableDataSources.map(source => <option key={source} value={source}>{source}</option>)}
+                </select>
+            </div>
         </div>
 
         <div className="absolute bottom-4 right-4 bg-white/80 backdrop-blur-sm p-3 rounded-lg shadow-md z-10 w-48">

@@ -99,7 +99,7 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
                             <a href="#home" className={`font-medium transition-colors duration-200 ${isScrolled ? `text-${colors.secondary} hover:text-[${colors.brand}]` : 'text-white hover:opacity-80'}`}>Home</a>
                             <a href="#about" className={`font-medium transition-colors duration-200 ${isScrolled ? `text-${colors.secondary} hover:text-[${colors.brand}]` : 'text-white hover:opacity-80'}`}>Tentang</a>
                             <a href="#features" className={`font-medium transition-colors duration-200 ${isScrolled ? `text-${colors.secondary} hover:text-[${colors.brand}]` : 'text-white hover:opacity-80'}`}>Fitur</a>
-                            <a href="#map" className={`font-medium transition-colors duration-200 ${isScrolled ? `text-${colors.secondary} hover:text-[${colors.brand}]` : 'text-white hover:opacity-80'}`}>Peta Emisi</a>
+                            <a href="#map" className={`font-medium transition-colors duration-200 ${isScrolled ? `text-${colors.secondary} hover:text-[${colors.brand}]` : 'text-white hover:opacity-80'}`}>Peta</a>
                             <button onClick={() => handleGoToAuth(true)} className={`px-5 py-2 font-semibold border-2 rounded-lg transition-all duration-300 ${isScrolled ? `text-[${colors.brand}] border-[${colors.brand}] hover:bg-green-50` : 'text-white border-white hover:bg-white/10'}`}>
                                 Login
                             </button>
@@ -163,12 +163,6 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
                             <p className={`text-lg text-${colors.secondary} mt-4 max-w-3xl mx-auto`}>Visualisasi data emisi CO2 dari sektor pariwisata di berbagai provinsi di Indonesia. Arahkan kursor pada sebuah provinsi untuk melihat detail.</p>
                         </div>
                         <EmissionMap />
-                        {/* -- UPDATE DI SINI -- */}
-                        <div className="text-xs text-slate-500 italic mt-4 space-y-1">
-                            <p>* Sumber data : Direktorat IGRK, Ditjen PPI, KLHK.(SIPONGI KEMENHUT)</p>
-                            <p>* Penghitungan Emisi Biomassa Global (BG) dilakukan dengan merujuk pada Faktor Emisi 923,1 Ton CO2e/ha.</p>
-                            <p>** Data input sampai dengan Juli 2025.</p>
-                        </div>
                     </div>
                 </section>
 
