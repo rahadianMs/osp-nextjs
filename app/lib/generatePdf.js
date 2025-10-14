@@ -13,6 +13,16 @@ const formatName = (type, category) => {
             glass: 'Kaca',
             electronics: 'Alat Elektronik',
             fabric: 'Kain'
+        },
+        non_electric: {
+            diesel_mineral: 'Diesel (Mineral)',
+            diesel_biofuel: 'Diesel (Biofuel)',
+            fuel_oil: 'Fuel Oil',
+            lpg: 'LPG',
+            natural_gas: 'Natural Gas',
+            cng: 'CNG',
+            lng: 'LNG',
+            propane: 'Propane'
         }
     };
     return names[category]?.[type] || type;
@@ -33,17 +43,16 @@ export const generatePdf = async (entry, businessName = 'Nama Usaha Belum Diatur
     // --- 1. KOP SURAT (HEADER) ---
     try {
         const logoUrl = 'https://upload.wikimedia.org/wikipedia/commons/f/fc/Lambang_Kementerian_Pariwisata_Republik_Indonesia_%282024%29.png';
-        const img = await fetch(logoUrl);
-        const blob = await img.blob();
-        const reader = new FileReader();
+        const img = new Image();
+        img.crossOrigin = "Anonymous";
         
         await new Promise((resolve, reject) => {
-            reader.onload = (e) => {
-                doc.addImage(e.target.result, 'PNG', margin, 12, 18, 18, undefined, 'MEDIUM');
+            img.onload = () => {
+                doc.addImage(img, 'PNG', margin, 12, 18, 18, undefined, 'MEDIUM');
                 resolve();
             };
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
+            img.onerror = reject;
+            img.src = logoUrl;
         });
 
     } catch (error) {
@@ -82,7 +91,6 @@ export const generatePdf = async (entry, businessName = 'Nama Usaha Belum Diatur
     doc.text('Total Estimasi Emisi Karbon', margin + 4, currentY + 9);
     
     doc.setFontSize(14).setFont('helvetica', 'bold');
-    // PERUBAHAN DI SINI
     doc.text(`${(entry.total_co2e_kg || 0).toFixed(2)} ton CO2e`, pageWidth - margin - 4, currentY + 10, { align: 'right' });
     currentY += 26;
 
@@ -95,7 +103,6 @@ export const generatePdf = async (entry, businessName = 'Nama Usaha Belum Diatur
     
     if (entry.electricity_co2e > 0 && entry.electricity_details) {
         doc.setFontSize(detailFontSize).setFont('helvetica', 'bold');
-        // PERUBAHAN DI SINI
         doc.text(`• Listrik: ${entry.electricity_co2e.toFixed(2)} ton CO2e`, margin, currentY);
         currentY += 5;
         doc.setFont('helvetica', 'normal');
@@ -103,43 +110,42 @@ export const generatePdf = async (entry, businessName = 'Nama Usaha Belum Diatur
         currentY += 7;
     }
 
+    if (entry.non_electricity_co2e > 0 && entry.non_electricity_details?.items) {
+        doc.setFontSize(detailFontSize).setFont('helvetica', 'bold');
+        doc.text(`• Energi Non-Listrik: ${entry.non_electricity_co2e.toFixed(2)} ton CO2e`, margin, currentY);
+        currentY += 5;
+        doc.setFont('helvetica', 'normal');
+        entry.non_electricity_details.items.forEach(item => {
+            doc.text(`  - ${formatName(item.type, 'non_electric')}: ${item.usage} ${item.unit}, ${item.frequency}x / bulan`, margin + 3, currentY);
+            currentY += 5;
+        });
+        currentY += 2;
+    }
+
     if (entry.transport_co2e > 0 && entry.transport_details) {
         doc.setFontSize(detailFontSize).setFont('helvetica', 'bold');
-        // PERUBAHAN DI SINI
         doc.text(`• Transportasi: ${entry.transport_co2e.toFixed(2)} ton CO2e`, margin, currentY);
         currentY += 5;
         doc.setFont('helvetica', 'normal');
         entry.transport_details.forEach(v => {
-            // PERUBAHAN DI SINI
             doc.text(`  - ${formatName(v.type, 'transport')}: ${v.km} km, ${v.frequency}x / bulan`, margin + 3, currentY);
             currentY += 5;
         });
         currentY += 2;
     }
 
-    if (entry.waste_co2e > 0 && entry.waste_details) {
+    if (entry.waste_co2e > 0 && entry.waste_details?.items) {
         doc.setFontSize(detailFontSize).setFont('helvetica', 'bold');
-        // PERUBAHAN DI SINI
         doc.text(`• Sampah: ${entry.waste_co2e.toFixed(2)} ton CO2e`, margin, currentY);
         currentY += 5;
         doc.setFont('helvetica', 'normal');
         
-        if (entry.waste_details.items && Array.isArray(entry.waste_details.items)) {
-            entry.waste_details.items.forEach(item => {
-                doc.text(`  - ${formatName(item.type, 'waste')}: ${item.weight} ton`, margin + 3, currentY);
-                currentY += 5;
-            });
-        } 
-        else if (Array.isArray(entry.waste_details)) {
-            entry.waste_details.forEach(item => {
-                // Mengasumsikan data lama dalam kg, jika perlu konversi bisa ditambahkan di sini
-                doc.text(`  - ${formatName(item.type, 'waste')}: ${item.weight} kg`, margin + 3, currentY);
-                currentY += 5;
-            });
-        }
+        entry.waste_details.items.forEach(item => {
+            doc.text(`  - ${formatName(item.type, 'waste')}: ${item.weight} ton`, margin + 3, currentY);
+            currentY += 5;
+        });
         currentY += 2;
     }
-
 
     // --- 5. FOOTER ---
     const pageCount = doc.internal.getNumberOfPages();

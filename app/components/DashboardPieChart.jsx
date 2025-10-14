@@ -3,15 +3,24 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// --- Konfigurasi Warna ---
+// --- Konfigurasi Kategori ---
 const ROOT_CONFIG = {
-    electricity_co2e: { name: 'Listrik', color: '#FBBF24', drillable: true },
+    electricity_co2e: { name: 'Listrik', color: '#FBBF24', drillable: false },
+    non_electricity_co2e: { name: 'Energi Non-Listrik', color: '#F97316', drillable: true },
     transport_co2e: { name: 'Transportasi', color: '#60A5FA', drillable: true },
-    waste_co2e: { name: 'Sampah', color: '#F87171', drillable: true },
+    waste_co2e: { name: 'Limbah', color: '#F87171', drillable: true },
 };
 
-const ELECTRICITY_DETAIL_CONFIG = {
-    grid_consumption: { name: 'Konsumsi Grid', color: '#FBBF24' },
+// --- Konfigurasi Detail ---
+const NON_ELECTRICITY_DETAIL_CONFIG = {
+    diesel_mineral: { name: 'Diesel (Mineral)', color: '#FB923C' },
+    diesel_biofuel: { name: 'Diesel (Biofuel)', color: '#FDBA74' },
+    fuel_oil: { name: 'Fuel Oil', color: '#FED7AA' },
+    lpg: { name: 'LPG', color: '#FB923C' },
+    natural_gas: { name: 'Natural Gas', color: '#FDBA74' },
+    cng: { name: 'CNG', color: '#FED7AA' },
+    lng: { name: 'LNG', color: '#FB923C' },
+    propane: { name: 'Propane', color: '#FDBA74' }
 };
 const TRANSPORT_DETAIL_CONFIG = {
     petrol: { name: 'Mobil Bensin', color: '#3B82F6' },
@@ -22,16 +31,25 @@ const WASTE_DETAIL_CONFIG = {
     food_waste: { name: 'Makanan', color: '#EF4444' },
     plastic: { name: 'Plastik', color: '#F87171' },
     paper_cardboard: { name: 'Kertas', color: '#FCA5A5' },
+    garden_waste: { name: 'Taman', color: '#FECACA'},
+    metal: { name: 'Logam', color: '#EF4444' },
+    glass: { name: 'Kaca', color: '#F87171' },
+    electronics: { name: 'Elektronik', color: '#FCA5A5' },
+    fabric: { name: 'Kain', color: '#FECACA' },
 };
 const GREY_COLOR = '#E5E7EB';
 
-// --- Komponen PieSlice ---
+// --- PERBAIKAN: Tambahkan variabel yang hilang ---
+const TRANSPORT_EMISSION_FACTORS = {
+    diesel: 0.00016984, petrol: 0.0001645, motorcycle: 0.00011367
+};
+
+// Komponen PieSlice (Tidak Berubah)
 const PieSlice = ({ item, radius, startAngle, endAngle }) => {
     const getArcPath = (r, start, end) => {
         const startPoint = { x: 100 + r * Math.cos(start), y: 100 + r * Math.sin(start) };
         const endPoint = { x: 100 + r * Math.cos(end), y: 100 + r * Math.sin(end) };
         const largeArcFlag = end - start < Math.PI ? "0" : "1";
-        // Penyesuaian kecil untuk mencegah busur 360 derajat menghilang
         if (end - start >= 2 * Math.PI - 0.001) {
             end -= 0.001;
             endPoint.x = 100 + r * Math.cos(end);
@@ -39,25 +57,13 @@ const PieSlice = ({ item, radius, startAngle, endAngle }) => {
         }
         return `M ${startPoint.x} ${startPoint.y} A ${r} ${r} 0 ${largeArcFlag} 1 ${endPoint.x} ${endPoint.y}`;
     };
-
     const springTransition = { type: "spring", stiffness: 200, damping: 25 };
-
     return (
-        <motion.path
-            d={getArcPath(radius, startAngle, endAngle)}
-            fill="none"
-            stroke={item.color}
-            strokeWidth="30"
-            initial={{ opacity: 0, pathLength: 0 }}
-            animate={{ opacity: 1, pathLength: 1 }}
-            exit={{ opacity: 0, pathLength: 0 }}
-            transition={{ ...springTransition, duration: 0.5 }}
-        >
+        <motion.path d={getArcPath(radius, startAngle, endAngle)} fill="none" stroke={item.color} strokeWidth="30" initial={{ opacity: 0, pathLength: 0 }} animate={{ opacity: 1, pathLength: 1 }} exit={{ opacity: 0, pathLength: 0 }} transition={{ ...springTransition, duration: 0.5 }}>
             <title>{`${item.name}: ${item.value.toFixed(2)}%`}</title>
         </motion.path>
     );
 };
-
 
 export default function DashboardPieChart({ supabase, user, dataVersion }) {
     const [allData, setAllData] = useState(null);
@@ -67,26 +73,32 @@ export default function DashboardPieChart({ supabase, user, dataVersion }) {
 
     useEffect(() => {
         const processData = (entries) => {
-            const rootTotals = { electricity_co2e: 0, transport_co2e: 0, waste_co2e: 0 };
+            const rootTotals = { electricity_co2e: 0, non_electricity_co2e: 0, transport_co2e: 0, waste_co2e: 0 };
+            const nonElectricDetails = {};
             const transportDetails = {};
             const wasteDetails = {};
-            const electricityDetails = { grid_consumption: 0 };
 
             entries.forEach(entry => {
-                const electricityEmission = entry.electricity_co2e || 0;
-                rootTotals.electricity_co2e += electricityEmission;
-                electricityDetails.grid_consumption += electricityEmission;
-
+                rootTotals.electricity_co2e += entry.electricity_co2e || 0;
+                rootTotals.non_electricity_co2e += entry.non_electricity_co2e || 0;
                 rootTotals.transport_co2e += entry.transport_co2e || 0;
+                rootTotals.waste_co2e += entry.waste_co2e || 0;
+
+                if (entry.non_electricity_details?.items) {
+                    entry.non_electricity_details.items.forEach(item => {
+                        if (!nonElectricDetails[item.type]) nonElectricDetails[item.type] = 0;
+                        nonElectricDetails[item.type] += item.emission || 0;
+                    });
+                }
+                
                 if (entry.transport_details) {
                     entry.transport_details.forEach(v => {
-                        const emission = ((parseFloat(v.km) || 0) * (v.type === 'diesel' ? 0.16984 : v.type === 'petrol' ? 0.1645 : 0.11367) * (parseFloat(v.frequency) || 0) * 4.345 * (parseInt(v.quantity, 10) || 1));
+                        const emission = ((parseFloat(v.km) || 0) * (TRANSPORT_EMISSION_FACTORS[v.type] || 0) * (parseFloat(v.frequency) || 0));
                         if (!transportDetails[v.type]) transportDetails[v.type] = 0;
                         transportDetails[v.type] += emission;
                     });
                 }
                 
-                rootTotals.waste_co2e += entry.waste_co2e || 0;
                 if (entry.waste_details?.items) {
                     entry.waste_details.items.forEach(item => {
                         if (!wasteDetails[item.type]) wasteDetails[item.type] = 0;
@@ -95,7 +107,7 @@ export default function DashboardPieChart({ supabase, user, dataVersion }) {
                 }
             });
             
-            setAllData({ root: rootTotals, electricity: electricityDetails, transport: transportDetails, waste: wasteDetails });
+            setAllData({ root: rootTotals, non_electricity: nonElectricDetails, transport: transportDetails, waste: wasteDetails });
         };
         
         const fetchAllData = async () => {
@@ -121,22 +133,13 @@ export default function DashboardPieChart({ supabase, user, dataVersion }) {
         const sourceData = allData[levelKey];
         if (!sourceData) return [];
 
-        const configs = { root: ROOT_CONFIG, electricity: ELECTRICITY_DETAIL_CONFIG, transport: TRANSPORT_DETAIL_CONFIG, waste: WASTE_DETAIL_CONFIG };
+        const configs = { root: ROOT_CONFIG, non_electricity: NON_ELECTRICITY_DETAIL_CONFIG, transport: TRANSPORT_DETAIL_CONFIG, waste: WASTE_DETAIL_CONFIG };
         const config = configs[levelKey];
         
         const total = Object.values(sourceData).reduce((sum, val) => sum + val, 0);
         
-        // --- PERBAIKAN LOGIKA DI SINI ---
         if (total === 0) {
-            // Jika total 0, buat satu segmen abu-abu 100% agar grafik tetap tampil
-            const firstKey = Object.keys(sourceData)[0] || 'empty';
-            return [{
-                key: firstKey,
-                name: config[firstKey]?.name || "Tidak Ada Data",
-                value: 100,
-                color: GREY_COLOR,
-                drillable: false,
-            }];
+            return [{ key: 'empty', name: "Tidak Ada Data", value: 100, color: GREY_COLOR, drillable: false }];
         }
         
         return Object.entries(sourceData).map(([key, value]) => ({
@@ -160,10 +163,8 @@ export default function DashboardPieChart({ supabase, user, dataVersion }) {
                 <AnimatePresence mode="wait">
                     <motion.h3 
                         key={chartView.title}
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 10 }}
-                        transition={{ duration: 0.3 }}
+                        initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }} transition={{ duration: 0.3 }}
                         className="text-xl font-bold"
                     >
                         {chartView.title}
@@ -196,10 +197,8 @@ export default function DashboardPieChart({ supabase, user, dataVersion }) {
                                 onClick={item.drillable ? () => setChartView({ level: item.key.replace('_co2e', ''), title: `Rincian Emisi ${item.name}` }) : undefined}
                                 disabled={!item.drillable}
                                 className={`flex items-center gap-3 p-1 rounded-md transition-colors duration-200 ${item.drillable ? 'cursor-pointer hover:bg-slate-100' : 'cursor-default'}`}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -20 }}
-                                transition={{ duration: 0.3 }}
+                                initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}
                             >
                                  <div className="w-4 h-4 rounded" style={{ backgroundColor: item.color }}></div>
                                  <div>

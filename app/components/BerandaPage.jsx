@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { DocumentChartBarIcon, QuestionMarkCircleIcon, BellIcon, BoltIcon, TransportIcon, TrashCanIcon } from './Icons';
+import { DocumentChartBarIcon, QuestionMarkCircleIcon, BellIcon, BoltIcon, TransportIcon, TrashCanIcon, FireIcon } from './Icons';
 
-// Komponen Kartu Rincian yang sudah diperbarui
+// Komponen Kartu Rincian kecil
 const DetailCard = ({ icon, consumptionValue, consumptionUnit, emissionValue, emissionUnit, colorClass }) => (
     <div className="bg-white p-4 rounded-xl border shadow-sm flex flex-col justify-between h-full">
         <div className="flex items-start gap-4">
@@ -21,7 +21,7 @@ const DetailCard = ({ icon, consumptionValue, consumptionUnit, emissionValue, em
     </div>
 );
 
-// Komponen baru untuk Pengingat Progres
+// Komponen Pengingat Progres
 const ProgressReminder = ({ percentageChange }) => {
     if (percentageChange === null || isNaN(percentageChange)) {
         return (
@@ -56,11 +56,11 @@ const ProgressReminder = ({ percentageChange }) => {
 
 // Komponen Utama Halaman Beranda
 export default function BerandaPage({ user, supabase, setActiveDashboardPage, dataVersion }) {
-    const [businessName, setBusinessName] = useState('Rekan');
+    const [businessName, setBusinessName] = useState('');
     const [summary, setSummary] = useState(null);
     const [loading, setLoading] = useState(true);
     const [percentageChange, setPercentageChange] = useState(null);
-    const [latestConsumption, setLatestConsumption] = useState({ kwh: 0, km: 0, waste: 0 });
+    const [latestConsumption, setLatestConsumption] = useState({ kwh: 0, nonElectric: 0, km: 0, waste: 0 });
     
     useEffect(() => {
         const fetchPageData = async () => {
@@ -77,7 +77,7 @@ export default function BerandaPage({ user, supabase, setActiveDashboardPage, da
 
                 const { data: entries, error } = await supabase
                     .from('carbon_entries')
-                    .select('report_month, total_co2e_kg, electricity_co2e, transport_co2e, waste_co2e, electricity_details, transport_details, waste_details')
+                    .select('*') // Ambil semua kolom untuk detail
                     .eq('user_id', user.id)
                     .gte('report_month', firstDayOfTwoMonthsAgo)
                     .order('report_month', { ascending: false });
@@ -96,29 +96,30 @@ export default function BerandaPage({ user, supabase, setActiveDashboardPage, da
                     }
 
                     let totalKwh = latestMonthEntry.electricity_details?.kwh || 0;
+                    // --- PENAMBAHAN PERHITUNGAN KONSUMSI NON-LISTRIK ---
+                    let totalNonElectric = (latestMonthEntry.non_electricity_details?.items || []).reduce((acc, v) => acc + ((v.usage || 0) * (v.frequency || 0)), 0);
                     let totalKm = (latestMonthEntry.transport_details || []).reduce((acc, v) => acc + ((v.km || 0) * (v.frequency || 0)), 0);
                     let totalWaste = (latestMonthEntry.waste_details?.items || []).reduce((acc, i) => acc + (i.weight || 0), 0);
                     
-                    setLatestConsumption({ kwh: totalKwh, km: totalKm, waste: totalWaste });
+                    setLatestConsumption({ kwh: totalKwh, nonElectric: totalNonElectric, km: totalKm, waste: totalWaste });
                     
-                    // PERBAIKAN UTAMA DI SINI
                     setSummary({
                         total_electricity: latestMonthEntry.electricity_co2e || 0,
+                        total_non_electricity: latestMonthEntry.non_electricity_co2e || 0,
                         total_transport: latestMonthEntry.transport_co2e || 0,
                         total_waste: latestMonthEntry.waste_co2e || 0,
                         total_all: latestMonthEntry.total_co2e_kg || 0,
                         report_count: entries.length,
                     });
                 } else {
-                     setSummary({ total_all: 0, report_count: 0, total_electricity: 0, total_transport: 0, total_waste: 0 });
+                     setSummary({ total_all: 0, report_count: 0, total_electricity: 0, total_non_electricity: 0, total_transport: 0, total_waste: 0 });
                      setPercentageChange(null);
-                     setLatestConsumption({ kwh: 0, km: 0, waste: 0 });
+                     setLatestConsumption({ kwh: 0, nonElectric: 0, km: 0, waste: 0 });
                 }
 
             } catch (err) {
                 console.error('Error fetching data for Beranda:', err);
-                // Set state ke nilai default jika ada error
-                setSummary({ total_all: 0, report_count: 0, total_electricity: 0, total_transport: 0, total_waste: 0 });
+                setSummary({ total_all: 0, report_count: 0, total_electricity: 0, total_non_electricity: 0, total_transport: 0, total_waste: 0 });
             } finally {
                 setLoading(false);
             }
@@ -127,7 +128,7 @@ export default function BerandaPage({ user, supabase, setActiveDashboardPage, da
         fetchPageData();
     }, [user, supabase, dataVersion]);
 
-    const userBgImage = "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?fm=jpg&q=60&w=3000&ixlib-rb-4-1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8YmFsaSUyMGhvdGVsfGVufDB8fDB8fHww";
+    const userBgImage = "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?fm=jpg&q=60&w=3000&ixlib=rb-4-1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8YmFsaSUyMGhvdGVsfGVufDB8fDB8fHww";
 
     return (
         <div className="space-y-8">
@@ -140,13 +141,15 @@ export default function BerandaPage({ user, supabase, setActiveDashboardPage, da
                     <div className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></div>
                 </button>
                 <div className="relative z-0">
-                    <h1 className="text-4xl font-extrabold drop-shadow-md">Selamat Datang, {businessName}!</h1>
+                    <h1 className="text-4xl font-extrabold drop-shadow-md">
+                        Selamat Datang, {loading ? '...' : businessName}!
+                    </h1>
                     <p className="mt-1 text-lg opacity-90 drop-shadow">Ini adalah pusat kendali Anda untuk pariwisata berkelanjutan.</p>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div className="lg:col-span-8 space-y-6">
                     {loading ? (
                         <div className="animate-pulse h-28 bg-slate-200 rounded-xl"></div>
                     ) : (
@@ -161,22 +164,25 @@ export default function BerandaPage({ user, supabase, setActiveDashboardPage, da
                         </div>
                     )}
                     
+                    {/* --- PERUBAHAN TATA LETAK GRID MENJADI 4 KOLOM --- */}
                     {loading ? (
-                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-pulse">
+                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-pulse">
+                            <div className="h-40 bg-slate-200 rounded-xl"></div>
                             <div className="h-40 bg-slate-200 rounded-xl"></div>
                             <div className="h-40 bg-slate-200 rounded-xl"></div>
                             <div className="h-40 bg-slate-200 rounded-xl"></div>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                             <DetailCard icon={<BoltIcon className="w-5 h-5"/>} consumptionValue={latestConsumption.kwh.toLocaleString('id-ID')} consumptionUnit="kWh" emissionValue={summary?.total_electricity || 0} emissionUnit="ton CO₂e" colorClass={{bg: 'bg-amber-100', text: 'text-amber-600'}} />
+                            <DetailCard icon={<FireIcon />} consumptionValue={latestConsumption.nonElectric.toLocaleString('id-ID')} consumptionUnit="L/m³" emissionValue={summary?.total_non_electricity || 0} emissionUnit="ton CO₂e" colorClass={{bg: 'bg-orange-100', text: 'text-orange-600'}} />
                             <DetailCard icon={<TransportIcon className="w-6 h-6"/>} consumptionValue={latestConsumption.km.toLocaleString('id-ID')} consumptionUnit="km" emissionValue={summary?.total_transport || 0} emissionUnit="ton CO₂e" colorClass={{bg: 'bg-blue-100', text: 'text-blue-600'}} />
                             <DetailCard icon={<TrashCanIcon className="w-5 h-5"/>} consumptionValue={latestConsumption.waste.toFixed(2)} consumptionUnit="ton" emissionValue={summary?.total_waste || 0} emissionUnit="ton CO₂e" colorClass={{bg: 'bg-red-100', text: 'text-red-600'}} />
                         </div>
                     )}
                 </div>
 
-                <div className="bg-white p-6 rounded-xl border shadow-sm flex flex-col justify-between">
+                <div className="lg:col-span-4 bg-white p-6 rounded-xl border shadow-sm flex flex-col justify-between">
                      <div>
                         <h3 className="text-xl font-bold text-slate-800">Siap Melaporkan Emisi?</h3>
                         <p className="text-slate-500 mt-2">Mulai langkah Anda dengan melaporkan data emisi untuk periode ini.</p>
@@ -194,7 +200,7 @@ export default function BerandaPage({ user, supabase, setActiveDashboardPage, da
                 </div>
             </div>
 
-            <div className="max-w-3xl mx-auto">
+            <div className="max-w-4xl mx-auto">
                 <div className="space-y-4">
                     <h3 className="text-xl font-bold text-slate-800">Mengapa harus Pariwisata Berkelanjutan?</h3>
                     <div className="bg-white p-2 rounded-xl border shadow-sm aspect-video w-full overflow-hidden">

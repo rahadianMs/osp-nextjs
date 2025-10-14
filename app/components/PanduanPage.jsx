@@ -1,6 +1,6 @@
 "use client";
 
-// --- Komponen Ikon untuk Panduan ---
+// Komponen Ikon untuk Panduan
 const NumberCircle = ({ number }) => (
     <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#22543d] text-white flex items-center justify-center font-bold">
         {number}
@@ -16,7 +16,7 @@ const GuideSection = ({ title, children }) => (
     </section>
 );
 
-// --- Komponen Utama Halaman Panduan ---
+// Komponen Utama Halaman Panduan
 export default function PanduanPage() {
     return (
         <div className="max-w-4xl mx-auto">
@@ -47,16 +47,19 @@ export default function PanduanPage() {
                         <NumberCircle number="2" />
                         <div>
                             <h4 className="font-bold text-lg text-slate-700">Input Data per Kategori</h4>
-                            <p>Platform membagi sumber emisi menjadi tiga kategori utama. Anda bisa mengisinya secara bertahap.</p>
+                            <p>Platform membagi sumber emisi menjadi empat kategori utama. Anda bisa mengisinya secara bertahap.</p>
                             <ul className="list-disc list-inside mt-2 space-y-2 pl-2">
                                 <li>
                                     <strong>Listrik:</strong> Masukkan total konsumsi listrik dari tagihan PLN (dalam kWh), luas bangunan, dan total malam kamar terisi. Pilih juga lokasi grid listrik yang paling sesuai.
                                 </li>
                                 <li>
-                                    <strong>Transportasi:</strong> Daftarkan kendaraan operasional milik perusahaan. Masukkan jenis kendaraan, rata-rata jarak tempuh per penggunaan, frekuensi penggunaan per minggu, dan jumlah unitnya.
+                                    <strong>Energi Non-Listrik:</strong> Catat penggunaan bahan bakar selain untuk transportasi, seperti solar untuk genset atau gas LPG untuk memasak. Masukkan jenis bahan bakar, jumlah penggunaan, dan frekuensi per bulan.
                                 </li>
                                 <li>
-                                    <strong>Limbah:</strong> Tambahkan jenis-jenis limbah yang dihasilkan bisnis Anda (misalnya, limbah makanan, plastik). Masukkan beratnya dalam satuan <strong>ton</strong> dan pilih metode pengolahannya (misalnya, dikirim ke TPA, didaur ulang).
+                                    <strong>Transportasi:</strong> Daftarkan kendaraan operasional milik perusahaan. Masukkan jenis kendaraan, rata-rata jarak tempuh per penggunaan, dan total frekuensi penggunaan per bulan.
+                                </li>
+                                <li>
+                                    <strong>Limbah:</strong> Tambahkan jenis-jenis limbah yang dihasilkan bisnis Anda (misalnya, limbah makanan, plastik). Masukkan beratnya dalam satuan <strong>ton</strong> dan pilih metode pengolahannya.
                                 </li>
                             </ul>
                         </div>
@@ -71,18 +74,7 @@ export default function PanduanPage() {
                 </GuideSection>
 
                 <GuideSection title="Memahami Dasbor Utama">
-                    <p>Halaman <strong>"Dasbor Utama"</strong> adalah pusat pantauan Anda. Di sini Anda akan menemukan:</p>
-                    <ul className="list-disc list-inside space-y-3">
-                        <li>
-                            <strong>Total Emisi Keseluruhan:</strong> Angka ini adalah akumulasi dari seluruh emisi (listrik, transportasi, dan limbah) dari semua laporan yang pernah Anda buat. Ini memberikan gambaran besar dampak karbon bisnis Anda dari waktu ke waktu.
-                        </li>
-                        <li>
-                            <strong>Kartu Ringkasan per Kategori:</strong> Menampilkan total emisi yang terakumulasi untuk masing-masing kategori. Ini membantu Anda melihat sumber emisi terbesar dari bisnis Anda.
-                        </li>
-                        <li>
-                            <strong>Grafik Distribusi Emisi:</strong> Diagram lingkaran (pie chart) ini secara visual menunjukkan persentase kontribusi setiap kategori terhadap total emisi Anda. Gunakan ini untuk memprioritaskan upaya pengurangan emisi.
-                        </li>
-                    </ul>
+                    <p>Halaman <strong>"Dasbor Utama"</strong> adalah pusat pantauan Anda. Di sini Anda akan menemukan ringkasan emisi yang dikelompokkan ke dalam Scope 1, 2, dan 3, beserta rincian untuk setiap kategori emisi.</p>
                 </GuideSection>
 
                 <GuideSection title="Mengelola Riwayat dan Sertifikat">
@@ -91,7 +83,7 @@ export default function PanduanPage() {
                             <strong>Riwayat Laporan:</strong> Di bagian bawah halaman "Laporan Emisi", Anda akan menemukan daftar semua laporan yang telah Anda buat, diurutkan dari yang terbaru. Klik pada salah satu laporan untuk melihat detailnya atau mengunduhnya dalam format PDF.
                         </li>
                         <li>
-                            <strong>Sertifikat Apresiasi:</strong> Kunjungi halaman <strong>"Sertifikasi"</strong>. Setelah Anda berhasil membuat setidaknya satu laporan yang mencakup data untuk ketiga kategori (Listrik, Transportasi, dan Limbah), Anda akan berhak mengunduh Sertifikat Apresiasi sebagai bentuk pengakuan atas komitmen Anda.
+                            <strong>Sertifikat Apresiasi:</strong> Kunjungi halaman <strong>"Sertifikasi"</strong>. Setelah Anda berhasil membuat setidaknya satu laporan yang mencakup data untuk semua kategori emisi, Anda akan berhak mengunduh Sertifikat Apresiasi sebagai bentuk pengakuan atas komitmen Anda.
                         </li>
                     </ul>
                 </GuideSection>

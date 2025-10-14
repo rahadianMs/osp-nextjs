@@ -5,8 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const CATEGORY_CONFIG = {
     electricity_co2e: { name: 'Listrik', color: '#FBBF24' },
+    non_electricity_co2e: { name: 'Energi Non-Listrik', color: '#F97316' }, // Kategori Baru
     transport_co2e: { name: 'Transportasi', color: '#60A5FA' },
-    waste_co2e: { name: 'Sampah', color: '#F87171' },
+    waste_co2e: { name: 'Limbah', color: '#F87171' },
 };
 const GREY_COLOR = '#E5E7EB';
 
@@ -22,7 +23,6 @@ const LineChart = ({ data, zoomCategory, maxValue }) => {
 
     return (
         <motion.svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto" animate={{ height: height }} transition={springTransition}>
-            {/* Sumbu Y dan Garis Grid */}
             <AnimatePresence>
                 {[...Array(5)].map((_, i) => {
                     const value = (maxValue / 4) * i;
@@ -36,20 +36,18 @@ const LineChart = ({ data, zoomCategory, maxValue }) => {
                             transition={{ duration: 0.5, delay: i * 0.05 }}
                         >
                             <line x1={padding} x2={width - padding} y1={y} y2={y} stroke="#F1F5F9" strokeDasharray="2,4" />
-                            <text x={padding - 8} y={y + 3} textAnchor="end" className="text-[10px] fill-slate-400">{value.toFixed(0)}</text>
+                            <text x={padding - 8} y={y + 3} textAnchor="end" className="text-[10px] fill-slate-400">{value.toFixed(2)}</text>
                         </motion.g>
                     );
                 })}
             </AnimatePresence>
 
-            {/* Sumbu X */}
             {data.map((d, i) => (
                 <text key={d.month} x={getX(i)} y={height - padding + 15} textAnchor="middle" className="text-xs font-semibold fill-slate-600">
                     {d.month}
                 </text>
             ))}
 
-            {/* Garis Grafik */}
             {Object.keys(CATEGORY_CONFIG).map(categoryKey => {
                 const isZoomed = zoomCategory === categoryKey;
                 const isVisible = !zoomCategory || isZoomed;
@@ -61,23 +59,18 @@ const LineChart = ({ data, zoomCategory, maxValue }) => {
                 }).join(' ');
                 
                 return (
-                    <motion.g 
-                        key={categoryKey}
-                        animate={{ opacity: isVisible ? 1 : 0.25 }}
-                        transition={springTransition}
-                    >
-                        {/* --- PERUBAHAN ANIMASI UTAMA DI SINI --- */}
+                    <motion.g key={categoryKey} animate={{ opacity: isVisible ? 1 : 0.25 }} transition={springTransition}>
                         <motion.path 
-                            initial={{ pathLength: 0 }} // Mulai dari 0 (tidak terlihat)
+                            initial={{ pathLength: 0 }}
                             animate={{ 
-                                pathLength: 1, // Animasikan hingga 1 (tergambar penuh)
+                                pathLength: 1, 
                                 d: pathData, 
                                 stroke: color, 
                                 strokeWidth: isZoomed || !zoomCategory ? 3 : 1.5 
                             }}
                             transition={{
-                                pathLength: { duration: 1.5, ease: "easeInOut" }, // Animasi menggambar
-                                default: springTransition // Animasi untuk zoom/rescale
+                                pathLength: { duration: 1.5, ease: "easeInOut" },
+                                default: springTransition
                             }}
                             fill="none" 
                             strokeLinecap="round" 
@@ -97,7 +90,7 @@ const LineChart = ({ data, zoomCategory, maxValue }) => {
                                     }}
                                     transition={springTransition}
                                 >
-                                   <title>{`${CATEGORY_CONFIG[categoryKey].name}: ${value.toFixed(2)} kg CO₂e`}</title>
+                                   <title>{`${CATEGORY_CONFIG[categoryKey].name}: ${value.toFixed(2)} ton CO₂e`}</title>
                                 </motion.circle>
                              )
                         })}
@@ -108,7 +101,6 @@ const LineChart = ({ data, zoomCategory, maxValue }) => {
     );
 };
 
-// ... Sisa komponen DashboardTrends tetap sama ...
 export default function DashboardTrends({ supabase, user, dataVersion }) {
     const [monthlyData, setMonthlyData] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -121,13 +113,16 @@ export default function DashboardTrends({ supabase, user, dataVersion }) {
             setLoading(true);
             try {
                 const { data } = await supabase
-                    .from('carbon_entries').select('report_month, electricity_co2e, transport_co2e, waste_co2e')
-                    .eq('user_id', user.id).order('report_month', { ascending: true });
+                    .from('carbon_entries')
+                    .select('report_month, electricity_co2e, non_electricity_co2e, transport_co2e, waste_co2e')
+                    .eq('user_id', user.id)
+                    .order('report_month', { ascending: true });
 
                 const groupedData = data.reduce((acc, entry) => {
                     const month = entry.report_month;
-                    if (!acc[month]) acc[month] = { electricity_co2e: 0, transport_co2e: 0, waste_co2e: 0 };
+                    if (!acc[month]) acc[month] = { electricity_co2e: 0, non_electricity_co2e: 0, transport_co2e: 0, waste_co2e: 0 };
                     acc[month].electricity_co2e += entry.electricity_co2e || 0;
+                    acc[month].non_electricity_co2e += entry.non_electricity_co2e || 0;
                     acc[month].transport_co2e += entry.transport_co2e || 0;
                     acc[month].waste_co2e += entry.waste_co2e || 0;
                     return acc;
@@ -170,7 +165,7 @@ export default function DashboardTrends({ supabase, user, dataVersion }) {
     } else {
         maxValue = Math.max(...monthlyData.flatMap(d => d.segments.map(s => s.value)));
     }
-    maxValue = Math.max(maxValue * 1.2, 100);
+    maxValue = Math.max(maxValue * 1.2, 0.1); // Set minimum agar tidak 0
 
     return (
         <div className="bg-white p-6 rounded-xl shadow-sm border">
@@ -178,7 +173,7 @@ export default function DashboardTrends({ supabase, user, dataVersion }) {
             <div className="w-full">
                 <LineChart data={monthlyData} zoomCategory={zoomCategory} maxValue={maxValue} />
             </div>
-             <div className="flex justify-center gap-4 mt-2 text-sm">
+             <div className="flex justify-center gap-4 mt-2 text-sm flex-wrap">
                 {Object.entries(CATEGORY_CONFIG).map(([key, cat]) => {
                     const isZoomed = zoomCategory === key;
                     const isActive = !zoomCategory || isZoomed;

@@ -8,13 +8,11 @@ export default function SustainabilityPage({ supabase, user }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     
-    // State untuk form
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [category, setCategory] = useState('Listrik');
-    const [activityDate, setActivityDate] = useState(new Date().toISOString().slice(0, 10)); // State baru untuk tanggal
+    const [activityDate, setActivityDate] = useState(new Date().toISOString().slice(0, 10));
 
-    // State untuk konfirmasi hapus
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [selectedReport, setSelectedReport] = useState(null);
 
@@ -25,7 +23,7 @@ export default function SustainabilityPage({ supabase, user }) {
             .from('sustainability_reports')
             .select('*')
             .eq('user_id', user.id)
-            .order('activity_date', { ascending: false }); // Urutkan berdasarkan tanggal kegiatan
+            .order('activity_date', { ascending: false });
 
         if (error) {
             console.error('Error fetching reports:', error);
@@ -87,13 +85,15 @@ export default function SustainabilityPage({ supabase, user }) {
         handleCancelDelete();
         setLoading(false);
     };
+    
+    // --- PERBAIKAN DI SINI ---
+    const categories = ['Listrik', 'Energi Non-Listrik', 'Transportasi', 'Limbah'];
 
     const groupedReports = reports.reduce((acc, report) => {
         (acc[report.category] = acc[report.category] || []).push(report);
         return acc;
     }, {});
 
-    const categories = ['Listrik', 'Transportasi', 'Limbah'];
 
     return (
         <div className="space-y-10">
@@ -117,9 +117,8 @@ export default function SustainabilityPage({ supabase, user }) {
                     <div>
                         <label htmlFor="category" className="block text-sm font-medium text-slate-700 mb-1">Kategori</label>
                         <select id="category" value={category} onChange={(e) => setCategory(e.target.value)} required className="w-full p-2 border border-slate-300 rounded-lg bg-white">
-                            <option>Listrik</option>
-                            <option>Transportasi</option>
-                            <option>Limbah</option>
+                            {/* --- PERBAIKAN DI SINI --- */}
+                            {categories.map(cat => <option key={cat}>{cat}</option>)}
                         </select>
                     </div>
                     <button type="submit" disabled={loading} className="w-full py-3 text-base font-semibold text-white bg-[#348567] rounded-lg hover:bg-[#2A6A52] transition-colors disabled:bg-slate-400">

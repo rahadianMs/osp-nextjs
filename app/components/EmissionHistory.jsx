@@ -1,4 +1,4 @@
-import { BoltIcon, TransportIcon, TrashCanIcon } from './Icons';
+import { BoltIcon, TransportIcon, TrashCanIcon, FireIcon } from './Icons';
 
 const ChevronRightIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" /></svg>;
 
@@ -50,10 +50,15 @@ export default function EmissionHistory({ entries, loading, error, onReportClick
                                 </div>
                             </div>
                             <div className="border-t my-3"></div>
-                            <div className="grid grid-cols-3 gap-4 text-sm items-center">
+                            {/* --- PERUBAHAN TATA LETAK GRID --- */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm items-center">
                                 <div className="flex items-center gap-3 text-slate-600">
                                     <BoltIcon className="w-8 h-8 text-slate-500" />
                                     <span className="font-medium">{(entry.electricity_co2e || 0).toFixed(2)} ton</span>
+                                </div>
+                                <div className="flex items-center gap-3 text-slate-600">
+                                    <FireIcon />
+                                    <span className="font-medium">{(entry.non_electricity_co2e || 0).toFixed(2)} ton</span>
                                 </div>
                                 <div className="flex items-center gap-3 text-slate-600">
                                     <TransportIcon className="w-8 h-8 text-slate-500" />
