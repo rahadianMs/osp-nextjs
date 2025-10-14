@@ -1,7 +1,15 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { BookOpenIcon, DashboardIcon, HandshakeIcon, IncentiveIcon, InstagramIcon, LinkedinIcon, FacebookIcon } from './Icons.jsx';
+
+// Dynamic import untuk komponen peta, dengan SSR dinonaktifkan
+const EmissionMap = dynamic(() => import('./EmissionMap'), { 
+    ssr: false,
+    loading: () => <div className="h-[500px] bg-zinc-200 rounded-lg animate-pulse flex items-center justify-center">Memuat Peta...</div>
+});
+
 
 export default function LandingPage({ setActivePage, setIsLogin }) {
     const [isScrolled, setIsScrolled] = useState(false);
@@ -146,6 +154,18 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
                         </div>
                     </div>
                 </section>
+                
+                {/* SECTION PETA BARU DIMULAI DI SINI */}
+                <section id="map" className="py-24 px-[5%] bg-white">
+                    <div className="container mx-auto max-w-6xl">
+                        <div className="text-center mb-16">
+                            <h2 className={`text-4xl md:text-5xl font-bold text-${colors.primary}`}>Peta Sebaran Emisi Karbon</h2>
+                            <p className={`text-lg text-${colors.secondary} mt-4 max-w-3xl mx-auto`}>Visualisasi data emisi CO2 dari sektor pariwisata di berbagai provinsi di Indonesia. Arahkan kursor pada sebuah provinsi untuk melihat detail.</p>
+                        </div>
+                        <EmissionMap />
+                    </div>
+                </section>
+                {/* SECTION PETA BERAKHIR DI SINI */}
 
                 <section id="features" className="py-24 px-[5%] bg-zinc-50">
                     <div className="container mx-auto max-w-6xl text-center">
