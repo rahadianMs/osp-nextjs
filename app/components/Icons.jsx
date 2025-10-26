@@ -26,3 +26,10 @@ export const UsersIcon = ({ className }) => <svg xmlns="http://www.w3.org/2000/s
 // Ikon ini sekarang memiliki ukuran yang sama dengan ikon sidebar lainnya
 export const BookOpenIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" /></svg>;
 export const FireIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8"><path strokeLinecap="round" strokeLinejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.362-6.867 8.208 8.208 0 013 2.48z" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 18a3.75 3.75 0 00.495-7.467 5.99 5.99 0 00-1.925 3.546 5.974 5.974 0 01-2.133-1.001A3.75 3.75 0 0012 18z" /></svg>
+
+// Tambahkan kode ini di bagian akhir file app/components/Icons.jsx
+
+// ... (semua ikon Anda yang lain)
+
+// [BARU] Ikon untuk penanda di peta
+export const MapPinIcon = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}><path fillRule="evenodd" d="M9.69 18.93l.003.002a1.75 1.75 0 002.614 0l.002-.002a1.75 1.75 0 00.31-2.22l-1.63-3.26a.75.75 0 00-1.35 0L8.03 16.71a1.75 1.75 0 00.31 2.22zM10 12.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" clipRule="evenodd" /><path d="M10 1.75a8.25 8.25 0 100 16.5A8.25 8.25 0 0010 1.75zM1.5 10a8.5 8.5 0 1117 0 8.5 8.5 0 01-17 0z" /></svg>;

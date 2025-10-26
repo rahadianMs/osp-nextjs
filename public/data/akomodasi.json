@@ -1,0 +1,110 @@
+{
+  "type": "FeatureCollection",
+  "name": "Akomodasi Hotel",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "Name": "Hotel A (Bali Utara - Singaraja)",
+        "data": {
+          "2025": { "totalEmisi": 890.00, "scope1": {"total": 210.00, "transportasi": 100.00, "energiNonListrik": 110.00}, "scope2": {"total": 500.00}, "scope3": {"total": 180.00} },
+          "2024": { "totalEmisi": 850.00, "scope1": {"total": 200.00, "transportasi": 90.00, "energiNonListrik": 110.00}, "scope2": {"total": 470.00}, "scope3": {"total": 180.00} },
+          "2023": { "totalEmisi": 830.00, "scope1": {"total": 190.00, "transportasi": 80.00, "energiNonListrik": 110.00}, "scope2": {"total": 460.00}, "scope3": {"total": 180.00} },
+          "2022": null
+        }
+      },
+      "geometry": { "type": "Point", "coordinates": [ 115.0883, -8.2510 ] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Name": "Hotel B (Bali Tengah - Bedugul)",
+        "data": {
+          "2025": { "totalEmisi": 1120.30, "scope1": {"total": 400.10, "transportasi": 250.00, "energiNonListrik": 150.10}, "scope2": {"total": 620.20}, "scope3": {"total": 100.00} },
+          "2024": { "totalEmisi": 1100.00, "scope1": {"total": 390.00, "transportasi": 240.00, "energiNonListrik": 150.00}, "scope2": {"total": 610.00}, "scope3": {"total": 100.00} },
+          "2023": null,
+          "2022": null
+        }
+      },
+      "geometry": { "type": "Point", "coordinates": [ 115.1660, -8.2783 ] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Name": "Hotel C (Bali Timur - Sidemen)",
+        "data": {
+          "2025": { "totalEmisi": 750.00, "scope1": {"total": 150.00, "transportasi": 100.00, "energiNonListrik": 50.00}, "scope2": {"total": 450.00}, "scope3": {"total": 150.00} },
+          "2024": null,
+          "2023": { "totalEmisi": 700.00, "scope1": {"total": 140.00, "transportasi": 90.00, "energiNonListrik": 50.00}, "scope2": {"total": 410.00}, "scope3": {"total": 150.00} },
+          "2022": null
+        }
+      },
+      "geometry": { "type": "Point", "coordinates": [ 115.5167, -8.4419 ] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Name": "Hotel D (Bali Tengah - Bangli)",
+        "data": {
+          "2025": { "totalEmisi": 950.00, "scope1": {"total": 250.00, "transportasi": 150.00, "energiNonListrik": 100.00}, "scope2": {"total": 550.00}, "scope3": {"total": 150.00} },
+          "2024": { "totalEmisi": 900.00, "scope1": {"total": 230.00, "transportasi": 130.00, "energiNonListrik": 100.00}, "scope2": {"total": 520.00}, "scope3": {"total": 150.00} },
+          "2023": null,
+          "2022": { "totalEmisi": 850.00, "scope1": {"total": 200.00, "transportasi": 100.00, "energiNonListrik": 100.00}, "scope2": {"total": 500.00}, "scope3": {"total": 150.00} }
+        }
+      },
+      "geometry": { "type": "Point", "coordinates": [ 115.3506, -8.3240 ] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Name": "Hotel E (Bali Tengah - Gianyar)",
+        "data": {
+          "2025": { "totalEmisi": 1300.00, "scope1": {"total": 400.00, "transportasi": 200.00, "energiNonListrik": 200.00}, "scope2": {"total": 700.00}, "scope3": {"total": 200.00} },
+          "2024": null,
+          "2023": null,
+          "2022": null
+        }
+      },
+      "geometry": { "type": "Point", "coordinates": [ 115.3275, -8.5401 ] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Name": "Hotel F (Bali Selatan - Uluwatu)",
+        "data": {
+          "2025": { "totalEmisi": 1800.00, "scope1": {"total": 600.00, "transportasi": 350.00, "energiNonListrik": 250.00}, "scope2": {"total": 900.00}, "scope3": {"total": 300.00} },
+          "2024": { "totalEmisi": 1750.00, "scope1": {"total": 580.00, "transportasi": 330.00, "energiNonListrik": 250.00}, "scope2": {"total": 870.00}, "scope3": {"total": 300.00} },
+          "2023": { "totalEmisi": 1700.00, "scope1": {"total": 550.00, "transportasi": 300.00, "energiNonListrik": 250.00}, "scope2": {"total": 850.00}, "scope3": {"total": 300.00} },
+          "2022": { "totalEmisi": 1650.00, "scope1": {"total": 500.00, "transportasi": 250.00, "energiNonListrik": 250.00}, "scope2": {"total": 850.00}, "scope3": {"total": 300.00} }
+        }
+      },
+      "geometry": { "type": "Point", "coordinates": [ 115.1281, -8.8095 ] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Name": "Hotel G (Bali Tengah - Ubud)",
+        "data": {
+          "2025": { "totalEmisi": 600.00, "scope1": {"total": 150.00, "transportasi": 100.00, "energiNonListrik": 50.00}, "scope2": {"total": 350.00}, "scope3": {"total": 100.00} },
+          "2024": { "totalEmisi": 580.00, "scope1": {"total": 140.00, "transportasi": 90.00, "energiNonListrik": 50.00}, "scope2": {"total": 340.00}, "scope3": {"total": 100.00} },
+          "2023": { "totalEmisi": 550.00, "scope1": {"total": 130.00, "transportasi": 80.00, "energiNonListrik": 50.00}, "scope2": {"total": 320.00}, "scope3": {"total": 100.00} },
+          "2022": null
+        }
+      },
+      "geometry": { "type": "Point", "coordinates": [ 115.2632, -8.5069 ] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Name": "Hotel H (Bali Selatan - Canggu)",
+        "data": {
+          "2025": { "totalEmisi": 1450.00, "scope1": {"total": 400.00, "transportasi": 250.00, "energiNonListrik": 150.00}, "scope2": {"total": 850.00}, "scope3": {"total": 200.00} },
+          "2024": null,
+          "2023": { "totalEmisi": 1400.00, "scope1": {"total": 380.00, "transportasi": 240.00, "energiNonListrik": 140.00}, "scope2": {"total": 820.00}, "scope3": {"total": 200.00} },
+          "2022": null
+        }
+      },
+      "geometry": { "type": "Point", "coordinates": [ 115.1398, -8.6585 ] }
+    }
+  ]
+}
