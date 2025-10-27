@@ -2,31 +2,58 @@
 
 "use client";
 import React from "react";
-// Impor ikon yang kita butuhkan (sudah benar)
-import { BoltIcon, TrashCanIcon, FireIcon, ChartPieIcon } from "./Icons";
+// Impor ikon yang kita butuhkan
+import {
+  BoltIcon,
+  TrashCanIcon,
+  FireIcon,
+  DocumentChartBarIcon,
+} from "./Icons";
 
 /**
- * [BARU] Komponen kartu persegi panjang berwarna solid.
- * Didesain untuk layout list vertikal yang ringkas.
+ * [BARU] Komponen 1: Kartu Utama untuk TOTAL
+ * Desain "clean" dengan latar belakang terang dan aksen warna.
  */
-const ColorStripeCard = ({ title, value, icon, bgColor }) => (
-  <div
-    className={`rounded-lg p-2.5 text-white shadow ${bgColor} flex items-center justify-between`}
-  >
-    {/* Kiri: Ikon dan Judul */}
-    <div className="flex items-center space-x-2">
-      <div className="flex-shrink-0">{icon}</div>
-      <span className="text-sm font-medium">{title}</span>
+const TotalStatCard = ({ value }) => (
+  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+    {/* [MODIFIKASI] space-x-3 diubah menjadi space-x-4 */}
+    <div className="flex items-center space-x-4 mb-1">
+      <div className="flex-shrink-0 w-5 h-5 text-green-700">
+        <DocumentChartBarIcon />
+      </div>
+      <span className="text-sm font-semibold text-green-800">
+        Total Emisi
+      </span>
     </div>
-    {/* Kanan: Nilai */}
-    <p className="text-sm font-bold">
-      {value.toLocaleString("id-ID")} kgCO₂e
+    <p className="text-2xl font-bold text-green-700">
+      {value.toLocaleString("id-ID")}
+      <span className="text-sm font-normal text-green-600 ml-1">kgCO₂e</span>
     </p>
   </div>
 );
 
 /**
- * Ini adalah komponen Popup yang telah diperbarui dengan UI Card persegi panjang.
+ * [BARU] Komponen 2: Baris Sederhana untuk SCOPES
+ * Ini menggantikan kotak-kotak persegi untuk tampilan yang lebih bersih.
+ */
+const ScopeStatRow = ({ title, value, icon, colorClass }) => (
+  <div className={`flex justify-between items-center ${colorClass}`}>
+    {/* Kiri: Ikon dan Judul */}
+    {/* [MODIFIKASI] space-x-3 diubah menjadi space-x-4 */}
+    <div className="flex items-center space-x-5">
+      <div className="flex-shrink-0 w-5 h-5">{icon}</div>
+      <span className="text-sm font-medium text-slate-600">{title}</span>
+    </div>
+    {/* Kanan: Nilai (dengan unit) */}
+    <p className="text-sm font-semibold text-slate-800">
+      {value.toLocaleString("id-ID")}
+      <span className="text-xs font-normal text-slate-500 ml-1">kgCO₂e</span>
+    </p>
+  </div>
+);
+
+/**
+ * Ini adalah komponen Popup utama dengan layout "clean" dan "professional".
  */
 function AccommodationPopup({ nama, dataForYear, properties, onDetailClick }) {
   const handleDetailClick = (e) => {
@@ -35,53 +62,50 @@ function AccommodationPopup({ nama, dataForYear, properties, onDetailClick }) {
   };
 
   return (
-    // [MODIFIKASI] Kita sesuaikan lebar agar pas untuk kartu persegi panjang
-    <div className="flex flex-col space-y-2 p-1" style={{ width: "240px" }}>
+    // Lebar 240px untuk memberi ruang bernapas
+    <div className="flex flex-col space-y-3 p-2" style={{ width: "240px" }}>
       {/* Nama Akomodasi */}
-      <h3 className="font-bold text-base text-slate-800 mb-1">{nama}</h3>
+      <h3 className="font-bold text-base text-slate-800">{nama}</h3>
 
       {/* Tampilkan data HANYA jika dataForYear tidak null */}
       {dataForYear ? (
         <>
-          {/* [BARU] Layout list vertikal untuk 4 kartu */}
-          <div className="flex flex-col space-y-1.5">
-            <ColorStripeCard
-              title="Total Emisi"
-              value={dataForYear.totalEmisi}
-              icon={<ChartPieIcon className="w-4 h-4" />}
-              bgColor="bg-green-600" // Warna Total
-            />
-            <ColorStripeCard
+          {/* 1. Total Emisi (Kartu Utama) */}
+          <TotalStatCard value={dataForYear.totalEmisi} />
+
+          {/* 2. Daftar Rincian Scopes */}
+          <div className="flex flex-col space-y-2 pt-1">
+            <ScopeStatRow
               title="Scope 1"
               value={dataForYear.scope1.total}
-              icon={<FireIcon className="w-4 h-4" />}
-              bgColor="bg-orange-500" // Warna Scope 1
+              icon={<FireIcon />}
+              colorClass="text-orange-500" // Warna hanya pada ikon/teks
             />
-            <ColorStripeCard
+            <ScopeStatRow
               title="Scope 2"
               value={dataForYear.scope2.total}
-              icon={<BoltIcon className="w-4 h-4" />}
-              bgColor="bg-amber-500" // Warna Scope 2
+              icon={<BoltIcon />}
+              colorClass="text-amber-500"
             />
-            <ColorStripeCard
+            <ScopeStatRow
               title="Scope 3"
               value={dataForYear.scope3.total}
-              icon={<TrashCanIcon className="w-4 h-4" />}
-              bgColor="bg-red-500" // Warna Scope 3
+              icon={<TrashCanIcon />}
+              colorClass="text-red-500"
             />
           </div>
 
-          {/* Tombol Lihat Detail (Tetap sama) */}
+          {/* 3. Tombol Aksi (sekarang lebih menonjol) */}
           <button
             onClick={handleDetailClick}
-            className="w-full text-center px-2 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 text-xs font-medium mt-2"
+            className="w-full text-center px-2 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 text-xs font-medium"
           >
             Lihat Detail
           </button>
         </>
       ) : (
-        // Tampilan jika data null (Tetap sama)
-        <p className="text-xs text-slate-500 italic">
+        // Tampilan jika data null
+        <p className="text-xs text-slate-500 italic mt-1">
           Data emisi untuk tahun ini tidak tersedia.
         </p>
       )}

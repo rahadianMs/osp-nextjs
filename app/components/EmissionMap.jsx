@@ -2,13 +2,13 @@
 
 "use client";
 
-// [TAMBAHAN] Kita butuh useMemo
+// [MODIFIKASI] Pastikan useState ada di sini
 import { useState, useEffect, useMemo } from 'react';
 import { MapContainer, TileLayer, GeoJSON, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-// [TAMBAHAN] Impor Modal dan Popup
+// Impor Modal dan Popup
 import AccommodationPopup from './AccommodationPopup';
 import AccommodationDetailModal from './AccommodationDetailModal'; // Impor Modal
 
@@ -29,9 +29,12 @@ const EmissionMap = () => {
   const [selectedDataSource, setSelectedDataSource] = useState('Akomodasi'); 
   const [accommodationData, setAccommodationData] = useState(null);
 
-  // [BARU] State untuk mengelola Modal
+  // State untuk mengelola Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedAccommodationProps, setSelectedAccommodationProps] = useState(null);
+
+  // [BARU - SOLUSI 2] State untuk menyimpan referensi ke map instance
+  const [mapRef, setMapRef] = useState(null);
 
   const availableYears = ['2025', '2024', '2023', '2022'];
   const availableDataSources = ['Akomodasi', 'SIPONGI KEMENHUT', 'Operator Jasa Perjalanan', 'Pengelola Atraksi Wisata'];
@@ -47,7 +50,7 @@ const EmissionMap = () => {
          : '#b8f2d5';
   };
   
-  // useEffect Anda (tidak berubah, sudah benar)
+  // useEffect untuk memuat data (tidak berubah)
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -90,7 +93,27 @@ const EmissionMap = () => {
     fetchData();
   }, [selectedDataSource]);
 
-  // [BARU] Handler untuk membuka dan menutup Modal
+  // [BARU - SOLUSI 2] useEffect untuk menambahkan event listener pada map
+  useEffect(() => {
+    // Pastikan mapRef sudah ada (map sudah di-render)
+    if (mapRef) {
+      // Definisikan fungsi yang akan dipanggil saat zoom dimulai
+      const handleZoomStart = () => {
+        mapRef.closePopup(); // Ini akan menutup popup apapun yang sedang terbuka
+      };
+
+      // Tambahkan listener ke map instance
+      mapRef.on('zoomstart', handleZoomStart);
+
+      // Fungsi cleanup: Hapus listener saat komponen di-unmount
+      return () => {
+        mapRef.off('zoomstart', handleZoomStart);
+      };
+    }
+  }, [mapRef]); // Efek ini hanya akan berjalan ketika mapRef sudah di-set
+
+
+  // Handler untuk membuka dan menutup Modal (tidak berubah)
   const handleOpenDetailModal = (properties) => {
     setSelectedAccommodationProps(properties); // Simpan properties dari feature
     setIsModalOpen(true);
@@ -101,7 +124,7 @@ const EmissionMap = () => {
     setSelectedAccommodationProps(null);
   };
 
-  // Fungsi style (dari file baru Anda, sudah benar)
+  // Fungsi style (tidak berubah)
   const style = (feature) => {
     if (selectedDataSource === 'Akomodasi') {
       return { 
@@ -122,7 +145,7 @@ const EmissionMap = () => {
     };
   };
 
-  // Fungsi onEachFeature (dari file baru Anda, sudah benar)
+  // Fungsi onEachFeature (tidak berubah)
   const onEachFeature = (feature, layer) => {
     if (selectedDataSource !== 'Akomodasi' && feature.properties) {
         const { PROVINSI, emissions } = feature.properties;
@@ -146,10 +169,18 @@ const EmissionMap = () => {
     return <div className="h-[550px] bg-zinc-200 rounded-lg animate-pulse flex items-center justify-center"><p className="text-zinc-500">Memuat Peta...</p></div>;
   }
 
-  // [MODIFIKASI] Bungkus dengan div 'relative'
+  // Bungkus dengan div 'relative'
   return (
     <div className="relative">
-        <MapContainer center={[-8.409518, 115.188919]} zoom={9} style={{ height: '550px', width: '100%' }} className="rounded-lg shadow-lg z-0" zoomControl={false}>
+        <MapContainer 
+          // [BARU - SOLUSI 2] Tambahkan prop 'ref' di sini
+          ref={setMapRef} 
+          center={[-8.409518, 115.188919]} 
+          zoom={9} 
+          style={{ height: '550px', width: '100%' }} 
+          className="rounded-lg shadow-lg z-0" 
+          zoomControl={false}
+        >
           
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -168,12 +199,10 @@ const EmissionMap = () => {
 
           {/* Layer 2: Titik Marker (HANYA tampil jika Akomodasi) */}
           {accommodationData && selectedDataSource === 'Akomodasi' && (
-            // Ini sudah benar: .features.map
             accommodationData.features.map(feature => {
               const coords = feature.geometry.coordinates;
               const position = [coords[1], coords[0]]; 
               
-              // Ambil data untuk tahun yang dipilih
               const properties = feature.properties;
               const dataForYear = properties.data ? properties.data[selectedYear] : null;
 
@@ -184,14 +213,11 @@ const EmissionMap = () => {
                   icon={accommodationIcon}
                 >
                   <Popup>
-                    {/* [MODIFIKASI] Kirim props baru ke popup sederhana */}
                     <div className="custom-leaflet-popup">
                       <AccommodationPopup 
                         nama={properties.Name} 
                         dataForYear={dataForYear}
-                        // Kirim 'properties' untuk diteruskan ke modal
                         properties={properties} 
-                        // Kirim handler untuk membuka modal
                         onDetailClick={handleOpenDetailModal}
                       />
                     </div>
@@ -202,7 +228,7 @@ const EmissionMap = () => {
           )}
         </MapContainer>
         
-        {/* Kontrol Filter (dari file baru Anda, sudah benar) */}
+        {/* Kontrol Filter (tidak berubah) */}
         <div className="absolute top-4 left-4 bg-white/80 backdrop-blur-sm p-2 rounded-lg shadow-md z-10 flex items-center gap-4">
             <div className="flex items-center gap-2">
                 <label htmlFor="year-select" className="text-sm font-semibold text-zinc-700">Tahun:</label>
@@ -229,7 +255,7 @@ const EmissionMap = () => {
             </div>
         </div>
 
-        {/* Legenda (dari file baru Anda, sudah benar) */}
+        {/* Legenda (tidak berubah) */}
         {selectedDataSource !== 'Akomodasi' && (
           <div className="absolute bottom-4 right-4 bg-white/80 backdrop-blur-sm p-3 rounded-lg shadow-md z-10 w-48">
               <h4 className="font-bold text-sm mb-2">Legenda Emisi (ton CO₂e)</h4>
@@ -245,11 +271,11 @@ const EmissionMap = () => {
           </div>
         )}
 
-        {/* [BARU] Render Modal secara kondisional di sini */}
+        {/* Render Modal (tidak berubah) */}
         {isModalOpen && selectedAccommodationProps && (
           <AccommodationDetailModal
             properties={selectedAccommodationProps}
-            selectedYear={selectedYear} // Kirim tahun yang dipilih
+            selectedYear={selectedYear}
             onClose={handleCloseDetailModal}
           />
         )}
