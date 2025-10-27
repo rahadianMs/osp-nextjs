@@ -1,0 +1,57 @@
+/* Konten untuk app/components/AccommodationDetailModal.module.css */
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  
+    /* Ini adalah bg-black bg-opacity-30 */
+    background-color: rgba(0, 0, 0, 0.3);
+  
+    /* Ini adalah backdrop-blur-md */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px); /* Dukungan Safari */
+  
+    /* Ini adalah transition-opacity duration-200 ease-out */
+    opacity: 0;
+    transition: opacity 200ms ease-out;
+  }
+  
+  .overlayShow {
+    opacity: 1;
+  }
+  
+  .panel {
+    background-color: white;
+    border-radius: 1rem; /* rounded-2xl */
+    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25); /* shadow-xl */
+    width: 100%;
+    max-width: 48rem; /* max-w-3xl */
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 1.5rem; /* p-6 */
+    position: relative;
+  
+    /* Ini adalah transition-all duration-200 ease-out */
+    transition: all 200ms ease-out;
+  
+    /* Ini adalah scale-95 opacity-0 */
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  
+  .panelShow {
+    opacity: 1;
+    transform: scale(1);
+  }
+  
+  .closeButton {
+    color: #94a3b8; /* text-slate-400 */
+  }
+  
+  .closeButton:hover {
+    color: #475569; /* hover:text-slate-600 */
+  }

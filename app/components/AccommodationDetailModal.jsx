@@ -1,8 +1,9 @@
-// Ganti seluruh isi file app/components/AccommodationDetailModal.jsx dengan ini
-
 "use client";
-// Impor useState dan useEffect untuk animasi
 import React, { useState, useEffect } from "react";
+// Impor file CSS Module
+import styles from "./AccommodationDetailModal.module.css";
+
+// Komponen ikon (tidak berubah)
 import {
   BoltIcon,
   TransportIcon,
@@ -43,6 +44,7 @@ const ScopeSection = ({ title, totalValue, children, layout = "grid" }) => {
     </div>
   );
 };
+// --- Akhir komponen yang tidak berubah ---
 
 export default function AccommodationDetailModal({
   properties,
@@ -51,45 +53,37 @@ export default function AccommodationDetailModal({
 }) {
   const yearData = properties.data ? properties.data[selectedYear] : null;
   const namaAkomodasi = properties.Name;
-
-  // State untuk mengelola animasi fade-in/out
   const [show, setShow] = useState(false);
 
-  // Efek untuk memicu animasi 'fade-in'
   useEffect(() => {
     setShow(true);
   }, []);
 
-  // Fungsi kustom untuk 'fade-out' sebelum menutup
   const handleClose = () => {
     setShow(false);
     setTimeout(() => {
       onClose();
-    }, 200); // Durasi ini HARUS sama dengan 'duration-200'
+    }, 200); // Sesuaikan dengan durasi transisi di .module.css
   };
 
   return (
-    // [MODIFIKASI] Latar Belakang (Overlay)
-    // Kelas-kelas ini SEKARANG AKAN BERFUNGSI setelah perbaikan globals.css
+    // [MODIFIKASI] Menggunakan CSS Modules
     <div
-      className={`fixed inset-0 z-[1000] flex items-center justify-center bg-black backdrop-blur-md
-        transition-opacity duration-200 ease-out
-        ${show ? "bg-opacity-30" : "bg-opacity-0"}`} // <-- Transparan 30%
+      className={`${styles.overlay} ${show ? styles.overlayShow : ""}`}
       onClick={handleClose}
     >
-      {/* [MODIFIKASI] Konten Modal (Panel) */}
+      {/* [MODIFIKASI] Menggunakan CSS Modules */}
       <div
-        className={`bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6 relative
-          transition-all duration-200 ease-out
-          ${show ? "scale-100 opacity-100" : "scale-95 opacity-0"}`} // <-- Efek Pop-up
+        className={`${styles.panel} ${show ? styles.panelShow : ""}`}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header Modal */}
+        {/* Header Modal (Tailwind classes di sini mungkin masih berfungsi 
+            jika hanya bg-opacity/backdrop yang rusak) */}
         <div className="flex justify-between items-center pb-4 border-b mb-4">
           <h2 className="text-2xl font-bold text-slate-800">{namaAkomodasi}</h2>
           <button
             onClick={handleClose}
-            className="text-slate-400 hover:text-slate-600"
+            className={styles.closeButton} // [MODIFIKASI] Gunakan kelas dari module
             title="Tutup"
           >
             <svg
@@ -109,7 +103,7 @@ export default function AccommodationDetailModal({
           </button>
         </div>
 
-        {/* Isi (Body) Modal (Layout sudah benar dari langkah sebelumnya) */}
+        {/* Isi (Body) Modal (Tidak ada perubahan di sini) */}
         {yearData ? (
           <div className="flex flex-col space-y-4">
             <div className="bg-green-600 text-white p-4 rounded-lg text-center">
