@@ -2,23 +2,25 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+// [TAMBAHAN] Kita butuh useMemo
+import { useState, useEffect, useMemo } from 'react';
 import { MapContainer, TileLayer, GeoJSON, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import AccommodationPopup from './AccommodationPopup';
 
-// [FIX 1] IKON PIN PETA MERAH (Bentuk Teardrop Klasik)
-// Menggunakan SVG baru yang terlihat seperti pin peta pada umumnya
+// [TAMBAHAN] Impor Modal dan Popup
+import AccommodationPopup from './AccommodationPopup';
+import AccommodationDetailModal from './AccommodationDetailModal'; // Impor Modal
+
+// Ikon Pin Peta (dari file baru Anda)
 const accommodationIcon = new L.DivIcon({
   html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#E31A1C" class="w-8 h-8 drop-shadow-lg">
            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/>
          </svg>`,
-  className: '', // Hapus style default
-  iconSize: [32, 32], // Ukuran w-8 h-8
-  iconAnchor: [16, 32] // Titik pin (bawah tengah)
+  className: '', 
+  iconSize: [32, 32], 
+  iconAnchor: [16, 32] 
 });
-// [FIX 1] AKHIR BLOK PERBAIKAN IKON
 
 const EmissionMap = () => {
   const [geoData, setGeoData] = useState(null);
@@ -27,11 +29,15 @@ const EmissionMap = () => {
   const [selectedDataSource, setSelectedDataSource] = useState('Akomodasi'); 
   const [accommodationData, setAccommodationData] = useState(null);
 
+  // [BARU] State untuk mengelola Modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedAccommodationProps, setSelectedAccommodationProps] = useState(null);
+
   const availableYears = ['2025', '2024', '2023', '2022'];
   const availableDataSources = ['Akomodasi', 'SIPONGI KEMENHUT', 'Operator Jasa Perjalanan', 'Pengelola Atraksi Wisata'];
 
   const getColor = (value) => {
-    if (value === null || value === undefined) return '#d1d5db'; // Abu-abu
+    if (value === null || value === undefined) return '#d1d5db'; 
     return value > 10000000 ? '#085839'
          : value > 5000000  ? '#1a7553'
          : value > 1000000  ? '#2b926d'
@@ -41,6 +47,7 @@ const EmissionMap = () => {
          : '#b8f2d5';
   };
   
+  // useEffect Anda (tidak berubah, sudah benar)
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -83,20 +90,27 @@ const EmissionMap = () => {
     fetchData();
   }, [selectedDataSource]);
 
-  // [FIX 2] MODIFIKASI FUNGSI STYLE
-  // Ini adalah perbaikan untuk "menghapus" layer provinsi
+  // [BARU] Handler untuk membuka dan menutup Modal
+  const handleOpenDetailModal = (properties) => {
+    setSelectedAccommodationProps(properties); // Simpan properties dari feature
+    setIsModalOpen(true);
+  };
+
+  const handleCloseDetailModal = () => {
+    setIsModalOpen(false);
+    setSelectedAccommodationProps(null);
+  };
+
+  // Fungsi style (dari file baru Anda, sudah benar)
   const style = (feature) => {
-    // Jika 'Akomodasi' dipilih, buat provinsi 100% transparan & tidak bisa diklik
     if (selectedDataSource === 'Akomodasi') {
       return { 
         opacity: 0, 
         fillOpacity: 0, 
         weight: 0, 
-        interactive: false // Mencegah popup/hover
+        interactive: false 
       };
     }
-
-    // Jika 'SIPONGI' dipilih, gunakan logika pewarnaan asli
     const emissionValue = feature.properties.emissions?.[selectedYear];
     return {
       fillColor: getColor(emissionValue),
@@ -104,13 +118,12 @@ const EmissionMap = () => {
       opacity: 1,
       color: 'white',
       fillOpacity: 0.8,
-      interactive: true // Pastikan interaktif saat terlihat
+      interactive: true 
     };
   };
 
-  // Fungsi onEachFeature (sedikit dimodifikasi)
+  // Fungsi onEachFeature (dari file baru Anda, sudah benar)
   const onEachFeature = (feature, layer) => {
-    // [FIX 2] Hanya tambahkan popup/hover jika BUKAN layer Akomodasi
     if (selectedDataSource !== 'Akomodasi' && feature.properties) {
         const { PROVINSI, emissions } = feature.properties;
         const emissionValue = emissions?.[selectedYear];
@@ -133,20 +146,20 @@ const EmissionMap = () => {
     return <div className="h-[550px] bg-zinc-200 rounded-lg animate-pulse flex items-center justify-center"><p className="text-zinc-500">Memuat Peta...</p></div>;
   }
 
+  // [MODIFIKASI] Bungkus dengan div 'relative'
   return (
     <div className="relative">
         <MapContainer center={[-8.409518, 115.188919]} zoom={9} style={{ height: '550px', width: '100%' }} className="rounded-lg shadow-lg z-0" zoomControl={false}>
           
-          {/* Peta OpenStreetMap standar */}
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           />
           
-          {/* Layer 1: Peta Provinsi (Selalu render, tapi akan disembunyikan oleh 'style') */}
+          {/* Layer 1: Peta Provinsi */}
           {geoData && (
             <GeoJSON 
-              key={`${selectedYear}-${selectedDataSource}-provinces`} // Key unik
+              key={`${selectedYear}-${selectedDataSource}-provinces`}
               data={geoData} 
               style={style} 
               onEachFeature={onEachFeature} 
@@ -155,23 +168,31 @@ const EmissionMap = () => {
 
           {/* Layer 2: Titik Marker (HANYA tampil jika Akomodasi) */}
           {accommodationData && selectedDataSource === 'Akomodasi' && (
+            // Ini sudah benar: .features.map
             accommodationData.features.map(feature => {
               const coords = feature.geometry.coordinates;
               const position = [coords[1], coords[0]]; 
               
+              // Ambil data untuk tahun yang dipilih
+              const properties = feature.properties;
+              const dataForYear = properties.data ? properties.data[selectedYear] : null;
+
               return (
                 <Marker 
-                  key={feature.properties.Name} 
+                  key={properties.Name} 
                   position={position}
-                  icon={accommodationIcon} // [FIX 1] Gunakan ikon SVG merah
+                  icon={accommodationIcon}
                 >
                   <Popup>
-                    {/* [FIX 3] Tambahkan class untuk styling popup container */}
+                    {/* [MODIFIKASI] Kirim props baru ke popup sederhana */}
                     <div className="custom-leaflet-popup">
                       <AccommodationPopup 
-                        nama={feature.properties.Name} 
-                        data={feature.properties.data}
-                        selectedYear={selectedYear}
+                        nama={properties.Name} 
+                        dataForYear={dataForYear}
+                        // Kirim 'properties' untuk diteruskan ke modal
+                        properties={properties} 
+                        // Kirim handler untuk membuka modal
+                        onDetailClick={handleOpenDetailModal}
                       />
                     </div>
                   </Popup>
@@ -181,7 +202,7 @@ const EmissionMap = () => {
           )}
         </MapContainer>
         
-        {/* Kontrol Filter (Tidak berubah) */}
+        {/* Kontrol Filter (dari file baru Anda, sudah benar) */}
         <div className="absolute top-4 left-4 bg-white/80 backdrop-blur-sm p-2 rounded-lg shadow-md z-10 flex items-center gap-4">
             <div className="flex items-center gap-2">
                 <label htmlFor="year-select" className="text-sm font-semibold text-zinc-700">Tahun:</label>
@@ -208,7 +229,7 @@ const EmissionMap = () => {
             </div>
         </div>
 
-        {/* [FIX 2] Legenda sekarang disembunyikan saat Akomodasi dipilih */}
+        {/* Legenda (dari file baru Anda, sudah benar) */}
         {selectedDataSource !== 'Akomodasi' && (
           <div className="absolute bottom-4 right-4 bg-white/80 backdrop-blur-sm p-3 rounded-lg shadow-md z-10 w-48">
               <h4 className="font-bold text-sm mb-2">Legenda Emisi (ton CO₂e)</h4>
@@ -222,6 +243,15 @@ const EmissionMap = () => {
                   <div className="flex items-center"><div className="w-4 h-4 mr-2" style={{backgroundColor: getColor(undefined)}}></div>Tidak Ada Data</div>
               </div>
           </div>
+        )}
+
+        {/* [BARU] Render Modal secara kondisional di sini */}
+        {isModalOpen && selectedAccommodationProps && (
+          <AccommodationDetailModal
+            properties={selectedAccommodationProps}
+            selectedYear={selectedYear} // Kirim tahun yang dipilih
+            onClose={handleCloseDetailModal}
+          />
         )}
     </div>
   );
