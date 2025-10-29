@@ -55,29 +55,40 @@ const ProgressReminder = ({ percentageChange }) => {
 };
 
 // Komponen Utama Halaman Beranda
-export default function BerandaPage({ user, supabase, setActiveDashboardPage, dataVersion }) {
-    const [businessName, setBusinessName] = useState('');
+// --- PERUBAHAN 1: Terima 'initialBusinessName' ---
+export default function BerandaPage({ user, supabase, setActiveDashboardPage, dataVersion, initialBusinessName }) {
+    
+    // --- PERUBAHAN 2: Gunakan prop untuk inisialisasi state ---
+    const [businessName, setBusinessName] = useState(initialBusinessName || 'Rekan');
+    // --- AKHIR PERUBAHAN 2 ---
+
     const [summary, setSummary] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(true); // State loading ini sekarang HANYA untuk chart
     const [percentageChange, setPercentageChange] = useState(null);
     const [latestConsumption, setLatestConsumption] = useState({ kwh: 0, nonElectric: 0, km: 0, waste: 0 });
     
     useEffect(() => {
         const fetchPageData = async () => {
-            if (!user) { setLoading(false); return; }
-            setLoading(true);
+            if (!user) { 
+                setLoading(false); 
+                return; 
+            }
+            
+            setLoading(true); 
             
             try {
-                const { data: profileData } = await supabase.from('profiles').select('business_name').eq('id', user.id).single();
-                setBusinessName(profileData?.business_name || user?.user_metadata?.business_name || 'Rekan');
+                // --- PERUBAHAN 3: Logika pengambilan nama dihapus dari sini ---
+                // Nama sudah disediakan melalui prop 'initialBusinessName'
+                // --- AKHIR PERUBAHAN 3 ---
 
+                // Ambil sisa data (yang mungkin lambat)
                 const twoMonthsAgo = new Date();
                 twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
                 const firstDayOfTwoMonthsAgo = new Date(twoMonthsAgo.getFullYear(), twoMonthsAgo.getMonth(), 1).toISOString().slice(0, 7);
 
                 const { data: entries, error } = await supabase
                     .from('carbon_entries')
-                    .select('*') // Ambil semua kolom untuk detail
+                    .select('*') 
                     .eq('user_id', user.id)
                     .gte('report_month', firstDayOfTwoMonthsAgo)
                     .order('report_month', { ascending: false });
@@ -96,7 +107,6 @@ export default function BerandaPage({ user, supabase, setActiveDashboardPage, da
                     }
 
                     let totalKwh = latestMonthEntry.electricity_details?.kwh || 0;
-                    // --- PENAMBAHAN PERHITUNGAN KONSUMSI NON-LISTRIK ---
                     let totalNonElectric = (latestMonthEntry.non_electricity_details?.items || []).reduce((acc, v) => acc + ((v.usage || 0) * (v.frequency || 0)), 0);
                     let totalKm = (latestMonthEntry.transport_details || []).reduce((acc, v) => acc + ((v.km || 0) * (v.frequency || 0)), 0);
                     let totalWaste = (latestMonthEntry.waste_details?.items || []).reduce((acc, i) => acc + (i.weight || 0), 0);
@@ -126,7 +136,9 @@ export default function BerandaPage({ user, supabase, setActiveDashboardPage, da
         };
     
         fetchPageData();
+    // --- PERUBAHAN 4: Hapus 'initialBusinessName' dari dependencies ---
     }, [user, supabase, dataVersion]);
+    // --- AKHIR PERUBAHAN 4 ---
 
     const userBgImage = "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?fm=jpg&q=60&w=3000&ixlib=rb-4-1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8YmFsaSUyMGhvdGVsfGVufDB8fDB8fHww";
 
@@ -136,23 +148,23 @@ export default function BerandaPage({ user, supabase, setActiveDashboardPage, da
                 className="relative p-8 rounded-2xl text-white bg-cover bg-center min-h-[180px] flex flex-col justify-between"
                 style={{ backgroundImage: `linear-gradient(to top, rgba(0,0,0,0.6), rgba(0,0,0,0.1)), url('${userBgImage}')` }}
             >
-                {/* --- MODIFIKASI DI SINI --- */}
-                {/* Baris div untuk titik merah telah dihapus dari dalam tombol ini */}
                 <button onClick={() => setActiveDashboardPage('notifikasi')} className="absolute top-4 right-4 w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors z-10">
                     <BellIcon />
                 </button>
-                {/* --- AKHIR MODIFIKASI --- */}
                 
                 <div className="relative z-0">
+                    {/* --- PERUBAHAN 5: Hapus ternary 'loading ?' --- */}
                     <h1 className="text-4xl font-extrabold drop-shadow-md">
-                        Selamat Datang, {loading ? '...' : businessName}!
+                        Selamat Datang, {businessName}!
                     </h1>
+                    {/* --- AKHIR PERUBAHAN 5 --- */}
                     <p className="mt-1 text-lg opacity-90 drop-shadow">Ini adalah pusat kendali Anda untuk pariwisata berkelanjutan.</p>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 <div className="lg:col-span-8 space-y-6">
+                    {/* State 'loading' sekarang hanya mengontrol bagian ini */}
                     {loading ? (
                         <div className="animate-pulse h-28 bg-slate-200 rounded-xl"></div>
                     ) : (
@@ -167,7 +179,6 @@ export default function BerandaPage({ user, supabase, setActiveDashboardPage, da
                         </div>
                     )}
                     
-                    {/* --- PERUBAHAN TATA LETAK GRID MENJADI 4 KOLOM --- */}
                     {loading ? (
                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-pulse">
                             <div className="h-40 bg-slate-200 rounded-xl"></div>

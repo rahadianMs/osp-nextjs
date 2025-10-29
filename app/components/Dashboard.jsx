@@ -44,14 +44,22 @@ import {
 const PageContent = ({ 
     activeDashboardPage, setActiveDashboardPage, supabase, user, sidebarLinks, 
     dataVersion, onDataUpdate, userRole, 
-    selectedResource, setSelectedResource 
+    selectedResource, setSelectedResource,
+    businessName // <-- 1. Terima businessName
 }) => {
     switch (activeDashboardPage) {
         case 'beranda':
             if (userRole === 'admin') {
                 return <AdminDashboardPage supabase={supabase} user={user} />;
             }
-            return <BerandaPage user={user} supabase={supabase} setActiveDashboardPage={setActiveDashboardPage} dataVersion={dataVersion} />;
+            // --- 2. Teruskan businessName ke BerandaPage ---
+            return <BerandaPage 
+                        user={user} 
+                        supabase={supabase} 
+                        setActiveDashboardPage={setActiveDashboardPage} 
+                        dataVersion={dataVersion}
+                        initialBusinessName={businessName} // <-- Teruskan sebagai prop
+                   />;
         
         case 'dashboard-utama':
             if (userRole === 'admin') {
@@ -70,7 +78,13 @@ const PageContent = ({
         case 'admin-dashboard':
             return userRole === 'admin' 
                 ? <AdminDashboardPage supabase={supabase} user={user} />
-                : <BerandaPage user={user} supabase={supabase} setActiveDashboardPage={setActiveDashboardPage} dataVersion={dataVersion} />; 
+                : <BerandaPage 
+                    user={user} 
+                    supabase={supabase} 
+                    setActiveDashboardPage={setActiveDashboardPage} 
+                    dataVersion={dataVersion}
+                    initialBusinessName={businessName} // <-- Teruskan juga di sini
+                  />; 
 
         case 'laporan-emisi':
             return <EmissionReportPage supabase={supabase} user={user} onDataUpdate={onDataUpdate} />;
@@ -90,15 +104,13 @@ const PageContent = ({
         case 'sertifikasi':
             return <SertifikasiPage supabase={supabase} user={user} />;
         
-        // --- MODIFIKASI: Teruskan 'userRole' ---
         case 'pembelajaran':
             return <PembelajaranPage 
                         supabase={supabase} 
                         setActiveDashboardPage={setActiveDashboardPage}
                         setSelectedResource={setSelectedResource}
-                        userRole={userRole} // <-- DITERUSKAN
+                        userRole={userRole} 
                    />;
-        // --- AKHIR MODIFIKASI ---
 
         case 'admin-learning':
             return userRole === 'admin'
@@ -110,7 +122,7 @@ const PageContent = ({
                         supabase={supabase} 
                         setActiveDashboardPage={setActiveDashboardPage}
                         setSelectedResource={setSelectedResource}
-                        userRole={userRole} // <-- DITERUSKAN
+                        userRole={userRole}
                    />;
         
         case 'video-detail':
@@ -142,32 +154,41 @@ export default function Dashboard({
     isUserMenuOpen, setIsUserMenuOpen, userMenuRef, handleLogout
 }) {
     const [dataVersion, setDataVersion] = useState(Date.now());
-    const [userRole, setUserRole] = useState(null);
-    const [loadingRole, setLoadingRole] = useState(true);
     const [selectedResource, setSelectedResource] = useState(null);
+
+    // --- PERUBAHAN 1: State digabung untuk role dan nama ---
+    const [userProfile, setUserProfile] = useState({ role: null, businessName: '...' });
+    const [loadingProfile, setLoadingProfile] = useState(true);
+    // --- AKHIR PERUBAHAN 1 ---
     
     useEffect(() => {
-        const fetchUserRole = async () => {
+        // --- PERUBAHAN 2: Fungsi mengambil role dan nama ---
+        const fetchUserProfile = async () => {
             if (user) {
                 try {
-                    setLoadingRole(true);
+                    setLoadingProfile(true);
                     const { data, error } = await supabase
                         .from('profiles')
-                        .select('role')
+                        .select('role, business_name') // <-- Ambil role DAN business_name
                         .eq('id', user.id)
                         .single();
                     if (error) throw error;
-                    if (data && data.role) { setUserRole(data.role); } 
-                    else { setUserRole('user'); }
+                    
+                    setUserProfile({
+                        role: data?.role || 'user',
+                        businessName: data?.business_name || user?.user_metadata?.business_name || 'Rekan'
+                    });
+                    
                 } catch (error) {
-                    console.error('Error fetching user role:', error.message);
-                    setUserRole('user'); 
+                    console.error('Error fetching user profile:', error.message);
+                    setUserProfile({ role: 'user', businessName: 'Rekan' }); 
                 } finally {
-                    setLoadingRole(false);
+                    setLoadingProfile(false);
                 }
             }
         };
-        fetchUserRole();
+        fetchUserProfile();
+        // --- AKHIR PERUBAHAN 2 ---
     }, [user, supabase]); 
 
     const logoKemenparPutih = "https://bob.kemenparekraf.go.id/wp-content/uploads/2025/02/Kementerian-Pariwisata-RI_Bahasa-Indonesia-Putih.png";
@@ -175,7 +196,6 @@ export default function Dashboard({
 
     const handleDataUpdate = () => setDataVersion(Date.now());
 
-    // --- MODIFIKASI: Logika sidebarLinks ---
     const commonLinks = [
         { id: 'notifikasi', text: 'Notifikasi', icon: <BellIcon /> },
         { id: 'profil-usaha', text: 'Profil Usaha', icon: <BuildingOfficeIcon /> },
@@ -186,11 +206,10 @@ export default function Dashboard({
         { id: 'panduan', text: 'Panduan', icon: <QuestionMarkCircleIcon /> },
     ];
     
-    // --- 'pembelajaran' DITAMBAHKAN KE DAFTAR YANG DISEMBUNYIKAN UNTUK ADMIN ---
     const adminHiddenLinks = ['profil-usaha', 'laporan-emisi', 'sertifikasi', 'panduan', 'pembelajaran'];
-    // --- AKHIR MODIFIKASI ---
 
-    const sidebarLinks = userRole === 'admin' 
+    // --- PERUBAHAN 3: Gunakan userProfile.role ---
+    const sidebarLinks = userProfile.role === 'admin' 
         ? [
             { id: 'admin-dashboard', text: 'Dasbor Admin', icon: <HomeIcon /> },
             ...commonLinks.filter(link => !adminHiddenLinks.includes(link.id)),
@@ -201,7 +220,7 @@ export default function Dashboard({
             { id: 'dashboard-utama', text: 'Dasbor Utama', icon: <ChartPieIcon /> },
             ...commonLinks
           ];
-    // --- AKHIR MODIFIKASI ---
+    // --- AKHIR PERUBAHAN 3 ---
     
     const getPageTitle = () => {
         const link = sidebarLinks.find(link => link.id === activeDashboardPage);
@@ -212,20 +231,21 @@ export default function Dashboard({
             case 'faq': return 'FAQ';
             case 'tentang': return 'Tentang';
             case 'video-detail': return 'Detail Materi';
-            // --- Tambahkan case untuk 'pembelajaran' agar judulnya benar ---
             case 'pembelajaran': return 'Pembelajaran';
             default: return 'Dasbor';
         }
     };
     const pageTitle = getPageTitle();
 
-    if (loadingRole) {
+    // --- PERUBAHAN 4: Cek loadingProfile ---
+    if (loadingProfile) {
         return (
             <div className="flex items-center justify-center min-h-screen w-full bg-slate-50">
                 <h2 className="text-xl font-medium text-slate-600">Memuat data pengguna...</h2>
             </div>
         );
     }
+    // --- AKHIR PERUBAHAN 4 ---
 
     return (
         <div id="app-wrapper" className="flex min-h-screen">
@@ -293,6 +313,7 @@ export default function Dashboard({
                             exit={{ opacity: 0, y: -20 }}
                             transition={{ duration: 0.3 }}
                         >
+                            {/* --- PERUBAHAN 5: Teruskan prop baru ke PageContent --- */}
                             <PageContent
                                 activeDashboardPage={activeDashboardPage}
                                 setActiveDashboardPage={setActiveDashboardPage}
@@ -301,10 +322,12 @@ export default function Dashboard({
                                 sidebarLinks={sidebarLinks}
                                 dataVersion={dataVersion}
                                 onDataUpdate={handleDataUpdate}
-                                userRole={userRole} 
+                                userRole={userProfile.role} // <-- Kirim role dari state
+                                businessName={userProfile.businessName} // <-- Kirim nama dari state
                                 selectedResource={selectedResource}
                                 setSelectedResource={setSelectedResource}
                             />
+                            {/* --- AKHIR PERUBAHAN 5 --- */}
                         </motion.div>
                     </AnimatePresence>
                 </main>
