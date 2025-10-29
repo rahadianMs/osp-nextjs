@@ -10,18 +10,20 @@ import DashboardSummary from './DashboardSummary';
 import DashboardPieChart from './DashboardPieChart';
 import DashboardTrends from './DashboardTrends';
 import ProfilUsahaPage from './ProfilUsahaPage';
-import NotificationPage from './NotificationPage';
+import NotificationPage from './NotificationPage'; // <-- Halaman User
 import AboutPage from './AboutPage';
 import AccountPage from './AccountPage';
 import FaqPage from './FaqPage';
 import SertifikasiPage from './SertifikasiPage';
 import PembelajaranPage from './PembelajaranPage';
 import PanduanPage from './PanduanPage';
-import SustainabilityPage from './SustainabilityPage'; // <-- Halaman untuk User
+import SustainabilityPage from './SustainabilityPage';
 
-// --- TAMBAHAN: Impor halaman baru untuk Admin ---
+// Impor halaman Admin
 import AdminDashboardPage from './AdminDashboardPage';
-import AdminSustainabilityPage from './AdminSustainabilityPage'; // <-- Halaman untuk Admin
+import AdminSustainabilityPage from './AdminSustainabilityPage';
+// --- TAMBAHAN: Impor halaman notifikasi admin ---
+import AdminNotificationPage from './AdminNotificationPage'; 
 // --- AKHIR TAMBAHAN ---
 
 
@@ -64,16 +66,18 @@ const PageContent = ({ activeDashboardPage, setActiveDashboardPage, supabase, us
         case 'laporan-emisi':
             return <EmissionReportPage supabase={supabase} user={user} onDataUpdate={onDataUpdate} />;
         
-        // --- MODIFIKASI: Logika routing untuk 'laporan-keberlanjutan' ---
         case 'laporan-keberlanjutan':
-            // Cek peran. Tampilkan halaman yang sesuai.
             return userRole === 'admin'
                 ? <AdminSustainabilityPage supabase={supabase} user={user} />
                 : <SustainabilityPage supabase={supabase} user={user} />;
+
+        // --- MODIFIKASI: Logika routing untuk 'notifikasi' ---
+        case 'notifikasi':
+            return userRole === 'admin'
+                ? <AdminNotificationPage supabase={supabase} user={user} />
+                : <NotificationPage supabase={supabase} user={user} />; // Pastikan Anda meneruskan props jika perlu
         // --- AKHIR MODIFIKASI ---
 
-        case 'notifikasi':
-            return <NotificationPage />;
         case 'profil-usaha':
             return <ProfilUsahaPage user={user} supabase={supabase} setActiveDashboardPage={setActiveDashboardPage} />;
         case 'sertifikasi':
@@ -108,6 +112,7 @@ export default function Dashboard({
     const [userRole, setUserRole] = useState(null);
     const [loadingRole, setLoadingRole] = useState(true);
     
+    // (useEffect fetchUserRole tetap sama)
     useEffect(() => {
         const fetchUserRole = async () => {
             if (user) {
@@ -137,7 +142,7 @@ export default function Dashboard({
 
     const handleDataUpdate = () => setDataVersion(Date.now());
 
-    // Logika Sidebar (Tidak perlu diubah, 'laporan-keberlanjutan' sudah benar)
+    // (Logika sidebarLinks tetap sama, 'notifikasi' sudah ada)
     const commonLinks = [
         { id: 'notifikasi', text: 'Notifikasi', icon: <BellIcon /> },
         { id: 'profil-usaha', text: 'Profil Usaha', icon: <BuildingOfficeIcon /> },
@@ -203,7 +208,6 @@ export default function Dashboard({
                         </button>
                     ))}
                 </nav>
-
                 <div className="mt-auto">
                     <button
                         onClick={handleLogout}
