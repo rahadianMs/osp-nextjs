@@ -2,23 +2,23 @@
 
 import React, { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
-// Ikon yang kita gunakan (pastikan sudah ada di Icons.jsx)
 import { DocumentChartBarIcon } from './Icons.jsx';
 
+// --- TAMBAHAN: Impor komponen dashboard admin yang baru ---
+import AdminDashboardSummary from './AdminDashboardSummary.jsx';
+import AdminDashboardTrends from './AdminDashboardTrends.jsx';
+import AdminDashboardPieChart from './AdminDashboardPieChart.jsx';
+// --- AKHIR TAMBAHAN ---
 
-// Komponen baru untuk kontrol paginasi
+
+// (Komponen PaginationControls tetap sama)
 const PaginationControls = ({ currentPage, totalPages, onPageChange, pageSize, onPageSizeChange, totalUsers }) => {
     const pageSizes = [5, 20, 25, 50, 100]; 
-
     const from = (currentPage - 1) * pageSize + 1;
     const to = Math.min(currentPage * pageSize, totalUsers);
-
-    // Jangan tampilkan apa-apa jika tidak ada data
     if (totalUsers === 0) return null;
-
     return (
-        <div className="flex items-center justify-between mt-4"> {/* MODIFIKASI: Tambah mt-4 di sini */}
-            {/* Kiri: Pilihan Page Size */}
+        <div className="flex items-center justify-between mt-4">
             <div className="flex items-center gap-2">
                 <label htmlFor="pageSize" className="text-sm text-slate-600">
                     Tampilkan:
@@ -34,8 +34,6 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange, pageSize, o
                     ))}
                 </select>
             </div>
-
-            {/* Kanan: Info & Tombol Navigasi */}
             <div className="flex items-center gap-4">
                 <span className="text-sm text-slate-600">
                     {from}-{to} dari {totalUsers}
@@ -62,7 +60,7 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange, pageSize, o
 };
 
 
-// Komponen untuk daftar pengguna dan unduhan per-user
+// (Komponen UserList tetap sama)
 const UserList = ({ supabase }) => {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -79,9 +77,7 @@ const UserList = ({ supabase }) => {
                 const to = from + pageSize - 1;
                 const { data, error, count } = await supabase
                     .from('profiles')
-                    .select('id, business_name, pic_name, pic_email, role', {
-                        count: 'exact' 
-                    })
+                    .select('id, business_name, pic_name, pic_email, role', { count: 'exact' })
                     .order('business_name', { ascending: true }) 
                     .range(from, to); 
                 if (error) throw error;
@@ -96,30 +92,15 @@ const UserList = ({ supabase }) => {
         fetchUsers();
     }, [supabase, currentPage, pageSize]); 
 
-
-    // (Fungsi unduh per user tidak berubah)
     const handleDownloadUserReport = async (userProfile) => {
         if (!userProfile) return;
         setLoadingUserId(userProfile.id);
         try {
             const { data: entries, error } = await supabase
                 .from('carbon_entries')
-                .select(`
-                    report_month,
-                    created_at,
-                    calculation_title,
-                    total_co2e_kg,
-                    electricity_co2e,
-                    transport_co2e,
-                    waste_co2e,
-                    non_electricity_co2e,
-                    electricity_details,
-                    waste_details,
-                    transport_details
-                `)
+                .select(`report_month, created_at, calculation_title, total_co2e_kg, electricity_co2e, transport_co2e, waste_co2e, non_electricity_co2e, electricity_details, waste_details, transport_details`)
                 .eq('user_id', userProfile.id) 
                 .order('created_at', { ascending: false });
-
             if (error) throw error;
             if (!entries || entries.length === 0) {
                 alert(`Tidak ada data emisi yang ditemukan untuk ${userProfile.business_name}.`);
@@ -128,12 +109,8 @@ const UserList = ({ supabase }) => {
             }
             const formattedData = entries.map(entry => {
                 const listriKwh = entry.electricity_details?.kwh || 0;
-                const totalWasteKg = entry.waste_details?.items?.reduce((acc, item) => {
-                    return acc + (parseFloat(item.weight) || 0);
-                }, 0) || 0;
-                const totalTransportKm = entry.transport_details?.reduce((acc, item) => {
-                    return acc + (parseFloat(item.km) || 0);
-                }, 0) || 0;
+                const totalWasteKg = entry.waste_details?.items?.reduce((acc, item) => acc + (parseFloat(item.weight) || 0), 0) || 0;
+                const totalTransportKm = entry.transport_details?.reduce((acc, item) => acc + (parseFloat(item.km) || 0), 0) || 0;
                 return {
                     'Nama Bisnis': userProfile.business_name,
                     'Bulan Laporan': entry.report_month,
@@ -162,28 +139,18 @@ const UserList = ({ supabase }) => {
         }
     };
 
-    const handlePageChange = (newPage) => {
-        setCurrentPage(newPage);
-    };
-
+    const handlePageChange = (newPage) => setCurrentPage(newPage);
     const handlePageSizeChange = (newPageSize) => {
         setPageSize(newPageSize);
         setCurrentPage(1); 
     };
-
     const totalPages = Math.ceil(totalUsers / pageSize);
 
     return (
-        <div> {/* Div pembungkus utama */}
-            
-            {/* --- MODIFIKASI: Kontrol Paginasi (atas) DIHAPUS --- */}
-            
-            {/* Tampilkan loading di tengah */}
+        <div>
             {loading ? (
                 <p className="text-slate-500 text-center py-20">Memuat daftar pengguna...</p>
             ) : (
-                /* Tabel Pengguna */
-                // --- MODIFIKASI: Hapus margin-top (mt-4) agar menempel ---
                 <div className="border rounded-lg overflow-x-auto shadow">
                     <table className="min-w-full divide-y divide-slate-200">
                         <thead className="bg-slate-50">
@@ -202,9 +169,7 @@ const UserList = ({ supabase }) => {
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{user.pic_name || '-'}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{user.pic_email || '-'}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                            user.role === 'admin' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
-                                        }`}>
+                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.role === 'admin' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
                                             {user.role}
                                         </span>
                                     </td>
@@ -212,11 +177,7 @@ const UserList = ({ supabase }) => {
                                         <button
                                             onClick={() => handleDownloadUserReport(user)}
                                             disabled={loadingUserId === user.id} 
-                                            className={`p-1 rounded-md transition-colors flex items-center justify-center
-                                                ${loadingUserId === user.id
-                                                    ? 'bg-slate-200 text-slate-500 cursor-wait'
-                                                    : 'bg-green-100 text-green-700 hover:bg-green-200'
-                                                }`}
+                                            className={`p-1 rounded-md transition-colors flex items-center justify-center ${loadingUserId === user.id ? 'bg-slate-200 text-slate-500 cursor-wait' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
                                             title={`Unduh laporan emisi untuk ${user.business_name}`}
                                         >
                                             {loadingUserId === user.id ? (
@@ -236,7 +197,6 @@ const UserList = ({ supabase }) => {
                 </div>
             )}
             
-            {/* Kontrol Paginasi (bawah) - Ini tetap ada */}
             <PaginationControls
                 currentPage={currentPage}
                 totalPages={totalPages}
@@ -250,41 +210,21 @@ const UserList = ({ supabase }) => {
 };
 
 
-// (Komponen AllUsersReportDownload tidak berubah)
+// (Komponen AllUsersReportDownload tetap sama)
 const AllUsersReportDownload = ({ supabase }) => {
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState('');
-
     const handleDownloadAllData = async () => {
         setLoading(true);
         setStatus('Sedang mengambil data dari database...');
         try {
             setStatus('1/3: Mengambil data profil pengguna...');
-            const { data: profilesData, error: profilesError } = await supabase
-                .from('profiles')
-                .select('id, business_name, pic_name, pic_email'); 
+            const { data: profilesData, error: profilesError } = await supabase.from('profiles').select('id, business_name, pic_name, pic_email'); 
             if (profilesError) throw profilesError;
             const profileMap = new Map();
-            profilesData.forEach(profile => {
-                profileMap.set(profile.id, profile);
-            });
+            profilesData.forEach(profile => profileMap.set(profile.id, profile));
             setStatus('2/3: Mengambil data emisi karbon...');
-            const { data: carbonEntriesData, error: carbonError } = await supabase
-                .from('carbon_entries')
-                .select(`
-                    user_id, 
-                    calculation_title,
-                    report_month,
-                    created_at,
-                    total_co2e_kg,
-                    electricity_co2e,
-                    transport_co2e,
-                    waste_co2e,
-                    non_electricity_co2e,
-                    electricity_details,
-                    waste_details,
-                    transport_details
-                `);
+            const { data: carbonEntriesData, error: carbonError } = await supabase.from('carbon_entries').select(`user_id, calculation_title, report_month, created_at, total_co2e_kg, electricity_co2e, transport_co2e, waste_co2e, non_electricity_co2e, electricity_details, waste_details, transport_details`);
             if (carbonError) throw carbonError;
             if (!carbonEntriesData || carbonEntriesData.length === 0) {
                  setStatus('Tidak ada data emisi untuk diunduh.');
@@ -295,12 +235,8 @@ const AllUsersReportDownload = ({ supabase }) => {
             const formattedData = carbonEntriesData.map(entry => {
                 const profile = profileMap.get(entry.user_id);
                 const listriKwh = entry.electricity_details?.kwh || 0;
-                const totalWasteKg = entry.waste_details?.items?.reduce((acc, item) => {
-                    return acc + (parseFloat(item.weight) || 0);
-                }, 0) || 0;
-                const totalTransportKm = entry.transport_details?.reduce((acc, item) => {
-                    return acc + (parseFloat(item.km) || 0);
-                }, 0) || 0;
+                const totalWasteKg = entry.waste_details?.items?.reduce((acc, item) => acc + (parseFloat(item.weight) || 0), 0) || 0;
+                const totalTransportKm = entry.transport_details?.reduce((acc, item) => acc + (parseFloat(item.km) || 0), 0) || 0;
                 return {
                     'Nama Bisnis': profile?.business_name || 'N/A',
                     'Nama PIC': profile?.pic_name || 'N/A',
@@ -343,18 +279,11 @@ const AllUsersReportDownload = ({ supabase }) => {
             <button
                 onClick={handleDownloadAllData}
                 disabled={loading}
-                className={`px-6 py-3 font-medium text-white rounded-lg transition-colors flex items-center gap-2
-                    ${loading 
-                        ? 'bg-slate-400 cursor-not-allowed' 
-                        : 'bg-green-700 hover:bg-green-800'
-                    }`}
+                className={`px-6 py-3 font-medium text-white rounded-lg transition-colors flex items-center gap-2 ${loading ? 'bg-slate-400 cursor-not-allowed' : 'bg-green-700 hover:bg-green-800'}`}
             >
                 {loading ? (
                     <>
-                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
+                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                         Memproses...
                     </>
                 ) : (
@@ -364,39 +293,46 @@ const AllUsersReportDownload = ({ supabase }) => {
                     </>
                 )}
             </button>
-            {status && (
-                <p className="text-sm text-slate-600 mt-4">
-                    {status}
-                </p>
-            )}
+            {status && <p className="text-sm text-slate-600 mt-4">{status}</p>}
         </div>
     );
 };
 
 
-// (Komponen utama AdminDashboardPage tidak berubah)
+// Komponen utama AdminDashboardPage
 export default function AdminDashboardPage({ supabase, user }) {
     return (
         <div className="space-y-8">
+            {/* Kartu Selamat Datang */}
             <div className="bg-white p-8 rounded-xl shadow-md border">
                 <h2 className="text-3xl font-bold text-slate-800 mb-2">Dasbor Admin</h2>
                 <p className="text-slate-600">
                     Selamat datang, <span className="font-medium">{user.email}</span>.
                 </p>
-                <p className="text-slate-500 mt-1">
-                    Halaman ini hanya dapat diakses oleh admin. Anda dapat melihat dan mengelola data pengguna di bawah.
-                </p>
             </div>
 
+            {/* --- TAMBAHAN: Bagian Ringkasan & Grafik --- */}
+            {/* Bagian Card Ringkasan */}
+            <AdminDashboardSummary supabase={supabase} />
+
+            {/* Bagian Grafik (Tren & Pie) */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                <AdminDashboardTrends supabase={supabase} />
+                <AdminDashboardPieChart supabase={supabase} />
+            </div>
+            {/* --- AKHIR TAMBAHAN --- */}
+
+
+            {/* Bagian Manajemen Pengguna (yang sudah ada) */}
             <div className="bg-white p-8 rounded-xl shadow-md border">
                  <h3 className="text-2xl font-bold text-slate-800 mb-4">Manajemen Pengguna</h3>
                  <p className="text-slate-500 mb-4">
                     Berikut adalah daftar semua pengguna yang terdaftar di platform. Klik ikon unduh untuk mendapatkan laporan emisi terperinci per pengguna.
                  </p>
-                 {/* UserList sekarang memiliki paginasi di dalamnya */}
                  <UserList supabase={supabase} />
             </div>
 
+            {/* Bagian Unduh Laporan Global (yang sudah ada) */}
             <AllUsersReportDownload supabase={supabase} />
         </div>
     );

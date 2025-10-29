@@ -17,21 +17,23 @@ import FaqPage from './FaqPage';
 import SertifikasiPage from './SertifikasiPage';
 import PembelajaranPage from './PembelajaranPage';
 import PanduanPage from './PanduanPage';
-import SustainabilityPage from './SustainabilityPage';
+import SustainabilityPage from './SustainabilityPage'; // <-- Halaman untuk User
 
-// --- MODIFIKASI: Hapus impor halaman AdminDownloadPage ---
+// --- TAMBAHAN: Impor halaman baru untuk Admin ---
 import AdminDashboardPage from './AdminDashboardPage';
-// --- AKHIR MODIFIKASI ---
+import AdminSustainabilityPage from './AdminSustainabilityPage'; // <-- Halaman untuk Admin
+// --- AKHIR TAMBAHAN ---
 
 
+// Impor Ikon
 import {
     HomeIcon, BellIcon, ChartPieIcon, BuildingOfficeIcon,
     DocumentChartBarIcon, PlusCircleIcon, AcademicCapIcon,
-    QuestionMarkCircleIcon, UserCircleIcon, BookOpenIcon,
+    QuestionMarkCircleIcon, UserCircleIcon, BookOpenIcon
 } from './Icons.jsx';
 
 
-// Komponen PageContent yang mengatur halaman mana yang tampil
+// Komponen PageContent (MODIFIKASI DI SINI)
 const PageContent = ({ activeDashboardPage, setActiveDashboardPage, supabase, user, sidebarLinks, dataVersion, onDataUpdate, userRole }) => {
     switch (activeDashboardPage) {
         case 'beranda':
@@ -54,17 +56,22 @@ const PageContent = ({ activeDashboardPage, setActiveDashboardPage, supabase, us
                 </div>
             );
         
-        // --- MODIFIKASI: Hapus case 'admin-download' ---
         case 'admin-dashboard':
             return userRole === 'admin' 
                 ? <AdminDashboardPage supabase={supabase} user={user} />
                 : <BerandaPage user={user} supabase={supabase} setActiveDashboardPage={setActiveDashboardPage} dataVersion={dataVersion} />; 
-        // --- AKHIR MODIFIKASI ---
 
         case 'laporan-emisi':
             return <EmissionReportPage supabase={supabase} user={user} onDataUpdate={onDataUpdate} />;
+        
+        // --- MODIFIKASI: Logika routing untuk 'laporan-keberlanjutan' ---
         case 'laporan-keberlanjutan':
-            return <SustainabilityPage supabase={supabase} user={user} />;
+            // Cek peran. Tampilkan halaman yang sesuai.
+            return userRole === 'admin'
+                ? <AdminSustainabilityPage supabase={supabase} user={user} />
+                : <SustainabilityPage supabase={supabase} user={user} />;
+        // --- AKHIR MODIFIKASI ---
+
         case 'notifikasi':
             return <NotificationPage />;
         case 'profil-usaha':
@@ -111,16 +118,9 @@ export default function Dashboard({
                         .select('role')
                         .eq('id', user.id)
                         .single();
-
-                    if (error) {
-                        throw error;
-                    }
-                    
-                    if (data && data.role) {
-                        setUserRole(data.role);
-                    } else {
-                        setUserRole('user'); 
-                    }
+                    if (error) throw error;
+                    if (data && data.role) { setUserRole(data.role); } 
+                    else { setUserRole('user'); }
                 } catch (error) {
                     console.error('Error fetching user role:', error.message);
                     setUserRole('user'); 
@@ -129,7 +129,6 @@ export default function Dashboard({
                 }
             }
         };
-
         fetchUserRole();
     }, [user, supabase]); 
 
@@ -138,7 +137,7 @@ export default function Dashboard({
 
     const handleDataUpdate = () => setDataVersion(Date.now());
 
-    // --- MODIFIKASI: Logika dinamis untuk sidebarLinks (hapus admin-download) ---
+    // Logika Sidebar (Tidak perlu diubah, 'laporan-keberlanjutan' sudah benar)
     const commonLinks = [
         { id: 'notifikasi', text: 'Notifikasi', icon: <BellIcon /> },
         { id: 'profil-usaha', text: 'Profil Usaha', icon: <BuildingOfficeIcon /> },
@@ -148,20 +147,18 @@ export default function Dashboard({
         { id: 'pembelajaran', text: 'Pembelajaran', icon: <AcademicCapIcon /> },
         { id: 'panduan', text: 'Panduan', icon: <QuestionMarkCircleIcon /> },
     ];
+    const adminHiddenLinks = ['profil-usaha', 'laporan-emisi', 'sertifikasi', 'panduan'];
 
     const sidebarLinks = userRole === 'admin' 
         ? [
             { id: 'admin-dashboard', text: 'Dasbor Admin', icon: <HomeIcon /> },
-            // Hapus { id: 'admin-download', text: 'Unduh Laporan', icon: <ArrowDownTrayIcon /> },
-            ...commonLinks
+            ...commonLinks.filter(link => !adminHiddenLinks.includes(link.id))
           ]
         : [
             { id: 'beranda', text: 'Beranda', icon: <HomeIcon /> },
             { id: 'dashboard-utama', text: 'Dasbor Utama', icon: <ChartPieIcon /> },
             ...commonLinks
           ];
-    // --- AKHIR MODIFIKASI ---
-
 
     const pageTitle = sidebarLinks.find(link => link.id === activeDashboardPage)?.text || 
                       (activeDashboardPage === 'akun' && 'Edit Akun & Profil') ||
