@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Impor semua komponen halaman
@@ -17,20 +17,33 @@ import FaqPage from './FaqPage';
 import SertifikasiPage from './SertifikasiPage';
 import PembelajaranPage from './PembelajaranPage';
 import PanduanPage from './PanduanPage';
-import SustainabilityPage from './SustainabilityPage'; // Impor halaman baru
+import SustainabilityPage from './SustainabilityPage';
+
+// --- MODIFIKASI: Hapus impor halaman AdminDownloadPage ---
+import AdminDashboardPage from './AdminDashboardPage';
+// --- AKHIR MODIFIKASI ---
+
 
 import {
     HomeIcon, BellIcon, ChartPieIcon, BuildingOfficeIcon,
     DocumentChartBarIcon, PlusCircleIcon, AcademicCapIcon,
-    QuestionMarkCircleIcon, UserCircleIcon, BookOpenIcon // Tambahkan BookOpenIcon jika belum ada
+    QuestionMarkCircleIcon, UserCircleIcon, BookOpenIcon,
 } from './Icons.jsx';
 
+
 // Komponen PageContent yang mengatur halaman mana yang tampil
-const PageContent = ({ activeDashboardPage, setActiveDashboardPage, supabase, user, sidebarLinks, dataVersion, onDataUpdate }) => {
+const PageContent = ({ activeDashboardPage, setActiveDashboardPage, supabase, user, sidebarLinks, dataVersion, onDataUpdate, userRole }) => {
     switch (activeDashboardPage) {
         case 'beranda':
+            if (userRole === 'admin') {
+                return <AdminDashboardPage supabase={supabase} user={user} />;
+            }
             return <BerandaPage user={user} supabase={supabase} setActiveDashboardPage={setActiveDashboardPage} dataVersion={dataVersion} />;
+        
         case 'dashboard-utama':
+            if (userRole === 'admin') {
+                return <AdminDashboardPage supabase={supabase} user={user} />;
+            }
             return (
                 <div className="space-y-8">
                     <DashboardSummary supabase={supabase} user={user} dataVersion={dataVersion} />
@@ -40,9 +53,16 @@ const PageContent = ({ activeDashboardPage, setActiveDashboardPage, supabase, us
                     </div>
                 </div>
             );
+        
+        // --- MODIFIKASI: Hapus case 'admin-download' ---
+        case 'admin-dashboard':
+            return userRole === 'admin' 
+                ? <AdminDashboardPage supabase={supabase} user={user} />
+                : <BerandaPage user={user} supabase={supabase} setActiveDashboardPage={setActiveDashboardPage} dataVersion={dataVersion} />; 
+        // --- AKHIR MODIFIKASI ---
+
         case 'laporan-emisi':
             return <EmissionReportPage supabase={supabase} user={user} onDataUpdate={onDataUpdate} />;
-        // --- ROUTE BARU ---
         case 'laporan-keberlanjutan':
             return <SustainabilityPage supabase={supabase} user={user} />;
         case 'notifikasi':
@@ -78,16 +98,49 @@ export default function Dashboard({
 }) {
     const [dataVersion, setDataVersion] = useState(Date.now());
     
+    const [userRole, setUserRole] = useState(null);
+    const [loadingRole, setLoadingRole] = useState(true);
+    
+    useEffect(() => {
+        const fetchUserRole = async () => {
+            if (user) {
+                try {
+                    setLoadingRole(true);
+                    const { data, error } = await supabase
+                        .from('profiles')
+                        .select('role')
+                        .eq('id', user.id)
+                        .single();
+
+                    if (error) {
+                        throw error;
+                    }
+                    
+                    if (data && data.role) {
+                        setUserRole(data.role);
+                    } else {
+                        setUserRole('user'); 
+                    }
+                } catch (error) {
+                    console.error('Error fetching user role:', error.message);
+                    setUserRole('user'); 
+                } finally {
+                    setLoadingRole(false);
+                }
+            }
+        };
+
+        fetchUserRole();
+    }, [user, supabase]); 
+
     const logoKemenparPutih = "https://bob.kemenparekraf.go.id/wp-content/uploads/2025/02/Kementerian-Pariwisata-RI_Bahasa-Indonesia-Putih.png";
     const logoWiseSteps = "https://cdn-lgbgj.nitrocdn.com/ItTrnTtgyWTkOHFuOZYyLNqTCVGqVARe/assets/images/optimized/rev-7dc1829/wisesteps.id/wp-content/uploads/revslider/home-desktop-tablet-12/Wise-Steps-Consulting-Logo-White.png";
 
     const handleDataUpdate = () => setDataVersion(Date.now());
 
-    // --- PENAMBAHAN MENU SIDEBAR DI SINI ---
-    const sidebarLinks = [
-        { id: 'beranda', text: 'Beranda', icon: <HomeIcon /> },
+    // --- MODIFIKASI: Logika dinamis untuk sidebarLinks (hapus admin-download) ---
+    const commonLinks = [
         { id: 'notifikasi', text: 'Notifikasi', icon: <BellIcon /> },
-        { id: 'dashboard-utama', text: 'Dasbor Utama', icon: <ChartPieIcon /> },
         { id: 'profil-usaha', text: 'Profil Usaha', icon: <BuildingOfficeIcon /> },
         { id: 'laporan-emisi', text: 'Laporan Emisi', icon: <DocumentChartBarIcon /> },
         { id: 'laporan-keberlanjutan', text: 'Laporan Keberlanjutan', icon: <BookOpenIcon /> },
@@ -96,11 +149,33 @@ export default function Dashboard({
         { id: 'panduan', text: 'Panduan', icon: <QuestionMarkCircleIcon /> },
     ];
 
+    const sidebarLinks = userRole === 'admin' 
+        ? [
+            { id: 'admin-dashboard', text: 'Dasbor Admin', icon: <HomeIcon /> },
+            // Hapus { id: 'admin-download', text: 'Unduh Laporan', icon: <ArrowDownTrayIcon /> },
+            ...commonLinks
+          ]
+        : [
+            { id: 'beranda', text: 'Beranda', icon: <HomeIcon /> },
+            { id: 'dashboard-utama', text: 'Dasbor Utama', icon: <ChartPieIcon /> },
+            ...commonLinks
+          ];
+    // --- AKHIR MODIFIKASI ---
+
+
     const pageTitle = sidebarLinks.find(link => link.id === activeDashboardPage)?.text || 
                       (activeDashboardPage === 'akun' && 'Edit Akun & Profil') ||
                       (activeDashboardPage === 'faq' && 'FAQ') ||
                       (activeDashboardPage === 'tentang' && 'Tentang') ||
                       'Dasbor';
+
+    if (loadingRole) {
+        return (
+            <div className="flex items-center justify-center min-h-screen w-full bg-slate-50">
+                <h2 className="text-xl font-medium text-slate-600">Memuat data pengguna...</h2>
+            </div>
+        );
+    }
 
     return (
         <div id="app-wrapper" className="flex min-h-screen">
@@ -114,18 +189,24 @@ export default function Dashboard({
                         <img src={logoKemenparPutih} alt="Logo Kemenpar" className="h-9" />
                     </div>
                 </div>
+                
                 <nav className="flex flex-col flex-grow gap-1">
                     {sidebarLinks.map(link => (
                         <button
                             key={link.id}
                             onClick={() => setActiveDashboardPage(link.id)}
-                            className={`flex items-center gap-4 p-3 rounded-lg text-sm font-medium transition-colors ${activeDashboardPage === link.id ? 'bg-white/10 text-white font-semibold' : 'text-white/70 hover:bg-white/5 hover:text-white'}`}
+                            className={`flex items-center gap-4 p-3 rounded-lg text-sm font-medium transition-colors ${
+                                activeDashboardPage === link.id 
+                                ? 'bg-white/10 text-white font-semibold' 
+                                : 'text-white/70 hover:bg-white/5 hover:text-white'
+                            }`}
                         >
                             {link.icon}
                             <span>{link.text}</span>
                         </button>
                     ))}
                 </nav>
+
                 <div className="mt-auto">
                     <button
                         onClick={handleLogout}
@@ -171,6 +252,7 @@ export default function Dashboard({
                                 sidebarLinks={sidebarLinks}
                                 dataVersion={dataVersion}
                                 onDataUpdate={handleDataUpdate}
+                                userRole={userRole} 
                             />
                         </motion.div>
                     </AnimatePresence>
