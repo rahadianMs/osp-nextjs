@@ -10,7 +10,7 @@ import DashboardSummary from './DashboardSummary';
 import DashboardPieChart from './DashboardPieChart';
 import DashboardTrends from './DashboardTrends';
 import ProfilUsahaPage from './ProfilUsahaPage';
-import NotificationPage from './NotificationPage'; // <-- Halaman User
+import NotificationPage from './NotificationPage';
 import AboutPage from './AboutPage';
 import AccountPage from './AccountPage';
 import FaqPage from './FaqPage';
@@ -22,21 +22,30 @@ import SustainabilityPage from './SustainabilityPage';
 // Impor halaman Admin
 import AdminDashboardPage from './AdminDashboardPage';
 import AdminSustainabilityPage from './AdminSustainabilityPage';
-// --- TAMBAHAN: Impor halaman notifikasi admin ---
 import AdminNotificationPage from './AdminNotificationPage'; 
-// --- AKHIR TAMBAHAN ---
+import AdminLearningPage from './AdminLearningPage'; 
+
+// Impor halaman detail video
+import VideoDetailPage from './VideoDetailPage'; 
 
 
 // Impor Ikon
 import {
     HomeIcon, BellIcon, ChartPieIcon, BuildingOfficeIcon,
     DocumentChartBarIcon, PlusCircleIcon, AcademicCapIcon,
-    QuestionMarkCircleIcon, UserCircleIcon, BookOpenIcon
+    QuestionMarkCircleIcon, UserCircleIcon, BookOpenIcon,
+    PencilIcon,
+    PlayCircleIcon, DocumentTextIcon, VideoCameraIcon, ArrowLeftIcon, 
+    EyeIcon
 } from './Icons.jsx';
 
 
-// Komponen PageContent (MODIFIKASI DI SINI)
-const PageContent = ({ activeDashboardPage, setActiveDashboardPage, supabase, user, sidebarLinks, dataVersion, onDataUpdate, userRole }) => {
+// Komponen PageContent
+const PageContent = ({ 
+    activeDashboardPage, setActiveDashboardPage, supabase, user, sidebarLinks, 
+    dataVersion, onDataUpdate, userRole, 
+    selectedResource, setSelectedResource 
+}) => {
     switch (activeDashboardPage) {
         case 'beranda':
             if (userRole === 'admin') {
@@ -71,19 +80,45 @@ const PageContent = ({ activeDashboardPage, setActiveDashboardPage, supabase, us
                 ? <AdminSustainabilityPage supabase={supabase} user={user} />
                 : <SustainabilityPage supabase={supabase} user={user} />;
 
-        // --- MODIFIKASI: Logika routing untuk 'notifikasi' ---
         case 'notifikasi':
             return userRole === 'admin'
                 ? <AdminNotificationPage supabase={supabase} user={user} />
-                : <NotificationPage supabase={supabase} user={user} />; // Pastikan Anda meneruskan props jika perlu
-        // --- AKHIR MODIFIKASI ---
+                : <NotificationPage supabase={supabase} user={user} />;
 
         case 'profil-usaha':
             return <ProfilUsahaPage user={user} supabase={supabase} setActiveDashboardPage={setActiveDashboardPage} />;
         case 'sertifikasi':
             return <SertifikasiPage supabase={supabase} user={user} />;
+        
+        // --- MODIFIKASI: Teruskan 'userRole' ---
         case 'pembelajaran':
-            return <PembelajaranPage />;
+            return <PembelajaranPage 
+                        supabase={supabase} 
+                        setActiveDashboardPage={setActiveDashboardPage}
+                        setSelectedResource={setSelectedResource}
+                        userRole={userRole} // <-- DITERUSKAN
+                   />;
+        // --- AKHIR MODIFIKASI ---
+
+        case 'admin-learning':
+            return userRole === 'admin'
+                ? <AdminLearningPage 
+                        supabase={supabase} 
+                        setActiveDashboardPage={setActiveDashboardPage}
+                  />
+                : <PembelajaranPage 
+                        supabase={supabase} 
+                        setActiveDashboardPage={setActiveDashboardPage}
+                        setSelectedResource={setSelectedResource}
+                        userRole={userRole} // <-- DITERUSKAN
+                   />;
+        
+        case 'video-detail':
+            return <VideoDetailPage 
+                        selectedResource={selectedResource}
+                        setActiveDashboardPage={setActiveDashboardPage}
+                   />;
+                
         case 'panduan':
             return <PanduanPage />;
         case 'tentang':
@@ -91,7 +126,6 @@ const PageContent = ({ activeDashboardPage, setActiveDashboardPage, supabase, us
         case 'akun':
             return <AccountPage user={user} supabase={supabase} />;
         case 'faq':
-            return <FaqPage />;
         default:
              return (
                 <div className="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-md border text-center">
@@ -108,11 +142,10 @@ export default function Dashboard({
     isUserMenuOpen, setIsUserMenuOpen, userMenuRef, handleLogout
 }) {
     const [dataVersion, setDataVersion] = useState(Date.now());
-    
     const [userRole, setUserRole] = useState(null);
     const [loadingRole, setLoadingRole] = useState(true);
+    const [selectedResource, setSelectedResource] = useState(null);
     
-    // (useEffect fetchUserRole tetap sama)
     useEffect(() => {
         const fetchUserRole = async () => {
             if (user) {
@@ -142,7 +175,7 @@ export default function Dashboard({
 
     const handleDataUpdate = () => setDataVersion(Date.now());
 
-    // (Logika sidebarLinks tetap sama, 'notifikasi' sudah ada)
+    // --- MODIFIKASI: Logika sidebarLinks ---
     const commonLinks = [
         { id: 'notifikasi', text: 'Notifikasi', icon: <BellIcon /> },
         { id: 'profil-usaha', text: 'Profil Usaha', icon: <BuildingOfficeIcon /> },
@@ -152,24 +185,39 @@ export default function Dashboard({
         { id: 'pembelajaran', text: 'Pembelajaran', icon: <AcademicCapIcon /> },
         { id: 'panduan', text: 'Panduan', icon: <QuestionMarkCircleIcon /> },
     ];
-    const adminHiddenLinks = ['profil-usaha', 'laporan-emisi', 'sertifikasi', 'panduan'];
+    
+    // --- 'pembelajaran' DITAMBAHKAN KE DAFTAR YANG DISEMBUNYIKAN UNTUK ADMIN ---
+    const adminHiddenLinks = ['profil-usaha', 'laporan-emisi', 'sertifikasi', 'panduan', 'pembelajaran'];
+    // --- AKHIR MODIFIKASI ---
 
     const sidebarLinks = userRole === 'admin' 
         ? [
             { id: 'admin-dashboard', text: 'Dasbor Admin', icon: <HomeIcon /> },
-            ...commonLinks.filter(link => !adminHiddenLinks.includes(link.id))
+            ...commonLinks.filter(link => !adminHiddenLinks.includes(link.id)),
+            { id: 'admin-learning', text: 'Kelola Pembelajaran', icon: <PencilIcon /> }
           ]
         : [
             { id: 'beranda', text: 'Beranda', icon: <HomeIcon /> },
             { id: 'dashboard-utama', text: 'Dasbor Utama', icon: <ChartPieIcon /> },
             ...commonLinks
           ];
-
-    const pageTitle = sidebarLinks.find(link => link.id === activeDashboardPage)?.text || 
-                      (activeDashboardPage === 'akun' && 'Edit Akun & Profil') ||
-                      (activeDashboardPage === 'faq' && 'FAQ') ||
-                      (activeDashboardPage === 'tentang' && 'Tentang') ||
-                      'Dasbor';
+    // --- AKHIR MODIFIKASI ---
+    
+    const getPageTitle = () => {
+        const link = sidebarLinks.find(link => link.id === activeDashboardPage);
+        if (link) return link.text;
+        
+        switch (activeDashboardPage) {
+            case 'akun': return 'Edit Akun & Profil';
+            case 'faq': return 'FAQ';
+            case 'tentang': return 'Tentang';
+            case 'video-detail': return 'Detail Materi';
+            // --- Tambahkan case untuk 'pembelajaran' agar judulnya benar ---
+            case 'pembelajaran': return 'Pembelajaran';
+            default: return 'Dasbor';
+        }
+    };
+    const pageTitle = getPageTitle();
 
     if (loadingRole) {
         return (
@@ -192,7 +240,7 @@ export default function Dashboard({
                     </div>
                 </div>
                 
-                <nav className="flex flex-col flex-grow gap-1">
+                <nav className="flex flex-col flex-grow gap-1 overflow-y-auto">
                     {sidebarLinks.map(link => (
                         <button
                             key={link.id}
@@ -208,12 +256,12 @@ export default function Dashboard({
                         </button>
                     ))}
                 </nav>
-                <div className="mt-auto">
+                <div className="mt-auto pt-4 border-t border-white/20">
                     <button
                         onClick={handleLogout}
                         className="flex items-center w-full gap-4 p-3 text-sm font-medium text-red-400 rounded-lg hover:bg-red-500/20 hover:text-white transition-colors"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" /></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1 1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" /></svg>
                         <span>Logout</span>
                     </button>
                 </div>
@@ -254,6 +302,8 @@ export default function Dashboard({
                                 dataVersion={dataVersion}
                                 onDataUpdate={handleDataUpdate}
                                 userRole={userRole} 
+                                selectedResource={selectedResource}
+                                setSelectedResource={setSelectedResource}
                             />
                         </motion.div>
                     </AnimatePresence>

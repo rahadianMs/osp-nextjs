@@ -136,10 +136,13 @@ export default function BerandaPage({ user, supabase, setActiveDashboardPage, da
                 className="relative p-8 rounded-2xl text-white bg-cover bg-center min-h-[180px] flex flex-col justify-between"
                 style={{ backgroundImage: `linear-gradient(to top, rgba(0,0,0,0.6), rgba(0,0,0,0.1)), url('${userBgImage}')` }}
             >
+                {/* --- MODIFIKASI DI SINI --- */}
+                {/* Baris div untuk titik merah telah dihapus dari dalam tombol ini */}
                 <button onClick={() => setActiveDashboardPage('notifikasi')} className="absolute top-4 right-4 w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors z-10">
                     <BellIcon />
-                    <div className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></div>
                 </button>
+                {/* --- AKHIR MODIFIKASI --- */}
+                
                 <div className="relative z-0">
                     <h1 className="text-4xl font-extrabold drop-shadow-md">
                         Selamat Datang, {loading ? '...' : businessName}!
