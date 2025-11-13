@@ -20,13 +20,16 @@ import SertifikasiPage from './SertifikasiPage';
 import PembelajaranPage from './PembelajaranPage';
 import PanduanPage from './PanduanPage';
 import SustainabilityPage from './SustainabilityPage';
-import PetaEmisiPage from './PetaEmisiPage'; // <-- 1. Impor Halaman Peta
+import PetaEmisiPage from './PetaEmisiPage'; 
+import SupplyChainPage from './SupplyChainPage'; 
 
 // Impor halaman Admin
 import AdminDashboardPage from './AdminDashboardPage';
 import AdminSustainabilityPage from './AdminSustainabilityPage';
 import AdminNotificationPage from './AdminNotificationPage'; 
 import AdminLearningPage from './AdminLearningPage'; 
+// --- INI PENTING ---
+import AdminSupplyChainPage from './AdminSupplyChainPage'; // <-- 1. Impor halaman admin baru
 
 // Impor halaman detail video
 import VideoDetailPage from './VideoDetailPage'; 
@@ -40,7 +43,7 @@ import {
     PencilIcon,
     PlayCircleIcon, DocumentTextIcon, VideoCameraIcon, ArrowLeftIcon, 
     EyeIcon,
-    MapIcon // <-- 2. Impor Ikon Peta
+    MapIcon
 } from './Icons.jsx';
 
 
@@ -97,10 +100,11 @@ const PageContent = ({
                 ? <AdminSustainabilityPage supabase={supabase} user={user} />
                 : <SustainabilityPage supabase={supabase} user={user} />;
 
-        // <-- 3. Case Baru untuk Peta Emisi -->
         case 'peta-emisi':
             return <PetaEmisiPage />;
-        // ------------------------------------
+
+        case 'supply-chain': 
+            return <SupplyChainPage supabase={supabase} user={user} />;
 
         case 'notifikasi':
             return userRole === 'admin'
@@ -132,6 +136,13 @@ const PageContent = ({
                         setSelectedResource={setSelectedResource}
                         userRole={userRole}
                    />;
+
+        // --- INI PENTING ---
+        case 'admin-supply-chain': // <-- 2. Case baru untuk admin
+            return userRole === 'admin'
+                ? <AdminSupplyChainPage supabase={supabase} />
+                : <SupplyChainPage supabase={supabase} user={user} />; // Pengaman jika user biasa mencoba akses
+        // -------------------
         
         case 'video-detail':
             return <VideoDetailPage 
@@ -204,21 +215,30 @@ export default function Dashboard({
         { id: 'profil-usaha', text: 'Profil Usaha', icon: <BuildingOfficeIcon /> },
         { id: 'laporan-emisi', text: 'Laporan Emisi', icon: <DocumentChartBarIcon /> },
         { id: 'laporan-keberlanjutan', text: 'Laporan Keberlanjutan', icon: <BookOpenIcon /> },
-        { id: 'peta-emisi', text: 'Peta Emisi', icon: <MapIcon /> }, // <-- 4. Menu Baru Ditambahkan
+        { id: 'peta-emisi', text: 'Peta Emisi', icon: <MapIcon /> },
+        { id: 'supply-chain', text: 'Supply Chain Inventory', icon: <DocumentTextIcon /> },
         { id: 'sertifikasi', text: 'Sertifikasi', icon: <PlusCircleIcon /> },
         { id: 'pembelajaran', text: 'Pembelajaran', icon: <AcademicCapIcon /> },
         { id: 'panduan', text: 'Panduan', icon: <QuestionMarkCircleIcon /> },
     ];
     
-    const adminHiddenLinks = ['profil-usaha', 'laporan-emisi', 'sertifikasi', 'panduan', 'pembelajaran', 'peta-emisi'];
+    // `adminHiddenLinks` menyembunyikan link 'user' dari 'admin'
+    const adminHiddenLinks = ['profil-usaha', 'laporan-emisi', 'sertifikasi', 'panduan', 'pembelajaran', 'peta-emisi', 'supply-chain'];
 
     const sidebarLinks = userProfile.role === 'admin' 
         ? [
             { id: 'admin-dashboard', text: 'Dasbor Admin', icon: <HomeIcon /> },
+            // Ini akan memfilter dan hanya menyisakan 'Notifikasi' & 'Laporan Keberlanjutan'
             ...commonLinks.filter(link => !adminHiddenLinks.includes(link.id)),
-            { id: 'admin-learning', text: 'Kelola Pembelajaran', icon: <PencilIcon /> }
+            
+            { id: 'admin-learning', text: 'Kelola Pembelajaran', icon: <PencilIcon /> },
+            
+            // --- INI ADALAH BARIS YANG HILANG DI FILE ANDA ---
+            { id: 'admin-supply-chain', text: 'Kelola Pemasok', icon: <BuildingOfficeIcon /> } // <-- 3. Menu admin baru
+            // ------------------------------------------------
           ]
         : [
+            // Menu untuk user biasa
             { id: 'beranda', text: 'Beranda', icon: <HomeIcon /> },
             { id: 'dashboard-utama', text: 'Dasbor Utama', icon: <ChartPieIcon /> },
             ...commonLinks
@@ -234,7 +254,13 @@ export default function Dashboard({
             case 'tentang': return 'Tentang';
             case 'video-detail': return 'Detail Materi';
             case 'pembelajaran': return 'Pembelajaran';
-            case 'peta-emisi': return 'Peta Sebaran Emisi'; // <-- Judul untuk halaman peta
+            case 'peta-emisi': return 'Peta Sebaran Emisi';
+            case 'supply-chain': return 'Direktori Pemasok Berkelanjutan'; 
+            
+            // --- INI PENTING ---
+            case 'admin-supply-chain': return 'Kelola Pemasok Berkelanjutan'; // <-- 4. Judul halaman admin
+            // ------------------
+            
             default: return 'Dasbor';
         }
     };
@@ -248,10 +274,11 @@ export default function Dashboard({
         );
     }
 
+    // Sisa dari return ( ... )
     return (
         <div id="app-wrapper" className="flex min-h-screen">
             <aside 
-                className="fixed top-0 left-0 z-40 flex flex-col h-screen p-6 w-72 text-white" // <-- 5. LEBAR DIUBAH
+                className="fixed top-0 left-0 z-40 flex flex-col h-screen p-6 w-72 text-white" 
                 style={{backgroundColor: '#22543d'}}
             >
                <div className="pb-6 mb-4 border-b border-white/20">
@@ -287,7 +314,7 @@ export default function Dashboard({
                     </button>
                 </div>
             </aside>
-            <div className="flex flex-col flex-1 w-full ml-72"> {/* <-- 6. MARGIN DIUBAH */}
+            <div className="flex flex-col flex-1 w-full ml-72"> 
                 <header className="sticky top-0 z-30 flex items-center justify-between h-16 px-10 bg-white border-b border-slate-200">
                     <h2 className="text-2xl font-bold">{pageTitle}</h2>
                     <div className="relative" ref={userMenuRef}>
