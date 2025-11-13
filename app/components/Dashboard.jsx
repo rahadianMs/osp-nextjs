@@ -1,3 +1,5 @@
+// app/components/Dashboard.jsx
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -18,6 +20,7 @@ import SertifikasiPage from './SertifikasiPage';
 import PembelajaranPage from './PembelajaranPage';
 import PanduanPage from './PanduanPage';
 import SustainabilityPage from './SustainabilityPage';
+import PetaEmisiPage from './PetaEmisiPage'; // <-- 1. Impor Halaman Peta
 
 // Impor halaman Admin
 import AdminDashboardPage from './AdminDashboardPage';
@@ -36,7 +39,8 @@ import {
     QuestionMarkCircleIcon, UserCircleIcon, BookOpenIcon,
     PencilIcon,
     PlayCircleIcon, DocumentTextIcon, VideoCameraIcon, ArrowLeftIcon, 
-    EyeIcon
+    EyeIcon,
+    MapIcon // <-- 2. Impor Ikon Peta
 } from './Icons.jsx';
 
 
@@ -45,20 +49,19 @@ const PageContent = ({
     activeDashboardPage, setActiveDashboardPage, supabase, user, sidebarLinks, 
     dataVersion, onDataUpdate, userRole, 
     selectedResource, setSelectedResource,
-    businessName // <-- 1. Terima businessName
+    businessName
 }) => {
     switch (activeDashboardPage) {
         case 'beranda':
             if (userRole === 'admin') {
                 return <AdminDashboardPage supabase={supabase} user={user} />;
             }
-            // --- 2. Teruskan businessName ke BerandaPage ---
             return <BerandaPage 
                         user={user} 
                         supabase={supabase} 
                         setActiveDashboardPage={setActiveDashboardPage} 
                         dataVersion={dataVersion}
-                        initialBusinessName={businessName} // <-- Teruskan sebagai prop
+                        initialBusinessName={businessName}
                    />;
         
         case 'dashboard-utama':
@@ -83,7 +86,7 @@ const PageContent = ({
                     supabase={supabase} 
                     setActiveDashboardPage={setActiveDashboardPage} 
                     dataVersion={dataVersion}
-                    initialBusinessName={businessName} // <-- Teruskan juga di sini
+                    initialBusinessName={businessName}
                   />; 
 
         case 'laporan-emisi':
@@ -93,6 +96,11 @@ const PageContent = ({
             return userRole === 'admin'
                 ? <AdminSustainabilityPage supabase={supabase} user={user} />
                 : <SustainabilityPage supabase={supabase} user={user} />;
+
+        // <-- 3. Case Baru untuk Peta Emisi -->
+        case 'peta-emisi':
+            return <PetaEmisiPage />;
+        // ------------------------------------
 
         case 'notifikasi':
             return userRole === 'admin'
@@ -155,21 +163,17 @@ export default function Dashboard({
 }) {
     const [dataVersion, setDataVersion] = useState(Date.now());
     const [selectedResource, setSelectedResource] = useState(null);
-
-    // --- PERUBAHAN 1: State digabung untuk role dan nama ---
     const [userProfile, setUserProfile] = useState({ role: null, businessName: '...' });
     const [loadingProfile, setLoadingProfile] = useState(true);
-    // --- AKHIR PERUBAHAN 1 ---
     
     useEffect(() => {
-        // --- PERUBAHAN 2: Fungsi mengambil role dan nama ---
         const fetchUserProfile = async () => {
             if (user) {
                 try {
                     setLoadingProfile(true);
                     const { data, error } = await supabase
                         .from('profiles')
-                        .select('role, business_name') // <-- Ambil role DAN business_name
+                        .select('role, business_name')
                         .eq('id', user.id)
                         .single();
                     if (error) throw error;
@@ -188,7 +192,6 @@ export default function Dashboard({
             }
         };
         fetchUserProfile();
-        // --- AKHIR PERUBAHAN 2 ---
     }, [user, supabase]); 
 
     const logoKemenparPutih = "https://bob.kemenparekraf.go.id/wp-content/uploads/2025/02/Kementerian-Pariwisata-RI_Bahasa-Indonesia-Putih.png";
@@ -201,14 +204,14 @@ export default function Dashboard({
         { id: 'profil-usaha', text: 'Profil Usaha', icon: <BuildingOfficeIcon /> },
         { id: 'laporan-emisi', text: 'Laporan Emisi', icon: <DocumentChartBarIcon /> },
         { id: 'laporan-keberlanjutan', text: 'Laporan Keberlanjutan', icon: <BookOpenIcon /> },
+        { id: 'peta-emisi', text: 'Peta Emisi', icon: <MapIcon /> }, // <-- 4. Menu Baru Ditambahkan
         { id: 'sertifikasi', text: 'Sertifikasi', icon: <PlusCircleIcon /> },
         { id: 'pembelajaran', text: 'Pembelajaran', icon: <AcademicCapIcon /> },
         { id: 'panduan', text: 'Panduan', icon: <QuestionMarkCircleIcon /> },
     ];
     
-    const adminHiddenLinks = ['profil-usaha', 'laporan-emisi', 'sertifikasi', 'panduan', 'pembelajaran'];
+    const adminHiddenLinks = ['profil-usaha', 'laporan-emisi', 'sertifikasi', 'panduan', 'pembelajaran', 'peta-emisi'];
 
-    // --- PERUBAHAN 3: Gunakan userProfile.role ---
     const sidebarLinks = userProfile.role === 'admin' 
         ? [
             { id: 'admin-dashboard', text: 'Dasbor Admin', icon: <HomeIcon /> },
@@ -220,7 +223,6 @@ export default function Dashboard({
             { id: 'dashboard-utama', text: 'Dasbor Utama', icon: <ChartPieIcon /> },
             ...commonLinks
           ];
-    // --- AKHIR PERUBAHAN 3 ---
     
     const getPageTitle = () => {
         const link = sidebarLinks.find(link => link.id === activeDashboardPage);
@@ -232,12 +234,12 @@ export default function Dashboard({
             case 'tentang': return 'Tentang';
             case 'video-detail': return 'Detail Materi';
             case 'pembelajaran': return 'Pembelajaran';
+            case 'peta-emisi': return 'Peta Sebaran Emisi'; // <-- Judul untuk halaman peta
             default: return 'Dasbor';
         }
     };
     const pageTitle = getPageTitle();
 
-    // --- PERUBAHAN 4: Cek loadingProfile ---
     if (loadingProfile) {
         return (
             <div className="flex items-center justify-center min-h-screen w-full bg-slate-50">
@@ -245,12 +247,11 @@ export default function Dashboard({
             </div>
         );
     }
-    // --- AKHIR PERUBAHAN 4 ---
 
     return (
         <div id="app-wrapper" className="flex min-h-screen">
             <aside 
-                className="fixed top-0 left-0 z-40 flex flex-col h-screen p-6 w-64 text-white"
+                className="fixed top-0 left-0 z-40 flex flex-col h-screen p-6 w-72 text-white" // <-- 5. LEBAR DIUBAH
                 style={{backgroundColor: '#22543d'}}
             >
                <div className="pb-6 mb-4 border-b border-white/20">
@@ -286,7 +287,7 @@ export default function Dashboard({
                     </button>
                 </div>
             </aside>
-            <div className="flex flex-col flex-1 w-full ml-64">
+            <div className="flex flex-col flex-1 w-full ml-72"> {/* <-- 6. MARGIN DIUBAH */}
                 <header className="sticky top-0 z-30 flex items-center justify-between h-16 px-10 bg-white border-b border-slate-200">
                     <h2 className="text-2xl font-bold">{pageTitle}</h2>
                     <div className="relative" ref={userMenuRef}>
@@ -313,7 +314,6 @@ export default function Dashboard({
                             exit={{ opacity: 0, y: -20 }}
                             transition={{ duration: 0.3 }}
                         >
-                            {/* --- PERUBAHAN 5: Teruskan prop baru ke PageContent --- */}
                             <PageContent
                                 activeDashboardPage={activeDashboardPage}
                                 setActiveDashboardPage={setActiveDashboardPage}
@@ -322,12 +322,11 @@ export default function Dashboard({
                                 sidebarLinks={sidebarLinks}
                                 dataVersion={dataVersion}
                                 onDataUpdate={handleDataUpdate}
-                                userRole={userProfile.role} // <-- Kirim role dari state
-                                businessName={userProfile.businessName} // <-- Kirim nama dari state
+                                userRole={userProfile.role}
+                                businessName={userProfile.businessName}
                                 selectedResource={selectedResource}
                                 setSelectedResource={setSelectedResource}
                             />
-                            {/* --- AKHIR PERUBAHAN 5 --- */}
                         </motion.div>
                     </AnimatePresence>
                 </main>
