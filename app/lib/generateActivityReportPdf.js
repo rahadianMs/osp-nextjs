@@ -6,7 +6,7 @@ import jsPDF from 'jspdf';
 // Helper untuk format tanggal
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A';
-  return new Date(dateString).toLocaleDateString('id-ID', {
+  return new Date(dateString).toLocaleString('id-ID', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -26,8 +26,6 @@ export const generateActivityReportPdf = async (report) => {
   let currentY = 20;
 
   // --- 1. KOP SURAT (HEADER) ---
-  // Saya mengambil gaya header dari file generatePdf.js Anda
-  // agar desainnya konsisten.
   try {
     const logoUrl =
       'https://upload.wikimedia.org/wikipedia/commons/f/fc/Lambang_Kementerian_Pariwisata_Republik_Indonesia_%282024%29.png';
@@ -64,9 +62,45 @@ export const generateActivityReportPdf = async (report) => {
   doc.setDrawColor(220);
   doc.line(margin, 35, pageWidth - margin, 35);
 
-  currentY = 45;
+  currentY = 42; // Posisi Y setelah garis header
 
-  // --- 2. DETAIL LAPORAN ---
+  // --- 2. BARU: STATUS BOX ---
+  let statusText, boxColor, textColor, boxWidth;
+
+  if (report.is_verified) {
+      statusText = "STATUS: TERVERIFIKASI";
+      boxColor = [236, 253, 245]; // Tailwind 'green-50'
+      textColor = [2, 44, 34]; // Tailwind 'green-900'
+      boxWidth = 60; // Lebar box
+  } else {
+      statusText = "STATUS: MENUNGGU VERIFIKASI";
+      boxColor = [248, 250, 252]; // Tailwind 'slate-50'
+      textColor = [71, 85, 105]; // Tailwind 'slate-600'
+      boxWidth = 75; // Box lebih lebar
+  }
+  
+  // Atur warna
+  doc.setFillColor(boxColor[0], boxColor[1], boxColor[2]);
+  doc.setTextColor(textColor[0], textColor[1], textColor[2]);
+  doc.setFont('helvetica', 'bold').setFontSize(9);
+  doc.setDrawColor(220); // Border abu-abu muda
+
+  // Gambar box di kanan atas
+  const boxX = pageWidth - margin - boxWidth;
+  doc.roundedRect(boxX, currentY, boxWidth, 8, 3, 3, 'FD'); // 'FD' = Fill and Draw border
+
+  // Tulis teks (rata tengah di dalam box)
+  doc.text(statusText, boxX + boxWidth / 2, currentY + 5.5, { align: 'center' });
+
+  // Reset warna dan font
+  doc.setTextColor(0, 0, 0); 
+  doc.setFont('helvetica', 'normal');
+  
+  currentY += 20; // Tambah spasi ekstra setelah box status
+  // --- AKHIR STATUS BOX ---
+
+
+  // --- 3. DETAIL LAPORAN ---
   doc.setFontSize(12).setFont('helvetica', 'bold');
   doc.text('Judul Aktivitas:', margin, currentY);
   doc
@@ -98,9 +132,9 @@ export const generateActivityReportPdf = async (report) => {
     pageWidth - margin * 2
   );
   doc.text(descriptionLines, margin, currentY);
-  currentY += descriptionLines.length * 5 + 10; // Spasi ekstra
+  currentY += descriptionLines.length * 5 + 10;
 
-  // --- 3. BUKTI / LINK ---
+  // --- 4. BUKTI / LINK ---
   doc.setFontSize(11).setFont('helvetica', 'bold');
   doc.text('Bukti / Evidensi:', margin, currentY);
   currentY += 7;
@@ -119,7 +153,7 @@ export const generateActivityReportPdf = async (report) => {
     doc.text('Tidak ada bukti link yang dilampirkan.', margin + 5, currentY);
   }
 
-  // --- 4. SIMPAN DOKUMEN ---
+  // --- 5. SIMPAN DOKUMEN ---
   const fileName = `Laporan_Aktivitas_${report.title
     .replace(/\s+/g, '_')
     .slice(0, 20)}.pdf`;

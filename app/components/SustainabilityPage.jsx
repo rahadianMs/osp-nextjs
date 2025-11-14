@@ -2,16 +2,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-// --- (1) IMPOR IKON & FUNGSI BARU ---
+// --- MODIFIKASI: Impor 'ClockIcon' ---
 import {
   PlusCircleIcon,
   TrashIcon,
   LinkIcon,
   BookOpenIcon,
   CalendarIcon,
-  ArrowDownTrayIcon, // <-- BARU
+  ArrowDownTrayIcon,
+  CheckBadgeIcon,
+  ClockIcon, // <-- BARU
 } from "./Icons";
-import { generateActivityReportPdf } from "../lib/generateActivityReportPdf"; // <-- BARU
+import { generateActivityReportPdf } from "../lib/generateActivityReportPdf";
 
 // --- KOMPONEN HELPER (UI) ---
 const FormLabel = ({ htmlFor, children }) => (
@@ -47,7 +49,6 @@ const FormSelect = ({ className, ...props }) => (
   </select>
 );
 
-// Komponen Spinner kecil untuk loading
 const SmallSpinner = () => (
   <svg
     className="animate-spin h-5 w-5 text-teal-600"
@@ -73,29 +74,24 @@ const SmallSpinner = () => (
 
 // --- KOMPONEN UTAMA ---
 export default function SustainabilityPage({ supabase, user }) {
-  // State untuk form
+  // (Semua state Anda tidak berubah)
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Energi Terbarukan');
   const [activityDate, setActivityDate] = useState('');
-  
-  // State untuk link bukti
   const [links, setLinks] = useState([
     { title: '', url: '' }
   ]);
-
-  // State untuk UI Form
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
-
-  // State untuk Daftar Riwayat
   const [reports, setReports] = useState([]);
   const [listLoading, setListLoading] = useState(true);
-  
-  // --- (2) STATE BARU UNTUK LOADING UNDUH ---
   const [downloadingId, setDownloadingId] = useState(null);
 
-  // --- Fungsi untuk mengambil data ---
+  // (Semua fungsi Anda tidak berubah)
+  // fetchReports, useEffect, handleLinkChange, addLinkInput, removeLinkInput,
+  // handleSubmit, handleDeleteReport, handleDownloadPdf, formatDate
+  
   const fetchReports = async () => {
     setListLoading(true);
     const { data, error } = await supabase
@@ -113,15 +109,12 @@ export default function SustainabilityPage({ supabase, user }) {
     setListLoading(false);
   };
 
-  // Ambil data saat komponen dimuat
   useEffect(() => {
     if (user) {
       fetchReports();
     }
   }, [user]);
 
-  // --- Fungsi Helper Link ---
-  // (Fungsi handleLinkChange, addLinkInput, removeLinkInput tidak berubah)
   const handleLinkChange = (index, field, value) => {
     const newLinks = [...links];
     newLinks[index][field] = value;
@@ -138,9 +131,6 @@ export default function SustainabilityPage({ supabase, user }) {
     setLinks(newLinks);
   };
 
-
-  // --- Fungsi Handle Submit ---
-  // (Fungsi handleSubmit tidak berubah)
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -169,21 +159,16 @@ export default function SustainabilityPage({ supabase, user }) {
       });
     } else {
       setMessage({ type: 'success', text: 'Laporan berhasil disimpan!' });
-      // Reset form
       setTitle('');
       setDescription('');
       setCategory('Energi Terbarukan');
       setActivityDate('');
       setLinks([{ title: '', url: '' }]);
-      
-      // Panggil data terbaru
       fetchReports();
     }
     setLoading(false);
   };
 
-  // --- Fungsi untuk Hapus Laporan ---
-  // (Fungsi handleDeleteReport tidak berubah)
   const handleDeleteReport = async (reportId) => {
     if (window.confirm("Apakah Anda yakin ingin menghapus laporan ini?")) {
       const { error } = await supabase
@@ -201,21 +186,18 @@ export default function SustainabilityPage({ supabase, user }) {
     }
   };
 
-  // --- (3) FUNGSI BARU UNTUK UNDUH PDF ---
   const handleDownloadPdf = async (report) => {
-    setDownloadingId(report.id); // Set loading di tombol ini
+    setDownloadingId(report.id);
     setMessage({ type: '', text: '' });
     try {
-      // Panggil fungsi generator baru kita
       await generateActivityReportPdf(report);
     } catch (error) {
       console.error("Gagal membuat PDF:", error);
       setMessage({ type: 'error', text: 'Gagal membuat file PDF.' });
     }
-    setDownloadingId(null); // Selesai loading
+    setDownloadingId(null);
   };
 
-  // Helper untuk format tanggal
   const formatDate = (dateString) => {
     if (!dateString) return 'Tanggal tidak valid';
     return new Date(dateString).toLocaleDateString('id-ID', {
@@ -228,13 +210,13 @@ export default function SustainabilityPage({ supabase, user }) {
   // --- RENDER ---
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto">
-      {/* --- FORM SUBMIT --- */}
+      {/* --- FORM SUBMIT (Tidak berubah) --- */}
       <h2 className="text-3xl font-bold text-slate-900 mb-6">
         Laporan Aktivitas Keberlanjutan
       </h2>
       
-      {/* ... (Kode Form tidak berubah) ... */}
       <form onSubmit={handleSubmit} className="bg-white p-6 md:p-8 rounded-xl shadow-lg border border-slate-200">
+        {/* ... (Konten form utuh) ... */}
         <div className="space-y-6">
           <div>
             <FormLabel htmlFor="title">Judul Aktivitas</FormLabel>
@@ -364,27 +346,41 @@ export default function SustainabilityPage({ supabase, user }) {
             {reports.map((report) => (
               <div key={report.id} className="bg-white p-6 rounded-xl shadow-lg border border-slate-200">
                 
-                {/* --- (4) PERUBAHAN UI/UX UNTUK TOMBOL AKSI --- */}
                 <div className="flex justify-between items-start gap-4 pb-4 border-b border-slate-100">
                   
                   {/* Bagian Kiri: Judul dan Tag */}
                   <div className="flex-grow">
                     <h4 className="text-xl font-semibold text-teal-700">{report.title}</h4>
-                    <span className="mt-1.5 inline-block px-3 py-1 bg-teal-50 text-teal-600 rounded-full text-sm font-medium">
-                      {report.category}
-                    </span>
+                    
+                    {/* --- PERUBAHAN UI: Menampilkan Status Verifikasi --- */}
+                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                      <span className="inline-block px-3 py-1 bg-teal-50 text-teal-600 rounded-full text-sm font-medium">
+                        {report.category}
+                      </span>
+                      
+                      {/* --- BARU: Logika Status (Hijau atau Abu-abu) --- */}
+                      {report.is_verified ? (
+                        <span className="flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm font-medium">
+                          <CheckBadgeIcon />
+                          Terverifikasi
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1.5 px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-sm font-medium">
+                          <ClockIcon />
+                          Menunggu Verifikasi
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Bagian Kanan: Tombol Aksi (Unduh & Hapus) */}
                   <div className="flex-shrink-0 flex items-center gap-1">
-                    {/* --- TOMBOL UNDUH BARU --- */}
                     <button
                       onClick={() => handleDownloadPdf(report)}
-                      disabled={downloadingId === report.id} // Nonaktifkan saat sedang mengunduh
+                      disabled={downloadingId === report.id}
                       className="p-1.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-full"
                       title="Unduh laporan (PDF)"
                     >
-                      {/* Tampilkan spinner jika id-nya cocok */}
                       {downloadingId === report.id ? (
                         <SmallSpinner />
                       ) : (
@@ -392,10 +388,9 @@ export default function SustainabilityPage({ supabase, user }) {
                       )}
                     </button>
                     
-                    {/* --- TOMBOL HAPUS --- */}
                     <button
                       onClick={() => handleDeleteReport(report.id)}
-                      disabled={downloadingId === report.id} // Nonaktifkan juga saat mengunduh
+                      disabled={downloadingId === report.id}
                       className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full"
                       title="Hapus laporan"
                     >
