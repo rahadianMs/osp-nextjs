@@ -1,182 +1,448 @@
+// app/components/SustainabilityPage.jsx
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
+// --- (1) IMPOR IKON & FUNGSI BARU ---
+import {
+  PlusCircleIcon,
+  TrashIcon,
+  LinkIcon,
+  BookOpenIcon,
+  CalendarIcon,
+  ArrowDownTrayIcon, // <-- BARU
+} from "./Icons";
+import { generateActivityReportPdf } from "../lib/generateActivityReportPdf"; // <-- BARU
 
-// Komponen untuk Halaman Laporan Keberlanjutan
+// --- KOMPONEN HELPER (UI) ---
+const FormLabel = ({ htmlFor, children }) => (
+  <label
+    htmlFor={htmlFor}
+    className="block text-sm font-medium text-slate-700 mb-1.5"
+  >
+    {children}
+  </label>
+);
+
+const FormInput = ({ className, ...props }) => (
+  <input
+    {...props}
+    className={`block w-full border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm ${className || ''}`}
+  />
+);
+
+const FormTextarea = ({ className, ...props }) => (
+  <textarea
+    {...props}
+    rows="4"
+    className={`block w-full border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm ${className || 'px-3 py-2'}`}
+  />
+);
+
+const FormSelect = ({ className, ...props }) => (
+  <select
+    {...props}
+    className={`block w-full border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm ${className || 'px-3 py-2'}`}
+  >
+    {props.children}
+  </select>
+);
+
+// Komponen Spinner kecil untuk loading
+const SmallSpinner = () => (
+  <svg
+    className="animate-spin h-5 w-5 text-teal-600"
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+  >
+    <circle
+      className="opacity-25"
+      cx="12"
+      cy="12"
+      r="10"
+      stroke="currentColor"
+      strokeWidth="4"
+    ></circle>
+    <path
+      className="opacity-75"
+      fill="currentColor"
+      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+    ></path>
+  </svg>
+);
+
+// --- KOMPONEN UTAMA ---
 export default function SustainabilityPage({ supabase, user }) {
-    const [reports, setReports] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
-    
-    const [title, setTitle] = useState('');
-    const [description, setDescription] = useState('');
-    const [category, setCategory] = useState('Listrik');
-    const [activityDate, setActivityDate] = useState(new Date().toISOString().slice(0, 10));
+  // State untuk form
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [category, setCategory] = useState('Energi Terbarukan');
+  const [activityDate, setActivityDate] = useState('');
+  
+  // State untuk link bukti
+  const [links, setLinks] = useState([
+    { title: '', url: '' }
+  ]);
 
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    const [selectedReport, setSelectedReport] = useState(null);
+  // State untuk UI Form
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '' });
 
-    const fetchReports = async () => {
-        if (!user) return;
-        setLoading(true);
-        const { data, error } = await supabase
-            .from('sustainability_reports')
-            .select('*')
-            .eq('user_id', user.id)
-            .order('activity_date', { ascending: false });
+  // State untuk Daftar Riwayat
+  const [reports, setReports] = useState([]);
+  const [listLoading, setListLoading] = useState(true);
+  
+  // --- (2) STATE BARU UNTUK LOADING UNDUH ---
+  const [downloadingId, setDownloadingId] = useState(null);
 
-        if (error) {
-            console.error('Error fetching reports:', error);
-            setError('Gagal memuat laporan.');
-        } else {
-            setReports(data);
+  // --- Fungsi untuk mengambil data ---
+  const fetchReports = async () => {
+    setListLoading(true);
+    const { data, error } = await supabase
+      .from('sustainability_reports')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('activity_date', { ascending: false });
+
+    if (data) {
+      setReports(data);
+    } else {
+      console.error("Gagal mengambil riwayat laporan:", error);
+      setMessage({ type: 'error', text: 'Gagal memuat riwayat laporan.' });
+    }
+    setListLoading(false);
+  };
+
+  // Ambil data saat komponen dimuat
+  useEffect(() => {
+    if (user) {
+      fetchReports();
+    }
+  }, [user]);
+
+  // --- Fungsi Helper Link ---
+  // (Fungsi handleLinkChange, addLinkInput, removeLinkInput tidak berubah)
+  const handleLinkChange = (index, field, value) => {
+    const newLinks = [...links];
+    newLinks[index][field] = value;
+    setLinks(newLinks);
+  };
+
+  const addLinkInput = () => {
+    setLinks([...links, { title: '', url: '' }]);
+  };
+
+  const removeLinkInput = (index) => {
+    if (links.length <= 1) return;
+    const newLinks = links.filter((_, i) => i !== index);
+    setLinks(newLinks);
+  };
+
+
+  // --- Fungsi Handle Submit ---
+  // (Fungsi handleSubmit tidak berubah)
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage({ type: '', text: '' });
+
+    const validLinks = links.filter(link => link.url && link.url.trim() !== '');
+
+    const { data, error } = await supabase
+      .from('sustainability_reports')
+      .insert([
+        {
+          user_id: user.id,
+          title,
+          description,
+          category,
+          activity_date: activityDate,
+          evidence_links: validLinks.length > 0 ? validLinks : null
         }
-        setLoading(false);
-    };
+      ]);
 
-    useEffect(() => {
-        fetchReports();
-    }, [user, supabase]);
+    if (error) {
+      console.error("Error submitting report object:", JSON.stringify(error, null, 2));
+      setMessage({
+        type: 'error',
+        text: `Gagal menyimpan laporan. Error: ${error.message || 'Cek konsol untuk detail.'}`
+      });
+    } else {
+      setMessage({ type: 'success', text: 'Laporan berhasil disimpan!' });
+      // Reset form
+      setTitle('');
+      setDescription('');
+      setCategory('Energi Terbarukan');
+      setActivityDate('');
+      setLinks([{ title: '', url: '' }]);
+      
+      // Panggil data terbaru
+      fetchReports();
+    }
+    setLoading(false);
+  };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError('');
+  // --- Fungsi untuk Hapus Laporan ---
+  // (Fungsi handleDeleteReport tidak berubah)
+  const handleDeleteReport = async (reportId) => {
+    if (window.confirm("Apakah Anda yakin ingin menghapus laporan ini?")) {
+      const { error } = await supabase
+        .from('sustainability_reports')
+        .delete()
+        .eq('id', reportId); 
 
-        const { error: insertError } = await supabase
-            .from('sustainability_reports')
-            .insert({ user_id: user.id, title, description, category, activity_date: activityDate });
+      if (error) {
+        console.error("Gagal menghapus laporan:", error);
+        setMessage({ type: 'error', text: `Gagal menghapus laporan: ${error.message}` });
+      } else {
+        setReports(reports.filter(report => report.id !== reportId));
+        setMessage({ type: 'success', text: 'Laporan berhasil dihapus.' });
+      }
+    }
+  };
 
-        if (insertError) {
-            setError('Gagal menyimpan laporan. Coba lagi.');
-        } else {
-            setTitle('');
-            setDescription('');
-            setCategory('Listrik');
-            setActivityDate(new Date().toISOString().slice(0, 10));
-            await fetchReports();
-        }
-        setLoading(false);
-    };
+  // --- (3) FUNGSI BARU UNTUK UNDUH PDF ---
+  const handleDownloadPdf = async (report) => {
+    setDownloadingId(report.id); // Set loading di tombol ini
+    setMessage({ type: '', text: '' });
+    try {
+      // Panggil fungsi generator baru kita
+      await generateActivityReportPdf(report);
+    } catch (error) {
+      console.error("Gagal membuat PDF:", error);
+      setMessage({ type: 'error', text: 'Gagal membuat file PDF.' });
+    }
+    setDownloadingId(null); // Selesai loading
+  };
 
-    const handleDeleteRequest = (report) => {
-        setSelectedReport(report);
-        setShowDeleteConfirm(true);
-    };
+  // Helper untuk format tanggal
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Tanggal tidak valid';
+    return new Date(dateString).toLocaleDateString('id-ID', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
 
-    const handleCancelDelete = () => {
-        setSelectedReport(null);
-        setShowDeleteConfirm(false);
-    };
-
-    const handleConfirmDelete = async () => {
-        if (!selectedReport) return;
-        setLoading(true);
-        const { error: deleteError } = await supabase
-            .from('sustainability_reports')
-            .delete()
-            .match({ id: selectedReport.id });
-        
-        if (deleteError) {
-            setError('Gagal menghapus laporan. Coba lagi.');
-        } else {
-            await fetchReports();
-        }
-        handleCancelDelete();
-        setLoading(false);
-    };
-    
-    // --- PERBAIKAN DI SINI ---
-    const categories = ['Listrik', 'Energi Non-Listrik', 'Transportasi', 'Limbah'];
-
-    const groupedReports = reports.reduce((acc, report) => {
-        (acc[report.category] = acc[report.category] || []).push(report);
-        return acc;
-    }, {});
-
-
-    return (
-        <div className="space-y-10">
-            <div className="bg-white p-8 rounded-xl shadow-md border">
-                <h3 className="text-2xl font-bold mb-6">Buat Laporan Keberlanjutan Baru</h3>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label htmlFor="title" className="block text-sm font-medium text-slate-700 mb-1">Judul Kegiatan</label>
-                            <input id="title" type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Contoh: Pemasangan Panel Surya" required className="w-full p-2 border border-slate-300 rounded-lg"/>
-                        </div>
-                        <div>
-                            <label htmlFor="activityDate" className="block text-sm font-medium text-slate-700 mb-1">Tanggal Kegiatan</label>
-                            <input id="activityDate" type="date" value={activityDate} onChange={(e) => setActivityDate(e.target.value)} required className="w-full p-2 border border-slate-300 rounded-lg"/>
-                        </div>
-                    </div>
-                    <div>
-                        <label htmlFor="description" className="block text-sm font-medium text-slate-700 mb-1">Deskripsi Kegiatan</label>
-                        <textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Jelaskan secara singkat kegiatan yang telah dilakukan..." required className="w-full p-2 border border-slate-300 rounded-lg" rows="4"></textarea>
-                    </div>
-                    <div>
-                        <label htmlFor="category" className="block text-sm font-medium text-slate-700 mb-1">Kategori</label>
-                        <select id="category" value={category} onChange={(e) => setCategory(e.target.value)} required className="w-full p-2 border border-slate-300 rounded-lg bg-white">
-                            {/* --- PERBAIKAN DI SINI --- */}
-                            {categories.map(cat => <option key={cat}>{cat}</option>)}
-                        </select>
-                    </div>
-                    <button type="submit" disabled={loading} className="w-full py-3 text-base font-semibold text-white bg-[#348567] rounded-lg hover:bg-[#2A6A52] transition-colors disabled:bg-slate-400">
-                        {loading ? 'Menyimpan...' : 'Simpan Laporan'}
-                    </button>
-                    {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
-                </form>
-            </div>
-
+  // --- RENDER ---
+  return (
+    <div className="p-4 md:p-8 max-w-5xl mx-auto">
+      {/* --- FORM SUBMIT --- */}
+      <h2 className="text-3xl font-bold text-slate-900 mb-6">
+        Laporan Aktivitas Keberlanjutan
+      </h2>
+      
+      {/* ... (Kode Form tidak berubah) ... */}
+      <form onSubmit={handleSubmit} className="bg-white p-6 md:p-8 rounded-xl shadow-lg border border-slate-200">
+        <div className="space-y-6">
+          <div>
+            <FormLabel htmlFor="title">Judul Aktivitas</FormLabel>
+            <FormInput id="title" type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Mis: Pemasangan Panel Surya" required className="px-3 py-2" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-                <h3 className="text-2xl font-bold mb-6">Riwayat Laporan Keberlanjutan</h3>
-                {loading && <p>Memuat laporan...</p>}
-                {!loading && reports.length === 0 && (
-                    <p className="text-slate-500 bg-white p-6 rounded-lg shadow-sm border">Anda belum memiliki laporan keberlanjutan.</p>
-                )}
-                <div className="space-y-6">
-                    {categories.map(cat => (
-                        groupedReports[cat] && groupedReports[cat].length > 0 && (
-                            <div key={cat}>
-                                <h4 className="text-xl font-semibold mb-3 text-slate-600">{cat}</h4>
-                                <div className="space-y-3">
-                                    {groupedReports[cat].map(report => (
-                                        <div key={report.id} className="bg-white p-4 rounded-lg border shadow-sm flex justify-between items-start">
-                                            <div>
-                                                <p className="font-bold text-slate-800">{report.title}</p>
-                                                <p className="text-slate-600 text-sm">{report.description}</p>
-                                                <p className="text-xs text-slate-400 mt-2">
-                                                    Tanggal Kegiatan: {new Date(report.activity_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
-                                                </p>
-                                            </div>
-                                            <button onClick={() => handleDeleteRequest(report)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full" title="Hapus Laporan">
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )
-                    ))}
-                </div>
+              <FormLabel htmlFor="category">Kategori</FormLabel>
+              <FormSelect id="category" value={category} onChange={(e) => setCategory(e.target.value)} className="px-3 py-2">
+                <option>Energi Terbarukan</option>
+                <option>Manajemen Limbah</option>
+                <option>Konservasi Air</option>
+                <option>Edukasi & Komunitas</option>
+                <option>Rantai Pasok Hijau</option>
+                <option>Lainnya</option>
+              </FormSelect>
             </div>
-
-            {showDeleteConfirm && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white p-8 rounded-lg shadow-xl max-w-sm w-full">
-                        <h2 className="text-xl font-bold mb-4">Konfirmasi Hapus</h2>
-                        <p className="text-slate-600 mb-6">
-                            Apakah Anda yakin ingin menghapus laporan <span className="font-semibold">"{selectedReport?.title}"</span>? Tindakan ini tidak dapat dibatalkan.
-                        </p>
-                        <div className="flex justify-end gap-4">
-                            <button onClick={handleCancelDelete} className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200">Batal</button>
-                            <button onClick={handleConfirmDelete} disabled={loading} className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:bg-slate-400">
-                                {loading ? 'Menghapus...' : 'Ya, Hapus'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <div>
+              <FormLabel htmlFor="activityDate">Tanggal Aktivitas</FormLabel>
+              <FormInput id="activityDate" type="date" value={activityDate} onChange={(e) => setActivityDate(e.target.value)} required className="px-3 py-2" />
+            </div>
+          </div>
+          <div>
+            <FormLabel htmlFor="description">Deskripsi Singkat Aktivitas</FormLabel>
+            <FormTextarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Jelaskan aktivitas yang dilakukan dan dampaknya..." className="px-3 py-2" />
+          </div>
         </div>
-    );
+        <div className="border-t border-slate-200 mt-8 pt-8">
+          <h3 className="text-xl font-semibold text-slate-800 mb-5">
+            Bukti / Evidensi (Opsional)
+          </h3>
+          <div className="space-y-4">
+            {links.map((link, index) => (
+              <div key={index} className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                <div className="flex flex-wrap md:flex-nowrap gap-4 items-end">
+                  <div className="flex-grow w-full md:w-1/3">
+                    <FormLabel htmlFor={`link-title-${index}`}>
+                      Judul Link {index + 1}
+                    </FormLabel>
+                    <FormInput
+                      id={`link-title-${index}`}
+                      type="text"
+                      placeholder="Contoh: Sertifikat"
+                      value={link.title}
+                      onChange={(e) => handleLinkChange(index, 'title', e.target.value)}
+                      className="px-3 py-2"
+                    />
+                  </div>
+                  <div className="flex-grow w-full md:w-2/3">
+                    <FormLabel htmlFor={`link-url-${index}`}>
+                      URL {index + 1}
+                    </FormLabel>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
+                        <LinkIcon />
+                      </span>
+                      <FormInput
+                        id={`link-url-${index}`}
+                        type="url"
+                        placeholder="https://..."
+                        value={link.url}
+                        onChange={(e) => handleLinkChange(index, 'url', e.target.value)}
+                        className="pl-10 pr-3 py-2"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeLinkInput(index)}
+                    disabled={links.length <= 1}
+                    className="flex-shrink-0 p-2 text-red-500 hover:text-red-700 disabled:text-slate-300 disabled:cursor-not-allowed rounded-md"
+                    title="Hapus link"
+                  >
+                    <TrashIcon />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={addLinkInput}
+            className="mt-5 inline-flex items-center gap-2 px-4 py-2 border border-slate-300 text-sm font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
+          >
+            <PlusCircleIcon />
+            Tambah Link Lain
+          </button>
+        </div>
+        <div className="border-t border-slate-200 mt-8 pt-6 text-right">
+          <button type="submit" disabled={loading}
+                  className="inline-flex justify-center py-2.5 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:bg-slate-400">
+            {loading ? 'Menyimpan...' : 'Simpan Laporan'}
+          </button>
+        </div>
+        
+        {message.text && (
+          <p className={`text-sm text-center mt-4 ${message.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+            {message.text}
+          </p>
+        )}
+      </form>
+      {/* --- AKHIR FORM SUBMIT --- */}
+
+
+      {/* --- BAGIAN RIWAYAT LAPORAN --- */}
+      <div className="mt-16">
+        <h3 className="flex items-center gap-3 text-2xl font-bold text-slate-900 mb-6">
+          <BookOpenIcon />
+          Riwayat Laporan Anda
+        </h3>
+
+        {/* ... (Loading dan Empty state tidak berubah) ... */}
+        {listLoading && (
+          <div className="text-center text-slate-500 p-8 bg-white rounded-lg shadow-sm border">
+            Memuat riwayat laporan...
+          </div>
+        )}
+
+        {!listLoading && reports.length === 0 && (
+          <div className="text-center text-slate-500 p-8 bg-white rounded-lg shadow-sm border">
+            Anda belum memiliki laporan aktivitas keberlanjutan.
+          </div>
+        )}
+
+        {!listLoading && reports.length > 0 && (
+          <div className="space-y-6">
+            {reports.map((report) => (
+              <div key={report.id} className="bg-white p-6 rounded-xl shadow-lg border border-slate-200">
+                
+                {/* --- (4) PERUBAHAN UI/UX UNTUK TOMBOL AKSI --- */}
+                <div className="flex justify-between items-start gap-4 pb-4 border-b border-slate-100">
+                  
+                  {/* Bagian Kiri: Judul dan Tag */}
+                  <div className="flex-grow">
+                    <h4 className="text-xl font-semibold text-teal-700">{report.title}</h4>
+                    <span className="mt-1.5 inline-block px-3 py-1 bg-teal-50 text-teal-600 rounded-full text-sm font-medium">
+                      {report.category}
+                    </span>
+                  </div>
+
+                  {/* Bagian Kanan: Tombol Aksi (Unduh & Hapus) */}
+                  <div className="flex-shrink-0 flex items-center gap-1">
+                    {/* --- TOMBOL UNDUH BARU --- */}
+                    <button
+                      onClick={() => handleDownloadPdf(report)}
+                      disabled={downloadingId === report.id} // Nonaktifkan saat sedang mengunduh
+                      className="p-1.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-full"
+                      title="Unduh laporan (PDF)"
+                    >
+                      {/* Tampilkan spinner jika id-nya cocok */}
+                      {downloadingId === report.id ? (
+                        <SmallSpinner />
+                      ) : (
+                        <ArrowDownTrayIcon />
+                      )}
+                    </button>
+                    
+                    {/* --- TOMBOL HAPUS --- */}
+                    <button
+                      onClick={() => handleDeleteReport(report.id)}
+                      disabled={downloadingId === report.id} // Nonaktifkan juga saat mengunduh
+                      className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full"
+                      title="Hapus laporan"
+                    >
+                      <TrashIcon />
+                    </button>
+                  </div>
+                </div>
+                
+                {/* ... (Konten Kartu tidak berubah) ... */}
+                <div className="pt-4 grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="md:col-span-2 space-y-3">
+                    <div className="flex items-center gap-2 text-sm text-slate-500">
+                      <CalendarIcon />
+                      <span>Tanggal Aktivitas: {formatDate(report.activity_date)}</span>
+                    </div>
+                    <p className="text-slate-600">{report.description}</p>
+                  </div>
+                  
+                  <div>
+                    <h5 className="text-sm font-semibold text-slate-800 mb-2">Bukti / Evidensi:</h5>
+                    {(report.evidence_links && report.evidence_links.length > 0) ? (
+                      <ul className="space-y-2">
+                        {report.evidence_links.map((link, index) => (
+                          <li key={index} className="flex items-center gap-2">
+                            <LinkIcon />
+                            <a
+                              href={link.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm text-teal-600 hover:text-teal-800 hover:underline truncate"
+                              title={link.url}
+                            >
+                              {link.title || link.url}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-sm text-slate-400 italic">Tidak ada bukti link.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
