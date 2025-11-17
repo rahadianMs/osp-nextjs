@@ -51,7 +51,10 @@ export const generatePdf = async (entry, businessName = 'Nama Usaha Belum Diatur
                 doc.addImage(img, 'PNG', margin, 12, 18, 18, undefined, 'MEDIUM');
                 resolve();
             };
-            img.onerror = reject;
+            img.onerror = (e) => {
+                console.warn("Logo failed to load, continuing without logo.", e);
+                resolve(); // Tetap lanjut walau logo gagal
+            };
             img.src = logoUrl;
         });
 
@@ -76,7 +79,7 @@ export const generatePdf = async (entry, businessName = 'Nama Usaha Belum Diatur
     currentY += 7;
 
     doc.setFontSize(10).setFont('helvetica', 'normal');
-    doc.text(`Periode Laporan: ${entry.calculation_title.replace('Laporan Emisi - ', '')}`, margin, currentY);
+    doc.text(`Periode Laporan: ${entry.calculation_title ? entry.calculation_title.replace('Laporan Emisi - ', '') : '-'}`, margin, currentY);
     currentY += 6;
     doc.text(`Nama Usaha: ${businessName}`, margin, currentY);
     currentY += 6;
@@ -101,47 +104,77 @@ export const generatePdf = async (entry, businessName = 'Nama Usaha Belum Diatur
 
     const detailFontSize = 9;
     
+    // Helper function to check if we need a new page
+    const checkPageBreak = (heightNeeded = 20) => {
+        if (currentY + heightNeeded > doc.internal.pageSize.getHeight() - margin) {
+            doc.addPage();
+            currentY = margin;
+        }
+    };
+
+    // LISTRIK
     if (entry.electricity_co2e > 0 && entry.electricity_details) {
+        checkPageBreak();
         doc.setFontSize(detailFontSize).setFont('helvetica', 'bold');
-        doc.text(`• Listrik: ${entry.electricity_co2e.toFixed(2)} ton CO2e`, margin, currentY);
+        doc.text(`• Listrik: ${Number(entry.electricity_co2e).toFixed(2)} ton CO2e`, margin, currentY);
         currentY += 5;
         doc.setFont('helvetica', 'normal');
         doc.text(`  - Konsumsi: ${entry.electricity_details.kwh} kWh`, margin + 3, currentY);
         currentY += 7;
     }
 
+    // NON LISTRIK
     if (entry.non_electricity_co2e > 0 && entry.non_electricity_details?.items) {
+        checkPageBreak();
         doc.setFontSize(detailFontSize).setFont('helvetica', 'bold');
-        doc.text(`• Energi Non-Listrik: ${entry.non_electricity_co2e.toFixed(2)} ton CO2e`, margin, currentY);
+        doc.text(`• Energi Non-Listrik: ${Number(entry.non_electricity_co2e).toFixed(2)} ton CO2e`, margin, currentY);
         currentY += 5;
         doc.setFont('helvetica', 'normal');
         entry.non_electricity_details.items.forEach(item => {
+            checkPageBreak(10);
             doc.text(`  - ${formatName(item.type, 'non_electric')}: ${item.usage} ${item.unit}, ${item.frequency}x / bulan`, margin + 3, currentY);
             currentY += 5;
         });
         currentY += 2;
     }
 
+    // TRANSPORTASI (DIPERBAIKI)
     if (entry.transport_co2e > 0 && entry.transport_details) {
+        checkPageBreak();
         doc.setFontSize(detailFontSize).setFont('helvetica', 'bold');
-        doc.text(`• Transportasi: ${entry.transport_co2e.toFixed(2)} ton CO2e`, margin, currentY);
+        doc.text(`• Transportasi: ${Number(entry.transport_co2e).toFixed(2)} ton CO2e`, margin, currentY);
         currentY += 5;
         doc.setFont('helvetica', 'normal');
+
+        // Tampilkan Total Jarak jika ada (Fallback hitung manual jika data lama belum punya transport_km)
+        let totalKm = entry.transport_km;
+        if (totalKm === undefined || totalKm === null) {
+            // Hitung manual untuk data lama
+             totalKm = entry.transport_details.reduce((acc, v) => acc + ((parseFloat(v.km)||0) * (parseFloat(v.frequency)||0)), 0);
+        }
+        
+        doc.text(`  - Total Jarak Tempuh: ${Number(totalKm).toFixed(0)} km`, margin + 3, currentY);
+        currentY += 5;
+
         entry.transport_details.forEach(v => {
+            checkPageBreak(10);
             doc.text(`  - ${formatName(v.type, 'transport')}: ${v.km} km, ${v.frequency}x / bulan`, margin + 3, currentY);
             currentY += 5;
         });
         currentY += 2;
     }
 
+    // LIMBAH
     if (entry.waste_co2e > 0 && entry.waste_details?.items) {
+        checkPageBreak();
         doc.setFontSize(detailFontSize).setFont('helvetica', 'bold');
-        doc.text(`• Sampah: ${entry.waste_co2e.toFixed(2)} ton CO2e`, margin, currentY);
+        doc.text(`• Limbah: ${Number(entry.waste_co2e).toFixed(2)} ton CO2e`, margin, currentY);
         currentY += 5;
         doc.setFont('helvetica', 'normal');
         
         entry.waste_details.items.forEach(item => {
-            doc.text(`  - ${formatName(item.type, 'waste')}: ${item.weight} ton`, margin + 3, currentY);
+            checkPageBreak(10);
+            doc.text(`  - ${formatName(item.type, 'waste')}: ${item.weight} ton (${item.treatment})`, margin + 3, currentY);
             currentY += 5;
         });
         currentY += 2;
@@ -161,6 +194,7 @@ export const generatePdf = async (entry, businessName = 'Nama Usaha Belum Diatur
     }
 
     // --- 6. SIMPAN DOKUMEN ---
-    const fileName = `Laporan_Emisi_${entry.calculation_title.replace('Laporan Emisi - ', '').replace(/\s+/g, '_')}.pdf`;
+    const safeTitle = entry.calculation_title ? entry.calculation_title.replace('Laporan Emisi - ', '').replace(/\s+/g, '_') : 'Report';
+    const fileName = `Laporan_Emisi_${safeTitle}.pdf`;
     doc.save(fileName);
 };

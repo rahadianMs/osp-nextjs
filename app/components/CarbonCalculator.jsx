@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { LinkIcon, PlusCircleIcon, TrashIcon } from './Icons'; // Import ikon yang dibutuhkan
+import { LinkIcon, PlusCircleIcon, TrashIcon } from './Icons';
 
 // --- DATA FAKTOR EMISI (Tetap sama) ---
 const ELECTRICITY_EMISSION_FACTORS = {
@@ -80,7 +80,7 @@ export default function CarbonCalculator({ supabase, user, onReportSubmitted }) 
     const [vehicles, setVehicles] = useState([{ id: Date.now(), type: 'petrol', km: '', frequency: '' }]);
     const [wasteItems, setWasteItems] = useState([{ id: Date.now(), type: 'food_waste', treatment: 'landfill', weight: '' }]);
 
-    // [BARU] State untuk Evidence (Bukti)
+    // State untuk Evidence (Bukti)
     const [evidenceLinks, setEvidenceLinks] = useState([{ id: Date.now(), url: '', description: '' }]);
 
     // Handlers Listrik
@@ -115,15 +115,17 @@ export default function CarbonCalculator({ supabase, user, onReportSubmitted }) 
         }));
     };
 
-    // [BARU] Handlers Evidence Links
+    // Handlers Evidence Links
     const handleAddLink = () => setEvidenceLinks([...evidenceLinks, { id: Date.now(), url: '', description: '' }]);
     const handleRemoveLink = (id) => setEvidenceLinks(evidenceLinks.filter(l => l.id !== id));
     const handleLinkChange = (id, field, value) => setEvidenceLinks(evidenceLinks.map(l => l.id === id ? { ...l, [field]: value } : l));
 
+    // Reset form evidence saat ganti tab
     const handleTabChange = (tab) => {
         setActiveTab(tab);
         setCalculationResult(null);
         setMessage({ type: '', text: '' });
+        setEvidenceLinks([{ id: Date.now(), url: '', description: '' }]); 
     };
 
     const handleSubmit = async (e) => {
@@ -157,6 +159,9 @@ export default function CarbonCalculator({ supabase, user, onReportSubmitted }) 
             
             newData.electricity_co2e = totalEmission;
             newData.electricity_details = { kwh, location: electricity.location, area, occupiedNights, emissionFactor, areaIntensity, occupancyIntensity };
+            // Simpan juga total KWH di root kolom jika perlu, atau ambil dari details nanti
+            newData.electricity_kwh = kwh;
+            
             setCalculationResult({ totalEmission, areaIntensity, occupancyIntensity });
 
         } else if (activeTab === 'non-electric') {
@@ -177,26 +182,37 @@ export default function CarbonCalculator({ supabase, user, onReportSubmitted }) 
 
         } else if (activeTab === 'transport') {
             let totalTransportCo2e = 0;
+            let totalKm = 0; // Variabel untuk hitung total jarak
+
             vehicles.forEach(v => {
                 const km = parseFloat(v.km) || 0;
                 const frequency = parseFloat(v.frequency) || 0;
-                totalTransportCo2e += km * (TRANSPORT_EMISSION_FACTORS[v.type] || 0) * frequency;
+                const usageDistance = km * frequency; // Jarak total untuk kendaraan ini
+                
+                totalKm += usageDistance; // Tambahkan ke total global
+                totalTransportCo2e += usageDistance * (TRANSPORT_EMISSION_FACTORS[v.type] || 0);
             });
+
             newData.transport_co2e = totalTransportCo2e;
+            newData.transport_km = totalKm; // PERBAIKAN UTAMA: Simpan total KM
             newData.transport_details = vehicles;
             setCalculationResult({ monthlyTotal: totalTransportCo2e });
 
         } else if (activeTab === 'waste') {
             let totalWasteCo2e = 0;
+            let totalWasteWeight = 0;
+
             const detailedWasteItems = wasteItems.map(item => {
                 const weight = parseFloat(item.weight) || 0;
                 const factor = WASTE_EMISSION_FACTORS[item.type]?.treatments[item.treatment] || 0;
                 const emission = weight * factor;
                 totalWasteCo2e += emission;
+                totalWasteWeight += weight;
                 return { ...item, weight, factor, emission };
             }).filter(item => item.weight > 0);
 
             newData.waste_co2e = totalWasteCo2e;
+            newData.waste_kg = totalWasteWeight * 1000; // Simpan dalam kg jika perlu (schema waste_kg numeric)
             newData.waste_details = { items: detailedWasteItems };
             setCalculationResult({ items: detailedWasteItems, monthlyTotal: totalWasteCo2e });
         }
@@ -207,13 +223,22 @@ export default function CarbonCalculator({ supabase, user, onReportSubmitted }) 
         const monthName = monthDate.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
         newData.calculation_title = `Laporan Emisi - ${monthName}`;
 
-        // [BARU] Simpan Evidence Links & Reset Status Verifikasi
-        // Filter link yang kosong
-        const validLinks = evidenceLinks.filter(l => l.url.trim() !== '');
-        if (validLinks.length > 0) {
-            newData.evidence_links = validLinks;
+        // Logika Penggabungan Evidence Link
+        let existingEvidence = [];
+        if (existingEntry && Array.isArray(existingEntry.evidence_links)) {
+            existingEvidence = existingEntry.evidence_links;
         }
-        // Reset verifikasi setiap kali ada update agar admin memeriksa ulang
+
+        const currentTabEvidence = evidenceLinks
+            .filter(l => l.url.trim() !== '')
+            .map(l => ({
+                url: l.url,
+                description: l.description,
+                category: activeTab 
+            }));
+
+        const otherTabEvidence = existingEvidence.filter(link => link.category !== activeTab);
+        newData.evidence_links = [...otherTabEvidence, ...currentTabEvidence];
         newData.is_verified = false;
 
         // 5. Simpan ke Supabase
@@ -224,15 +249,14 @@ export default function CarbonCalculator({ supabase, user, onReportSubmitted }) 
         if (submissionError) {
             setMessage({ type: 'error', text: `Gagal menyimpan laporan: ${submissionError.message}` });
         } else {
-            // Pesan sukses diupdate untuk memberitahu tentang status verifikasi
             setMessage({ type: 'success', text: `Sukses! Data ${activeTab} tersimpan. Status laporan kini "Menunggu Verifikasi".` });
             
-            // Reset form fields (optional, but good UX)
+            // Reset form
             if (activeTab === 'electricity') setElectricity({ kwh: '', location: 'DKI Jakarta', area: '', occupiedNights: '' });
             if (activeTab === 'non-electric') setNonElectricEnergy([{ id: Date.now(), type: 'diesel_mineral', usage: '', frequency: '' }]);
             if (activeTab === 'transport') setVehicles([{ id: Date.now(), type: 'petrol', km: '', frequency: '' }]);
             if (activeTab === 'waste') setWasteItems([{ id: Date.now(), type: 'food_waste', treatment: 'landfill', weight: '' }]);
-            // Reset evidence links field
+            
             setEvidenceLinks([{ id: Date.now(), url: '', description: '' }]);
             
             if (onReportSubmitted) onReportSubmitted();
@@ -400,8 +424,8 @@ export default function CarbonCalculator({ supabase, user, onReportSubmitted }) 
     };
 
     return (
-        <div className="bg-white p-8 rounded-xl shadow-md border">
-            <h2 className="text-2xl font-bold mb-6">Input Laporan Emisi</h2>
+        <div className="bg-white p-8 rounded-xl shadow-md border border-slate-200">
+            <h2 className="text-2xl font-bold mb-6 text-slate-800">Input Laporan Emisi</h2>
             <form onSubmit={handleSubmit}>
                 <div className="mb-6">
                     <label htmlFor="reportMonth" className="block text-sm font-medium text-slate-700 mb-1">Periode Laporan</label>
@@ -409,24 +433,24 @@ export default function CarbonCalculator({ supabase, user, onReportSubmitted }) 
                 </div>
                 <div className="mb-6">
                     <div className="flex border-b border-slate-200 overflow-x-auto">
-                        <button type="button" onClick={() => handleTabChange('electricity')} className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${activeTab === 'electricity' ? 'border-b-2 border-[#348567] text-[#348567]' : 'text-slate-500'}`}>Listrik</button>
-                        <button type="button" onClick={() => handleTabChange('non-electric')} className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${activeTab === 'non-electric' ? 'border-b-2 border-[#348567] text-[#348567]' : 'text-slate-500'}`}>Energi Non Listrik</button>
-                        <button type="button" onClick={() => handleTabChange('transport')} className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${activeTab === 'transport' ? 'border-b-2 border-[#348567] text-[#348567]' : 'text-slate-500'}`}>Transportasi</button>
-                        <button type="button" onClick={() => handleTabChange('waste')} className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${activeTab === 'waste' ? 'border-b-2 border-[#348567] text-[#348567]' : 'text-slate-500'}`}>Limbah</button>
+                        <button type="button" onClick={() => handleTabChange('electricity')} className={`px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors ${activeTab === 'electricity' ? 'border-b-2 border-[#348567] text-[#348567]' : 'text-slate-500 hover:text-slate-700'}`}>Listrik</button>
+                        <button type="button" onClick={() => handleTabChange('non-electric')} className={`px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors ${activeTab === 'non-electric' ? 'border-b-2 border-[#348567] text-[#348567]' : 'text-slate-500 hover:text-slate-700'}`}>Energi Non Listrik</button>
+                        <button type="button" onClick={() => handleTabChange('transport')} className={`px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors ${activeTab === 'transport' ? 'border-b-2 border-[#348567] text-[#348567]' : 'text-slate-500 hover:text-slate-700'}`}>Transportasi</button>
+                        <button type="button" onClick={() => handleTabChange('waste')} className={`px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors ${activeTab === 'waste' ? 'border-b-2 border-[#348567] text-[#348567]' : 'text-slate-500 hover:text-slate-700'}`}>Limbah</button>
                     </div>
                 </div>
                 <div className="min-h-[200px] mb-6">
                     {renderForm()}
                 </div>
 
-                {/* [BARU] Section Bukti Pendukung */}
+                {/* Section Bukti Pendukung */}
                 <div className="mb-8 p-5 bg-slate-50 rounded-xl border border-slate-200">
                     <h3 className="text-md font-bold text-slate-800 mb-3 flex items-center gap-2">
-                        <LinkIcon />
-                        Bukti Pendukung (Opsional)
+                        <LinkIcon className="w-5 h-5 text-slate-600" />
+                        Bukti Pendukung (untuk sesi {activeTab === 'non-electric' ? 'Energi' : activeTab})
                     </h3>
                     <p className="text-sm text-slate-500 mb-4">
-                        Sertakan tautan ke dokumen bukti (Google Drive, Dropbox, dll) untuk memverifikasi laporan ini agar mendapatkan status <b>Terverifikasi</b>.
+                        Unggah link dokumen bukti untuk <strong>kategori ini</strong> agar laporan valid.
                     </p>
                     <div className="space-y-3">
                         {evidenceLinks.map((link) => (
@@ -443,7 +467,7 @@ export default function CarbonCalculator({ supabase, user, onReportSubmitted }) 
                                 <div className="flex-1 w-full">
                                     <input
                                         type="text"
-                                        placeholder="Keterangan (cth: Tagihan Listrik Bulan Juni)"
+                                        placeholder="Keterangan (cth: Tagihan Listrik)"
                                         value={link.description}
                                         onChange={(e) => handleLinkChange(link.id, 'description', e.target.value)}
                                         className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348567] text-sm bg-white"
@@ -451,25 +475,25 @@ export default function CarbonCalculator({ supabase, user, onReportSubmitted }) 
                                 </div>
                                 {evidenceLinks.length > 1 && (
                                     <button type="button" onClick={() => handleRemoveLink(link.id)} className="text-red-500 p-2 hover:bg-red-100 rounded-lg transition-colors">
-                                        <TrashIcon />
+                                        <TrashIcon className="w-5 h-5" />
                                     </button>
                                 )}
                             </div>
                         ))}
                         <button type="button" onClick={handleAddLink} className="text-sm text-[#348567] font-medium flex items-center gap-1 hover:underline mt-2">
-                            <PlusCircleIcon /> Tambah Link Bukti Lainnya
+                            <PlusCircleIcon className="w-4 h-4" /> Tambah Link Bukti Lainnya
                         </button>
                     </div>
                 </div>
 
                 <button type="submit" disabled={loading} className="w-full py-3 text-base font-semibold text-white bg-[#348567] rounded-lg hover:bg-[#2A6A52] transition-colors disabled:bg-slate-400 shadow-sm hover:shadow-md">
-                    {loading ? 'Menyimpan...' : `Simpan Laporan & Ajukan Verifikasi`}
+                    {loading ? 'Menyimpan...' : `Simpan Laporan ${activeTab === 'non-electric' ? 'Energi' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}`}
                 </button>
             </form>
 
             {message.text && (<p className={`mt-4 text-sm text-center p-3 rounded-lg ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>{message.text}</p>)}
 
-            {/* Result Display Sections (Tidak Berubah) */}
+            {/* Result Display Sections */}
             {calculationResult && activeTab === 'electricity' && (
                 <div className="mt-6 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
                     <h3 className="font-bold text-lg text-emerald-800 mb-2">Hasil Analisis Jejak Karbon Listrik</h3>

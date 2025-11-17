@@ -1,141 +1,299 @@
-"use client";
-
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { generatePdf } from '../lib/generatePdf';
+import { BoltIcon, TransportIcon, TrashCanIcon, FireIcon } from './Icons';
 
-const WASTE_EMISSION_FACTORS = {
-    food_waste: { name: 'Limbah makanan & minuman' },
-    garden_waste: { name: 'Limbah taman' },
-    plastic: { name: 'Plastik' },
-    paper_cardboard: { name: 'Kertas dan Karton' },
-    metal: { name: 'Logam' },
-    glass: { name: 'Kaca' },
-    electronics: { name: 'Alat Elektronik' },
-    fabric: { name: 'Kain' },
-};
-const WASTE_TREATMENTS = {
-    recycled: 'Didaur ulang',
-    combustion: 'Pembakaran u/ energi',
-    composting: 'Pengomposan',
-    landfill: 'TPA'
-};
+// --- 1. Ikon-ikon Pendukung ---
+const CloseIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+    </svg>
+);
 
-const CloseIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>;
-const DownloadIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" /></svg>;
-const TrashIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clipRule="evenodd" /></svg>;
+const DownloadIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+    </svg>
+);
 
-const formatName = (type, category) => {
-    const names = {
-        transport: { petrol: 'Mobil Bensin', diesel: 'Mobil Diesel', motorcycle: 'Motor' }
-    };
-    return names[category]?.[type] || type;
+const LinkIcon = ({ className }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+    </svg>
+);
+
+// Mapping Kategori untuk Badge Evidence (UPDATED: Label Bahan Bakar -> Energi Non-Listrik)
+const EVIDENCE_CATEGORIES = {
+    'electricity': { label: 'Listrik', color: 'bg-amber-100 text-amber-700 border-amber-200' },
+    'non-electric': { label: 'Energi Non-Listrik', color: 'bg-red-100 text-red-700 border-red-200' },
+    'transport': { label: 'Transportasi', color: 'bg-blue-100 text-blue-700 border-blue-200' },
+    'waste': { label: 'Limbah', color: 'bg-emerald-100 text-emerald-700 border-emerald-200' }
 };
 
 export default function ReportDetailModal({ entry, onClose, onDelete }) {
     const [isDownloading, setIsDownloading] = useState(false);
+
     if (!entry) return null;
 
     const handleDownload = async () => {
         setIsDownloading(true);
-        const businessName = entry.user?.user_metadata?.business_name || "Nama Usaha";
-        await generatePdf(entry, businessName);
-        setIsDownloading(false);
-    };
-
-    const renderWasteDetails = (details) => {
-        if (details && details.items) {
-            return (
-                 <ul className="space-y-2 text-sm text-slate-600">
-                    <li className="grid grid-cols-3 gap-2 font-semibold text-xs text-slate-500">
-                        <span>Jenis Limbah</span>
-                        <span className="text-center">Pengolahan</span>
-                        <span className="text-right">Emisi (ton CO₂e)</span>
-                    </li>
-                    {details.items.map(item => (
-                        <li key={item.id} className="grid grid-cols-3 gap-2 border-t pt-2">
-                            <span>{WASTE_EMISSION_FACTORS[item.type]?.name || item.type} ({item.weight} ton)</span>
-                            <span className="text-center">{WASTE_TREATMENTS[item.treatment] || item.treatment}</span>
-                            <span className="text-right font-semibold">{item.emission.toFixed(2)}</span>
-                        </li>
-                    ))}
-                </ul>
-            );
+        try {
+            const businessName = entry.user?.user_metadata?.business_name || "Nama Usaha";
+            await generatePdf(entry, businessName);
+        } catch (error) {
+            console.error("Gagal download PDF:", error);
+            alert("Gagal mengunduh PDF.");
+        } finally {
+            setIsDownloading(false);
         }
-        return <p className="text-sm text-slate-500">Tidak ada rincian limbah.</p>;
     };
 
+    // Helper Data Evidence
+    const getEvidenceData = (item) => {
+        if (typeof item === 'string') {
+            return { url: item, label: item, category: null };
+        }
+        if (typeof item === 'object' && item !== null) {
+            return { 
+                url: item.url || '#', 
+                label: item.description || item.url || 'Bukti Lampiran',
+                category: item.category || null 
+            };
+        }
+        return { url: '#', label: 'Format tidak dikenali', category: null };
+    };
+
+    const evidenceLinks = Array.isArray(entry.evidence_links) ? entry.evidence_links : [];
+
+    const formatDate = (dateString) => {
+        if (!dateString) return '-';
+        return new Date(dateString).toLocaleDateString('id-ID', {
+            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+        });
+    };
+
+    // --- Helper Perhitungan Total ---
+
+    // 1. Total Berat Limbah (Ton)
+    const getTotalWasteWeight = () => {
+        if (entry.waste_kg) return (parseFloat(entry.waste_kg) / 1000).toFixed(2); 
+        if (entry.waste_details?.items) {
+            const total = entry.waste_details.items.reduce((acc, item) => acc + (parseFloat(item.weight) || 0), 0);
+            return total.toFixed(2);
+        }
+        return '0.00';
+    };
+
+    // 2. Total Jarak Transportasi (KM)
+    const getTotalTransportKm = () => {
+        if (entry.transport_km) return parseFloat(entry.transport_km).toLocaleString('id-ID');
+        if (entry.transport_details && Array.isArray(entry.transport_details)) {
+            const total = entry.transport_details.reduce((acc, v) => acc + ((parseFloat(v.km)||0) * (parseFloat(v.frequency)||0)), 0);
+            return total.toLocaleString('id-ID');
+        }
+        return '0';
+    };
+
+    // 3. Total Konsumsi BBM (Liter) - BARU
+    const getTotalFuelConsumption = () => {
+        if (entry.non_electricity_details?.items) {
+            // Filter hanya yang satuannya liter (atau asumsikan semua cair adalah liter)
+            // Dan kalikan usage * frequency
+            const total = entry.non_electricity_details.items
+                .filter(item => item.unit === 'liter') 
+                .reduce((acc, item) => acc + ((parseFloat(item.usage)||0) * (parseFloat(item.frequency)||0)), 0);
+            
+            return total.toLocaleString('id-ID');
+        }
+        return '0';
+    };
 
     return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} transition={{ duration: 0.2 }} className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
-                <header className="flex items-center justify-between p-6 border-b border-slate-200">
+        <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }} 
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto"
+            onClick={onClose}
+        >
+            <motion.div 
+                initial={{ scale: 0.95, opacity: 0 }} 
+                animate={{ scale: 1, opacity: 1 }} 
+                exit={{ scale: 0.95, opacity: 0 }} 
+                onClick={(e) => e.stopPropagation()}
+                className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+            >
+                {/* Header Modal */}
+                <div className="p-6 border-b border-slate-100 flex justify-between items-start bg-slate-50/50">
                     <div>
-                        <h2 className="text-2xl font-bold text-slate-800">Detail Laporan</h2>
-                        <p className="text-slate-500">{entry.calculation_title || 'Laporan tanpa judul'}</p>
+                        <h2 className="text-xl font-bold text-slate-800 pr-8">
+                            {entry.calculation_title || 'Detail Laporan Emisi'}
+                        </h2>
+                        <p className="text-sm text-slate-500 mt-1">
+                            Dibuat pada {formatDate(entry.created_at)}
+                        </p>
                     </div>
-                    <button onClick={onClose} className="p-2 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800"><CloseIcon /></button>
-                </header>
+                    <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors">
+                        <CloseIcon />
+                    </button>
+                </div>
 
-                <main className="flex-1 p-6 overflow-y-auto space-y-6">
-                    <div className="bg-emerald-50 border-l-4 border-emerald-400 p-4 rounded-lg">
-                        <p className="text-sm font-semibold text-emerald-700">Total Emisi Bulan Ini</p>
-                        <p className="text-3xl font-extrabold text-emerald-800">{(entry.total_co2e_kg || 0).toFixed(2)} <span className="text-xl font-medium">ton CO₂e</span></p>
+                {/* Body Modal */}
+                <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
+                    
+                    {/* Total Emisi (Satuan Ton CO2e) */}
+                    <div className="bg-emerald-50 rounded-xl p-6 text-center mb-8 border border-emerald-100">
+                        <p className="text-sm font-medium text-emerald-800 mb-1 uppercase tracking-wide">Total Jejak Karbon</p>
+                        <div className="text-4xl font-bold text-emerald-600 mb-2">
+                            {parseFloat(entry.total_co2e_kg || 0).toLocaleString('id-ID', { maximumFractionDigits: 2 })}
+                        </div>
+                        <p className="text-emerald-700 font-medium">Ton CO₂e</p>
                     </div>
 
-                    <div className="space-y-4">
-                        {entry.electricity_details && entry.electricity_co2e > 0 && (
-                             <div className="border border-slate-200 p-4 rounded-lg">
-                                <div className="flex justify-between items-start mb-2">
-                                     <h3 className="font-bold text-lg text-slate-700">Listrik</h3>
-                                     <p className="font-bold text-lg text-slate-600">{(entry.electricity_co2e || 0).toFixed(2)} ton CO₂e</p>
+                    {/* Grid Rincian Emisi */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                        {/* 1. Listrik */}
+                        {entry.electricity_co2e > 0 && (
+                            <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 h-full">
+                                <div className="flex items-center gap-3 mb-3">
+                                    <div className="p-2 bg-white rounded-lg shadow-sm text-amber-500">
+                                        <BoltIcon className="w-6 h-6" />
+                                    </div>
+                                    <h3 className="font-semibold text-slate-700">Listrik</h3>
                                 </div>
-                                <div className="text-sm text-slate-600 space-y-1 border-t pt-2">
-                                    <p><strong>Konsumsi:</strong> <span className="font-semibold">{entry.electricity_details.kwh || 0} kWh</span></p>
-                                    <p><strong>Lokasi (Grid):</strong> <span className="font-semibold">{entry.electricity_details.location}</span></p>
-                                    {/* PERBAIKAN SATUAN HANYA DI TAMPILAN INI */}
-                                    {entry.electricity_details.areaIntensity !== undefined && ( <p><strong>Intensitas Area:</strong> <span className="font-semibold">{entry.electricity_details.areaIntensity.toFixed(2)}</span> kg CO₂e/m²</p>)}
-                                    {entry.electricity_details.occupancyIntensity !== undefined && ( <p><strong>Intensitas Hunian:</strong> <span className="font-semibold">{entry.electricity_details.occupancyIntensity.toFixed(2)}</span> kg CO₂e/kamar terisi</p>)}
+                                <div className="space-y-1 ml-1">
+                                    <p className="text-2xl font-bold text-slate-800">
+                                        {(entry.electricity_co2e || 0).toFixed(2)} <span className="text-sm font-normal text-slate-500">Ton CO₂e</span>
+                                    </p>
+                                    {entry.electricity_details && (
+                                        <p className="text-sm text-slate-500">Total Konsumsi: {Number(entry.electricity_details.kwh).toLocaleString('id-ID')} kWh</p>
+                                    )}
                                 </div>
                             </div>
                         )}
-                        
-                        {entry.transport_details && entry.transport_details.length > 0 && entry.transport_co2e > 0 && (
-                            <div className="border border-slate-200 p-4 rounded-lg">
-                                <h3 className="font-bold text-lg text-slate-700 mb-2">Transportasi ({(entry.transport_co2e || 0).toFixed(2)} ton CO₂e)</h3>
-                                 <ul className="space-y-2 text-sm text-slate-600">
-                                    <li className="grid grid-cols-3 gap-2 font-semibold text-xs text-slate-500">
-                                        <span>Kendaraan</span>
-                                        <span className="text-center">Jarak</span>
-                                        <span className="text-center">Frekuensi</span>
-                                    </li>
-                                    {entry.transport_details.map((v, index) => (
-                                        <li key={v.id || index} className="grid grid-cols-3 gap-2 border-t pt-2">
-                                            <span>{formatName(v.type, 'transport')}</span>
-                                            <span className="text-center">{v.km} km</span>
-                                            <span className="text-center">{v.frequency}x / bulan</span>
-                                        </li>
-                                    ))}
+
+                        {/* 2. Energi Non-Listrik (UPDATED NAME & DETAIL) */}
+                        {entry.non_electricity_co2e > 0 && (
+                            <div className="p-4 bg-red-50 rounded-xl border border-red-100 h-full">
+                                <div className="flex items-center gap-3 mb-3">
+                                    <div className="p-2 bg-white rounded-lg shadow-sm text-red-500">
+                                        <FireIcon className="w-6 h-6" />
+                                    </div>
+                                    <h3 className="font-semibold text-slate-700">Energi Non-Listrik</h3>
+                                </div>
+                                <div className="space-y-1 ml-1">
+                                    <p className="text-2xl font-bold text-slate-800">
+                                        {(entry.non_electricity_co2e || 0).toFixed(2)} <span className="text-sm font-normal text-slate-500">Ton CO₂e</span>
+                                    </p>
+                                    {/* Detail Total Konsumsi Liter Ditambahkan Disini */}
+                                    <p className="text-sm text-slate-500">Total Konsumsi: {getTotalFuelConsumption()} Liter</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 3. Transportasi */}
+                        {entry.transport_co2e > 0 && (
+                            <div className="p-4 bg-blue-50 rounded-xl border border-blue-100 h-full">
+                                <div className="flex items-center gap-3 mb-3">
+                                    <div className="p-2 bg-white rounded-lg shadow-sm text-blue-500">
+                                        <TransportIcon className="w-6 h-6" />
+                                    </div>
+                                    <h3 className="font-semibold text-slate-700">Transportasi</h3>
+                                </div>
+                                <div className="space-y-1 ml-1">
+                                    <p className="text-2xl font-bold text-slate-800">
+                                        {(entry.transport_co2e || 0).toFixed(2)} <span className="text-sm font-normal text-slate-500">Ton CO₂e</span>
+                                    </p>
+                                    <p className="text-sm text-slate-500">Jarak Total: {getTotalTransportKm()} km</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 4. Limbah */}
+                        {entry.waste_co2e > 0 && (
+                            <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100 h-full">
+                                <div className="flex items-center gap-3 mb-3">
+                                    <div className="p-2 bg-white rounded-lg shadow-sm text-emerald-500">
+                                        <TrashCanIcon className="w-6 h-6" />
+                                    </div>
+                                    <h3 className="font-semibold text-slate-700">Limbah</h3>
+                                </div>
+                                <div className="space-y-1 ml-1">
+                                    <p className="text-2xl font-bold text-slate-800">
+                                        {(entry.waste_co2e || 0).toFixed(2)} <span className="text-sm font-normal text-slate-500">Ton CO₂e</span>
+                                    </p>
+                                    <p className="text-sm text-slate-500">Total Berat: {getTotalWasteWeight()} ton</p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* --- BAGIAN EVIDENCE LINKS --- */}
+                    {evidenceLinks.length > 0 && (
+                        <div className="mb-8">
+                            <h3 className="font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                                <LinkIcon className="w-5 h-5 text-slate-500" />
+                                Bukti Lampiran & Dokumen
+                            </h3>
+                            <div className="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden">
+                                <ul className="divide-y divide-slate-200">
+                                    {evidenceLinks.map((item, index) => {
+                                        const { url, label, category } = getEvidenceData(item);
+                                        const tagStyle = category ? EVIDENCE_CATEGORIES[category] : null;
+
+                                        return (
+                                            <li key={item.id || index} className="group">
+                                                <a 
+                                                    href={url} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="flex items-center gap-3 p-3 hover:bg-slate-100 transition-colors"
+                                                >
+                                                    <div className="w-10 h-10 rounded bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                                                            <path d="M12.232 4.232a2.5 2.5 0 013.536 3.536l-1.225 1.224a.75.75 0 001.061 1.06l1.224-1.224a4 4 0 00-5.656-5.656l-3 3a4 4 0 00.225 5.865.75.75 0 00.977-1.138 2.5 2.5 0 01-.142-3.667l3-3z" />
+                                                            <path d="M11.603 7.963a.75.75 0 00-.977 1.138 2.5 2.5 0 01.142 3.667l-3 3a2.5 2.5 0 01-3.536-3.536l1.225-1.224a.75.75 0 00-1.061-1.06l-1.224 1.224a4 4 0 105.656 5.656l3-3a4 4 0 00-.225-5.865z" />
+                                                        </svg>
+                                                    </div>
+                                                    <div className="overflow-hidden flex-1">
+                                                        <div className="flex items-center gap-2 mb-0.5">
+                                                            {tagStyle && (
+                                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider border ${tagStyle.color}`}>
+                                                                    {tagStyle.label}
+                                                                </span>
+                                                            )}
+                                                            <p className="text-sm font-medium text-blue-600 group-hover:underline truncate">
+                                                                {label}
+                                                            </p>
+                                                        </div>
+                                                        <p className="text-xs text-slate-500 truncate">{url}</p>
+                                                    </div>
+                                                </a>
+                                            </li>
+                                        );
+                                    })}
                                 </ul>
                             </div>
-                        )}
-                        
-                        {entry.waste_details && entry.waste_co2e > 0 && (
-                           <div className="border border-slate-200 p-4 rounded-lg">
-                                <h3 className="font-bold text-lg text-slate-700 mb-2">Limbah ({(entry.waste_co2e || 0).toFixed(2)} ton CO₂e)</h3>
-                                {renderWasteDetails(entry.waste_details)}
-                            </div>
-                        )}
-                    </div>
-                </main>
+                        </div>
+                    )}
+                </div>
 
-                <footer className="flex justify-between items-center p-6 bg-slate-50 border-t border-slate-200 rounded-b-2xl">
-                    <button onClick={() => onDelete(entry)} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 bg-red-100 rounded-lg hover:bg-red-200"><TrashIcon /> Hapus Laporan</button>
-                    <div className="flex gap-4">
-                        <button onClick={handleDownload} disabled={isDownloading} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-emerald-700 bg-emerald-100 rounded-lg hover:bg-emerald-200 disabled:bg-slate-200 disabled:text-slate-500"><DownloadIcon /> {isDownloading ? 'Membuat PDF...' : 'Download PDF'}</button>
-                        <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-200 rounded-lg hover:bg-slate-300">Tutup</button>
+                {/* Footer Modal */}
+                <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-between items-center">
+                    <button onClick={() => onDelete(entry.id)} className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-2">
+                        <TrashCanIcon className="w-4 h-4" />
+                        Hapus Laporan
+                    </button>
+                    <div className="flex gap-3">
+                        <button onClick={handleDownload} disabled={isDownloading} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-emerald-700 bg-emerald-100 rounded-lg hover:bg-emerald-200 disabled:bg-slate-200 disabled:text-slate-500 transition-colors">
+                            <DownloadIcon /> 
+                            {isDownloading ? 'Membuat PDF...' : 'Download PDF'}
+                        </button>
+                        <button onClick={onClose} className="px-6 py-2 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors shadow-sm">
+                            Tutup
+                        </button>
                     </div>
-                </footer>
+                </div>
             </motion.div>
         </motion.div>
     );
