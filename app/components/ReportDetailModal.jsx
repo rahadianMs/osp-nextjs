@@ -22,7 +22,7 @@ const LinkIcon = ({ className }) => (
     </svg>
 );
 
-// Mapping Kategori untuk Badge Evidence (UPDATED: Label Bahan Bakar -> Energi Non-Listrik)
+// Mapping Kategori untuk Badge Evidence
 const EVIDENCE_CATEGORIES = {
     'electricity': { label: 'Listrik', color: 'bg-amber-100 text-amber-700 border-amber-200' },
     'non-electric': { label: 'Energi Non-Listrik', color: 'bg-red-100 text-red-700 border-red-200' },
@@ -30,7 +30,14 @@ const EVIDENCE_CATEGORIES = {
     'waste': { label: 'Limbah', color: 'bg-emerald-100 text-emerald-700 border-emerald-200' }
 };
 
-export default function ReportDetailModal({ entry, onClose, onDelete }) {
+export default function ReportDetailModal({ 
+    entry, 
+    onClose, 
+    onDelete, 
+    isAdminVerification = false, // Default false (untuk user biasa)
+    onVerify, 
+    onReject 
+}) {
     const [isDownloading, setIsDownloading] = useState(false);
 
     if (!entry) return null;
@@ -38,7 +45,7 @@ export default function ReportDetailModal({ entry, onClose, onDelete }) {
     const handleDownload = async () => {
         setIsDownloading(true);
         try {
-            const businessName = entry.user?.user_metadata?.business_name || "Nama Usaha";
+            const businessName = entry.user?.user_metadata?.business_name || entry.business_name || "Nama Usaha";
             await generatePdf(entry, businessName);
         } catch (error) {
             console.error("Gagal download PDF:", error);
@@ -94,7 +101,7 @@ export default function ReportDetailModal({ entry, onClose, onDelete }) {
         return '0';
     };
 
-    // 3. Total Konsumsi BBM (Liter) - BARU
+    // 3. Total Konsumsi BBM (Liter)
     const getTotalFuelConsumption = () => {
         if (entry.non_electricity_details?.items) {
             // Filter hanya yang satuannya liter (atau asumsikan semua cair adalah liter)
@@ -172,7 +179,7 @@ export default function ReportDetailModal({ entry, onClose, onDelete }) {
                             </div>
                         )}
 
-                        {/* 2. Energi Non-Listrik (UPDATED NAME & DETAIL) */}
+                        {/* 2. Energi Non-Listrik */}
                         {entry.non_electricity_co2e > 0 && (
                             <div className="p-4 bg-red-50 rounded-xl border border-red-100 h-full">
                                 <div className="flex items-center gap-3 mb-3">
@@ -185,7 +192,6 @@ export default function ReportDetailModal({ entry, onClose, onDelete }) {
                                     <p className="text-2xl font-bold text-slate-800">
                                         {(entry.non_electricity_co2e || 0).toFixed(2)} <span className="text-sm font-normal text-slate-500">Ton CO₂e</span>
                                     </p>
-                                    {/* Detail Total Konsumsi Liter Ditambahkan Disini */}
                                     <p className="text-sm text-slate-500">Total Konsumsi: {getTotalFuelConsumption()} Liter</p>
                                 </div>
                             </div>
@@ -280,18 +286,58 @@ export default function ReportDetailModal({ entry, onClose, onDelete }) {
 
                 {/* Footer Modal */}
                 <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-between items-center">
-                    <button onClick={() => onDelete(entry.id)} className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-2">
-                        <TrashCanIcon className="w-4 h-4" />
-                        Hapus Laporan
-                    </button>
+                    
+                    {/* LOGIKA TOMBOL KIRI: User=Hapus, Admin=Tolak */}
+                    {isAdminVerification ? (
+                         <button
+                            onClick={onReject}
+                            className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-2"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Tolak / Minta Revisi
+                        </button>
+                    ) : (
+                        <button
+                            onClick={() => onDelete(entry.id)}
+                            className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-2"
+                        >
+                            <TrashCanIcon className="w-4 h-4" />
+                            Hapus Laporan
+                        </button>
+                    )}
+
                     <div className="flex gap-3">
-                        <button onClick={handleDownload} disabled={isDownloading} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-emerald-700 bg-emerald-100 rounded-lg hover:bg-emerald-200 disabled:bg-slate-200 disabled:text-slate-500 transition-colors">
+                        {/* Tombol Download PDF (Selalu Ada) */}
+                        <button 
+                            onClick={handleDownload} 
+                            disabled={isDownloading} 
+                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-emerald-700 bg-emerald-100 rounded-lg hover:bg-emerald-200 disabled:bg-slate-200 disabled:text-slate-500 transition-colors"
+                        >
                             <DownloadIcon /> 
                             {isDownloading ? 'Membuat PDF...' : 'Download PDF'}
                         </button>
-                        <button onClick={onClose} className="px-6 py-2 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors shadow-sm">
-                            Tutup
-                        </button>
+
+                        {/* LOGIKA TOMBOL KANAN: User=Tutup, Admin=Verifikasi */}
+                        {isAdminVerification ? (
+                             <button
+                                onClick={onVerify}
+                                className="px-6 py-2 text-sm font-medium text-white bg-[#348567] hover:bg-[#2A6A52] rounded-lg transition-colors shadow-sm flex items-center gap-2"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Verifikasi Laporan
+                            </button>
+                        ) : (
+                            <button
+                                onClick={onClose}
+                                className="px-6 py-2 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors shadow-sm"
+                            >
+                                Tutup
+                            </button>
+                        )}
                     </div>
                 </div>
             </motion.div>

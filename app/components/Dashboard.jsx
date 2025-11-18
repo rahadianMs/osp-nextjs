@@ -1,5 +1,3 @@
-// app/components/Dashboard.jsx
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -28,12 +26,12 @@ import AdminDashboardPage from './AdminDashboardPage';
 import AdminSustainabilityPage from './AdminSustainabilityPage';
 import AdminNotificationPage from './AdminNotificationPage'; 
 import AdminLearningPage from './AdminLearningPage'; 
-// --- INI PENTING ---
-import AdminSupplyChainPage from './AdminSupplyChainPage'; // <-- 1. Impor halaman admin baru
+import AdminSupplyChainPage from './AdminSupplyChainPage';
+// [BARU] Impor halaman Verifikasi
+import AdminVerificationPage from './AdminVerificationPage'; 
 
 // Impor halaman detail video
 import VideoDetailPage from './VideoDetailPage'; 
-
 
 // Impor Ikon
 import {
@@ -92,6 +90,12 @@ const PageContent = ({
                     initialBusinessName={businessName}
                   />; 
 
+        // [BARU] Case untuk Halaman Verifikasi Admin
+        case 'admin-verification':
+            return userRole === 'admin'
+                ? <AdminVerificationPage supabase={supabase} />
+                : <div className="flex items-center justify-center h-64 text-slate-500">Akses Ditolak</div>;
+
         case 'laporan-emisi':
             return <EmissionReportPage supabase={supabase} user={user} onDataUpdate={onDataUpdate} />;
         
@@ -137,12 +141,10 @@ const PageContent = ({
                         userRole={userRole}
                    />;
 
-        // --- INI PENTING ---
-        case 'admin-supply-chain': // <-- 2. Case baru untuk admin
+        case 'admin-supply-chain':
             return userRole === 'admin'
                 ? <AdminSupplyChainPage supabase={supabase} />
-                : <SupplyChainPage supabase={supabase} user={user} />; // Pengaman jika user biasa mencoba akses
-        // -------------------
+                : <SupplyChainPage supabase={supabase} user={user} />;
         
         case 'video-detail':
             return <VideoDetailPage 
@@ -228,17 +230,17 @@ export default function Dashboard({
     const sidebarLinks = userProfile.role === 'admin' 
         ? [
             { id: 'admin-dashboard', text: 'Dasbor Admin', icon: <HomeIcon /> },
-            // Ini akan memfilter dan hanya menyisakan 'Notifikasi' & 'Laporan Keberlanjutan'
+            
+            // [BARU] Menu Verifikasi Laporan
+            { id: 'admin-verification', text: 'Verifikasi Laporan', icon: <DocumentChartBarIcon /> },
+            
             ...commonLinks.filter(link => !adminHiddenLinks.includes(link.id)),
             
             { id: 'admin-learning', text: 'Kelola Pembelajaran', icon: <PencilIcon /> },
             
-            // --- INI ADALAH BARIS YANG HILANG DI FILE ANDA ---
-            { id: 'admin-supply-chain', text: 'Kelola Pemasok', icon: <BuildingOfficeIcon /> } // <-- 3. Menu admin baru
-            // ------------------------------------------------
+            { id: 'admin-supply-chain', text: 'Kelola Pemasok', icon: <BuildingOfficeIcon /> } 
           ]
         : [
-            // Menu untuk user biasa
             { id: 'beranda', text: 'Beranda', icon: <HomeIcon /> },
             { id: 'dashboard-utama', text: 'Dasbor Utama', icon: <ChartPieIcon /> },
             ...commonLinks
@@ -257,9 +259,9 @@ export default function Dashboard({
             case 'peta-emisi': return 'Peta Sebaran Emisi';
             case 'supply-chain': return 'Direktori Pemasok Berkelanjutan'; 
             
-            // --- INI PENTING ---
-            case 'admin-supply-chain': return 'Kelola Pemasok Berkelanjutan'; // <-- 4. Judul halaman admin
-            // ------------------
+            case 'admin-supply-chain': return 'Kelola Pemasok Berkelanjutan';
+            // [BARU] Judul Halaman Verifikasi
+            case 'admin-verification': return 'Verifikasi & Validasi Laporan';
             
             default: return 'Dasbor';
         }
@@ -274,7 +276,6 @@ export default function Dashboard({
         );
     }
 
-    // Sisa dari return ( ... )
     return (
         <div id="app-wrapper" className="flex min-h-screen">
             <aside 
