@@ -33,10 +33,9 @@ const EVIDENCE_CATEGORIES = {
 export default function ReportDetailModal({ 
     entry, 
     onClose, 
-    onDelete, 
-    isAdminVerification = false, // Default false (untuk user biasa)
-    onVerify, 
-    onReject 
+    onDelete, // Opsional (hanya dikirim oleh User, tidak oleh Admin Verified)
+    isAdminVerification = false, 
+    onVerify
 }) {
     const [isDownloading, setIsDownloading] = useState(false);
 
@@ -80,8 +79,6 @@ export default function ReportDetailModal({
     };
 
     // --- Helper Perhitungan Total ---
-
-    // 1. Total Berat Limbah (Ton)
     const getTotalWasteWeight = () => {
         if (entry.waste_kg) return (parseFloat(entry.waste_kg) / 1000).toFixed(2); 
         if (entry.waste_details?.items) {
@@ -91,7 +88,6 @@ export default function ReportDetailModal({
         return '0.00';
     };
 
-    // 2. Total Jarak Transportasi (KM)
     const getTotalTransportKm = () => {
         if (entry.transport_km) return parseFloat(entry.transport_km).toLocaleString('id-ID');
         if (entry.transport_details && Array.isArray(entry.transport_details)) {
@@ -101,11 +97,8 @@ export default function ReportDetailModal({
         return '0';
     };
 
-    // 3. Total Konsumsi BBM (Liter)
     const getTotalFuelConsumption = () => {
         if (entry.non_electricity_details?.items) {
-            // Filter hanya yang satuannya liter (atau asumsikan semua cair adalah liter)
-            // Dan kalikan usage * frequency
             const total = entry.non_electricity_details.items
                 .filter(item => item.unit === 'liter') 
                 .reduce((acc, item) => acc + ((parseFloat(item.usage)||0) * (parseFloat(item.frequency)||0)), 0);
@@ -287,18 +280,13 @@ export default function ReportDetailModal({
                 {/* Footer Modal */}
                 <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-between items-center">
                     
-                    {/* LOGIKA TOMBOL KIRI: User=Hapus, Admin=Tolak */}
+                    {/* LOGIKA TOMBOL KIRI: 
+                        1. Admin Mode: Selalu KOSONG (tombol reject dihapus, tombol delete tidak ada).
+                        2. User Mode: Muncul Tombol Hapus jika fungsi 'onDelete' diberikan.
+                    */}
                     {isAdminVerification ? (
-                         <button
-                            onClick={onReject}
-                            className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-2"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            Tolak / Minta Revisi
-                        </button>
-                    ) : (
+                         <div /> 
+                    ) : onDelete ? (
                         <button
                             onClick={() => onDelete(entry.id)}
                             className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-2"
@@ -306,6 +294,8 @@ export default function ReportDetailModal({
                             <TrashCanIcon className="w-4 h-4" />
                             Hapus Laporan
                         </button>
+                    ) : (
+                        <div />
                     )}
 
                     <div className="flex gap-3">
