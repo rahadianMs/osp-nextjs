@@ -1,22 +1,25 @@
 "use client";
 
-// MODIFIKASI: Tambahkan 'useRef'
 import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { BookOpenIcon, DashboardIcon, HandshakeIcon, IncentiveIcon, InstagramIcon, LinkedinIcon, FacebookIcon } from './Icons.jsx';
 
-// Dynamic import untuk komponen peta, dengan SSR dinonaktifkan
+// Dynamic import untuk komponen peta
 const EmissionMap = dynamic(() => import('./EmissionMap'), { 
     ssr: false,
     loading: () => <div className="h-[500px] bg-zinc-200 rounded-lg animate-pulse flex items-center justify-center">Memuat Peta...</div>
 });
 
-// === KOMPONEN BARU UNTUK KARTU FITUR (DIPERBAIKI) ===
+// Import LandingPageMap baru
+const LandingPageMap = dynamic(() => import('./LandingPageMap'), { 
+    ssr: false,
+    loading: () => <div className="h-[500px] bg-zinc-200 rounded-lg animate-pulse flex items-center justify-center">Memuat Peta...</div>
+});
+
 function FeatureCard({ icon, title, description, delay }) {
     const cardRef = useRef(null);
     const [style, setStyle] = useState({});
 
-    // Definisikan transisi scroll-in di satu tempat
     const scrollInTransition = `opacity 0.6s ease-out ${delay}s, transform 0.6s ease-out ${delay}s`;
 
     const handleMouseMove = (e) => {
@@ -37,8 +40,6 @@ function FeatureCard({ icon, title, description, delay }) {
 
         setStyle({
             transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05) translateY(-4px)`,
-            // FIX: Gabungkan transisi scroll-in (untuk opacity) 
-            // dengan transisi mouse-move (untuk transform) yang cepat dan tanpa delay.
             transition: `opacity 0.6s ease-out ${delay}s, transform 0.1s ease-out 0s`
         });
     };
@@ -46,8 +47,6 @@ function FeatureCard({ icon, title, description, delay }) {
     const handleMouseLeave = () => {
         setStyle({
             transform: 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1) translateY(0px)',
-            // FIX: Gabungkan transisi scroll-in (untuk opacity) 
-            // dengan transisi mouse-leave (untuk transform) yang lambat dan tanpa delay.
             transition: `opacity 0.6s ease-out ${delay}s, transform 0.5s ease-in-out 0s`
         });
     };
@@ -58,10 +57,7 @@ function FeatureCard({ icon, title, description, delay }) {
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
             style={{ 
-                // FIX: Terapkan transisi scroll-in awal
                 transition: scrollInTransition,
-                // ...style akan menimpa 'transition' ini saat mouse bergerak,
-                // yang mana sudah kita siapkan di handleMouseMove/Leave
                 ...style 
             }}
             className="bg-white p-8 rounded-xl shadow-sm text-left border hover:shadow-lg transition-all duration-300 scroll-animate"
@@ -72,9 +68,6 @@ function FeatureCard({ icon, title, description, delay }) {
         </div>
     );
 }
-// === AKHIR KOMPONEN BARU ===
-// === AKHIR KOMPONEN BARU ===
-
 
 export default function LandingPage({ setActivePage, setIsLogin }) {
     const [isScrolled, setIsScrolled] = useState(false);
@@ -84,7 +77,6 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
     const logoKemenparBerwarna = "https://upload.wikimedia.org/wikipedia/commons/f/fc/Lambang_Kementerian_Pariwisata_Republik_Indonesia_%282024%29.png";
     const logoWiseSteps = "https://github.com/rahadianMs/gstc-fix/blob/main/asset/WSG_Masterfiles_Logo-02-1024x264.png?raw=true";
 
-    // Efek untuk header
     useEffect(() => {
         const handleScroll = () => {
             setIsScrolled(window.scrollY > 10);
@@ -93,7 +85,6 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    // Efek Intersection Observer (Animasi saat scroll)
     useEffect(() => {
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
@@ -212,8 +203,11 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
                 .delay-500 { animation-delay: 0.5s; transition-delay: 0.5s; }
             `}</style>
             <div id="landing-page" className={`bg-white text-${colors.primary}`}>
-                <header className={`fixed top-0 left-0 z-50 w-full px-[5%] py-4 transition-all duration-300 ${isScrolled ? 'bg-white shadow-md' : 'bg-transparent'}`}>
-                    {/* ... (Konten header tidak berubah) ... */}
+                
+                {/* MODIFIKASI Z-INDEX:
+                    Mengubah 'z-50' menjadi 'z-[9999]' agar Header selalu di atas Peta (Leaflet z-index 400+) 
+                */}
+                <header className={`fixed top-0 left-0 z-[9999] w-full px-[5%] py-4 transition-all duration-300 ${isScrolled ? 'bg-white shadow-md' : 'bg-transparent'}`}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <img 
@@ -240,10 +234,9 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
                 </header>
 
                 <main id="home" className="relative flex items-center min-h-screen px-[5%] py-24 text-white bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1608387371413-f2566ac510e0?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1170')" }}>
-                    {/* ... (Konten main hero tidak berubah) ... */}
                     <div className="absolute inset-0 bg-black opacity-50"></div>
                     <div className="relative z-10 max-w-2xl text-left">
-                        <p className="mb-4 text-lg md:text-xl opacity-95 animate-on-load fade-in-up delay-100">Selamat datang di “Wonderful Indonesia Net Zero Hub”</p>
+                        <p className="mb-4 text-lg md:text-xl opacity-95 animate-on-load fade-in-up delay-100">Selamat datang di Wonderful Indonesia Decarbonization Initiative Hub</p>
                         <h1 className="text-4xl md:text-6xl font-extrabold leading-tight mb-8 drop-shadow-lg animate-on-load fade-in-up delay-300">Menuju Pariwisata Rendah Karbon dan Berkelanjutan</h1>
                         <button onClick={() => handleGoToAuth(false)} style={{ backgroundColor: colors.accent }} className={`px-8 py-4 text-lg font-semibold text-white rounded-lg shadow-xl hover:bg-[${colors.accentHover}] transform hover:-translate-y-1 transition-all duration-300 animate-on-load fade-in-up delay-500`}>
                             Daftar / Registrasi
@@ -252,10 +245,9 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
                 </main>
 
                 <section id="about" className="py-24 px-[5%]">
-                    {/* ... (Konten about tidak berubah) ... */}
                     <div className="container mx-auto max-w-6xl">
                         <div className="text-center mb-16">
-                             <h2 className={`text-4xl md:text-5xl font-bold text-${colors.primary} scroll-animate`}>Tentang Wonderful Indonesia Net Zero Hub</h2>
+                             <h2 className={`text-4xl md:text-5xl font-bold text-${colors.primary} scroll-animate`}>Tentang Wonderful Indonesia Decarbonization Initiative Hub</h2>
                         </div>
                         <div className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center">
                             <div className="scroll-animate delay-200">
@@ -267,8 +259,8 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
                                     <p className={`text-${colors.secondary} leading-relaxed text-justify`}>Program ini adalah inisiatif Kementerian Pariwisata Indonesia untuk mewujudkan komitmen sektor dalam Glasgow Declaration, yakni menuju Net Zero Emissions di 2060. Melalui program ini, Kementerian Pariwisata Indonesia berkomitmen untuk berkolaborasi bersama pelaku usaha pariwisata dalam mengukur dan mengurangi jejak karbon di sektor pariwisata.</p>
                                 </div>
                                 <div>
-                                    <h3 className={`text-2xl font-bold text-${colors.primary} mb-3`}>Apa itu ‘WINZ Hub’?</h3>
-                                    <p className={`text-${colors.secondary} leading-relaxed text-justify`}>Wonderful Indonesia Net Zero Hub (WINZ Hub) adalah sebuah platform nasional yang dikembangkan untuk mendukung transformasi pariwisata Indonesia dalam mengurangi jejak karbon. WINZ Hub berfungsi sebagai pusat data, wadah pengembangan upaya rendah emisi, dan kolaborasi lintas aktor dalam mengukur, melaporkan, serta mengurangi emisi karbon di sektor pariwisata.</p>
+                                    <h3 className={`text-2xl font-bold text-${colors.primary} mb-3`}>Berkenalan dengan WIDI</h3>
+                                    <p className={`text-${colors.secondary} leading-relaxed text-justify`}>Wonderful Indonesia Decarbonization Initiative Hub "WIDI" adalah sebuah platform nasional yang dikembangkan untuk mendukung transformasi pariwisata Indonesia dalam mengurangi jejak karbon. WIDI berfungsi sebagai pusat data, wadah pengembangan upaya rendah emisi, dan kolaborasi lintas aktor dalam mengukur, melaporkan, serta mengurangi emisi karbon di sektor pariwisata.</p>
                                 </div>
                             </div>
                         </div>
@@ -294,33 +286,33 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
                 </section>
                 
                 <section id="map" className="py-24 px-[5%] bg-white">
-                    {/* ... (Konten map tidak berubah) ... */}
                     <div className="container mx-auto max-w-6xl">
                         <div className="text-center mb-16">
                             <h2 className={`text-4xl md:text-5xl font-bold text-${colors.primary} scroll-animate`}>Peta Sebaran Emisi Karbon</h2>
-                            <p className={`text-lg text-${colors.secondary} mt-4 max-w-3xl mx-auto scroll-animate delay-200`}>Visualisasi data emisi CO2 dari sektor pariwisata di berbagai provinsi di Indonesia. Arahkan kursor pada sebuah provinsi untuk melihat detail.</p>
+                            <p className={`text-lg text-${colors.secondary} mt-4 max-w-3xl mx-auto scroll-animate delay-200`}>Visualisasi data emisi CO2 dari sektor pariwisata di berbagai provinsi di Indonesia.</p>
                         </div>
-                        <EmissionMap />
+                        
+                        {/* MENGGUNAKAN KOMPONEN PETA BARU */}
+                        <LandingPageMap />
+                        
+                        <div className="mt-4 text-center text-sm text-slate-500 italic">
+                            Sumber: Sipongi Kemenhut 2024
+                        </div>
                     </div>
                 </section>
 
-                {/* --- FEATURES SECTION: MODIFIKASI --- */}
                 <section id="features" className="py-24 px-[5%] bg-zinc-50">
                     <div className="container mx-auto max-w-6xl text-center">
                         <span className="font-semibold scroll-animate" style={{color: colors.brand}}>Fitur Utama</span>
                         <h2 className={`text-4xl font-bold text-${colors.primary} mt-2 mb-16 scroll-animate delay-100`}>Semua yang Anda Butuhkan untuk Transformasi Hijau</h2>
                         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-                            {/* MODIFIKASI: 
-                                Menggunakan komponen 'FeatureCard' baru
-                                menggantikan 'div' inline sebelumnya.
-                            */}
                             {featureCards.map((card, index) => (
                                 <FeatureCard 
                                     key={card.title} 
                                     icon={card.icon}
                                     title={card.title}
                                     description={card.description}
-                                    delay={0.1 + index * 0.15} // Kirim delay sebagai prop
+                                    delay={0.1 + index * 0.15} 
                                 />
                             ))}
                         </div>
@@ -328,7 +320,6 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
                 </section>
                 
                 <section id="participant-list-section" className="relative py-24 bg-center bg-cover" style={{ backgroundImage: "url('https://myoona.id/content/dam/oona/aem-images/blog/liburan-labuan-bajo-risiko-perjalanan-domestik-banner.webp')" }}>
-                    {/* ... (Konten participant-list tidak berubah) ... */}
                     <div className="absolute inset-0 bg-black opacity-70"></div>
                     <div className="relative z-10 container mx-auto text-center">
                         <h2 className="text-4xl font-bold text-white mb-4 scroll-animate">Didukung dan Diikuti Oleh</h2>
@@ -346,7 +337,6 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
                 </section>
 
                 <section id="glasgow-portal" className="py-20 px-[5%] bg-zinc-100">
-                    {/* ... (Konten glasgow-portal tidak berubah) ... */}
                     <div className="container mx-auto max-w-4xl bg-white p-10 rounded-2xl shadow-lg border flex flex-col md:flex-row items-center gap-8 text-center md:text-left scroll-animate">
                         <div className="flex-shrink-0">
                             <img src="https://kindlejourneys.com/files/Recurso-2-e1635510867617.png" alt="Glasgow Declaration Logo" className="h-24" />
@@ -362,7 +352,6 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
                 </section>
 
                 <footer style={{backgroundColor: colors.brand}} className="text-white/80 py-16 px-[5%]">
-                    {/* ... (Konten footer tidak berubah) ... */}
                     <div className="container mx-auto max-w-6xl">
                          <div className="grid md:grid-cols-12 gap-12">
                             <div className="md:col-span-4">
