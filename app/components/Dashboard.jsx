@@ -13,7 +13,7 @@ import ProfilUsahaPage from './ProfilUsahaPage';
 import NotificationPage from './NotificationPage';
 import AboutPage from './AboutPage';
 import AccountPage from './AccountPage';
-import FaqPage from './FaqPage';
+import FaqPage from './FaqPage'; // Pastikan file ini ada
 import SertifikasiPage from './SertifikasiPage';
 import PembelajaranPage from './PembelajaranPage';
 import PanduanPage from './PanduanPage';
@@ -158,7 +158,11 @@ const PageContent = ({
             return <AboutPage />;
         case 'akun':
             return <AccountPage user={user} supabase={supabase} />;
+            
+        // [FIXED] FAQ sekarang merender komponen yang benar
         case 'faq':
+            return <FaqPage />;
+            
         default:
              return (
                 <div className="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-md border text-center">
