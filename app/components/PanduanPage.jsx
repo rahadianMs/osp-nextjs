@@ -1,12 +1,9 @@
 "use client";
 
-import { useState } from 'react';
 import { 
     BookOpenIcon, 
-    ChartPieIcon, 
     DocumentChartBarIcon, 
-    QuestionMarkCircleIcon 
-} from './Icons'; // Pastikan path import icon sesuai
+} from './Icons'; 
 
 // Komponen Ikon Nomor
 const NumberCircle = ({ number }) => (
@@ -26,17 +23,6 @@ const GuideSection = ({ title, children, icon }) => (
             {children}
         </div>
     </section>
-);
-
-// Komponen Kartu Rumus Sederhana
-const FormulaCard = ({ title, formula, description }) => (
-    <div className="bg-slate-50 p-5 rounded-xl border border-slate-200 mb-4">
-        <h5 className="font-bold text-slate-800 mb-2 text-sm uppercase tracking-wider">{title}</h5>
-        <div className="bg-white p-3 rounded-lg border border-slate-200 font-mono text-sm text-[#22543d] mb-2 overflow-x-auto">
-            {formula}
-        </div>
-        <p className="text-xs text-slate-500">{description}</p>
-    </div>
 );
 
 export default function PanduanPage() {
@@ -125,70 +111,6 @@ export default function PanduanPage() {
                         </div>
                     </div>
                 </div>
-            </GuideSection>
-
-            {/* 3. Transparansi Metodologi */}
-            <GuideSection title="Transparansi Metodologi Perhitungan" icon={<ChartPieIcon className="w-8 h-8"/>}>
-                <p className="mb-6">
-                    WIDI Hub menggunakan standar perhitungan berbasis sains (IPCC) yang disesuaikan dengan faktor emisi lokal Indonesia. Berikut adalah logika perhitungan di balik layar kalkulator ini:
-                </p>
-
-                <div className="grid lg:grid-cols-2 gap-6">
-                    {/* Kiri */}
-                    <div>
-                        <FormulaCard 
-                            title="Listrik (Grid)" 
-                            formula="kWh × Faktor Emisi Grid Wilayah"
-                            description="Faktor emisi berbeda tiap provinsi (misal: Jawa-Bali ~0.8 kg CO₂e/kWh) tergantung pembangkit listrik setempat."
-                        />
-                        <FormulaCard 
-                            title="Pembakaran BBM (Genset & Kendaraan)" 
-                            formula="(Liter × Faktor Emisi BBM) ÷ 1000"
-                            description="Menghitung total emisi CO₂, CH₄, dan N₂O dari pembakaran bahan bakar. Hasil dibagi 1.000 untuk konversi kg ke Ton."
-                        />
-                    </div>
-
-                    {/* Kanan - Limbah Detail */}
-                    <div>
-                        <h5 className="font-bold text-slate-800 mb-3 text-sm">Perhitungan Limbah (Kompleks)</h5>
-                        <div className="space-y-3">
-                            <div className="p-3 bg-red-50 rounded border border-red-100 text-sm">
-                                <strong className="block text-red-700">1. Dibuang ke TPA (Landfill)</strong>
-                                <span className="text-red-600">Menggunakan metode <em>IPCC First Order Decay</em> untuk menghitung potensi gas Metana (CH₄) yang dihasilkan dari pembusukan sampah organik.</span>
-                            </div>
-                            <div className="p-3 bg-orange-50 rounded border border-orange-100 text-sm">
-                                <strong className="block text-orange-700">2. Dibakar (Insinerasi / Terbuka)</strong>
-                                <span className="text-orange-600">Menghitung total emisi dari gas Nitrogen Oksida (N₂O), Metana (CH₄), dan Karbon Fosil (CO₂) khusus untuk sampah plastik/tekstil.</span>
-                            </div>
-                            <div className="p-3 bg-green-50 rounded border border-green-100 text-sm">
-                                <strong className="block text-green-700">3. Pengomposan & Biogas</strong>
-                                <span className="text-green-600">Hanya menghitung emisi kebocoran gas (CH₄ & N₂O) yang sangat kecil selama proses penguraian biologis.</span>
-                            </div>
-                            <div className="p-3 bg-blue-50 rounded border border-blue-100 text-sm">
-                                <strong className="block text-blue-700">4. Daur Ulang (Recycle)</strong>
-                                <span className="text-blue-600">Dianggap <strong>0 Emisi</strong> dalam batasan pelaporan ini, karena material dipulihkan kembali menjadi bahan baku.</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </GuideSection>
-
-            {/* 4. FAQ Singkat */}
-            <GuideSection title="Pertanyaan Umum" icon={<QuestionMarkCircleIcon className="w-8 h-8"/>}>
-                <ul className="space-y-4 list-disc list-inside text-slate-700">
-                    <li>
-                        <strong>Apakah data saya aman?</strong>
-                        <br/>Ya, data spesifik perusahaan Anda bersifat privat. Data yang ditampilkan ke publik di halaman depan hanyalah data agregat nasional (total gabungan) atau data resmi pemerintah (SIPONGI).
-                    </li>
-                    <li>
-                        <strong>Mengapa input limbah harus dalam Kilogram (kg)?</strong>
-                        <br/>Standar perhitungan IPCC menggunakan berat massa dalam kilogram untuk presisi faktor emisi gas metana. Sistem kami yang akan mengonversinya menjadi Ton di laporan akhir untuk kemudahan pembacaan.
-                    </li>
-                    <li>
-                        <strong>Apa itu CO₂e?</strong>
-                        <br/><em>Carbon Dioxide Equivalent</em>. Ini adalah satuan standar untuk menyetarakan dampak berbagai gas rumah kaca (seperti Metana yang 28x lebih kuat dari CO₂) menjadi satu satuan setara CO₂ agar mudah dijumlahkan.
-                    </li>
-                </ul>
             </GuideSection>
         </div>
     );

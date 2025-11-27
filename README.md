@@ -1,132 +1,90 @@
-# 🌏 Wonderful Indonesia Net Zero Hub (WINZ Hub)
+# 🌏 Wonderful Indonesia Decarbonization Initiative Hub (WIDI Hub)
 
-**Wonderful Indonesia Net Zero Hub (WINZ Hub)** adalah platform online nasional yang dirancang untuk membantu bisnis di sektor pariwisata Indonesia dalam mengukur, melaporkan, dan mengurangi jejak karbon mereka. Proyek ini merupakan inisiatif dari Kementerian Pariwisata dan Ekonomi Kreatif/Badan Pariwisata dan Ekonomi Kreatif Republik Indonesia untuk mendukung komitmen Indonesia dalam **Deklarasi Glasgow tentang Aksi Iklim di Sektor Pariwisata**.
+**Wonderful Indonesia Decarbonization Initiative Hub (WIDI Hub)** adalah platform nasional terintegrasi yang dirancang untuk memimpin transformasi sektor pariwisata Indonesia menuju masa depan rendah karbon. Proyek ini merupakan inisiatif strategis dari Kementerian Pariwisata dan Ekonomi Kreatif Republik Indonesia untuk mendukung komitmen **Net Zero Emissions** dan **Deklarasi Glasgow** tentang Aksi Iklim di Sektor Pariwisata.
 
-Aplikasi ini dibangun menggunakan teknologi modern **Next.js** (App Router) untuk frontend dan **Supabase** sebagai infrastruktur backend (Database & Authentication), memastikan performa tinggi, skalabilitas, dan keamanan data.
-
----
-
-## ✨ Fitur Utama
-
-Berdasarkan arsitektur kode saat ini, platform menyediakan fitur berikut:
-
-### 1. 📊 Manajemen Emisi & Lingkungan
-* **Kalkulator Jejak Karbon:** Hitung emisi dari berbagai sumber (listrik, transportasi, limbah) menggunakan faktor emisi terstandarisasi.
-* **Peta Sebaran Emisi (GIS):** Visualisasi interaktif data emisi per provinsi di Indonesia menggunakan data GeoJSON.
-* **Riwayat & Laporan:** Pelacakan historis emisi bulanan/tahunan dan pembuatan laporan otomatis dalam format PDF.
-
-### 2. 🏢 Dashboard Terintegrasi
-* **User Dashboard:** Pantau tren penurunan emisi, status sertifikasi, dan ringkasan aktivitas usaha pariwisata.
-* **Admin Dashboard:** Pusat kendali untuk memantau statistik nasional, verifikasi pengguna baru, dan analisis data agregat.
-
-### 3. 🔗 Rantai Pasok Hijau (Supply Chain)
-* **Manajemen Supplier:** Evaluasi dan kelola daftar pemasok berdasarkan kriteria keberlanjutan.
-* **Scoring System:** Lihat skor keberlanjutan dari setiap pemasok untuk pengambilan keputusan pengadaan barang yang lebih hijau.
-
-### 4. 🏆 Sertifikasi & Kepatuhan
-* **Pengajuan Sertifikasi:** Alur kerja digital untuk mengajukan validasi "Net Zero" atau label ramah lingkungan lainnya.
-* **Verifikasi Admin:** Panel khusus bagi admin untuk memvalidasi dokumen bukti dan menyetujui pengajuan.
-* **Sertifikat Digital:** Pembuatan sertifikat apresiasi (PDF) secara otomatis bagi mitra yang memenuhi syarat.
-
-### 5. 📚 Pusat Edukasi (Learning Center)
-* **Modul & Panduan:** Akses materi edukasi tentang *Best Practice* pariwisata berkelanjutan.
-* **Video Learning:** Halaman khusus untuk konten pembelajaran berbasis video.
+WIDI Hub berfungsi sebagai pusat data, alat pengukuran (kalkulator), dan wadah kolaborasi bagi industri pariwisata (Hotel, Operator Tur, Atraksi Wisata) untuk mengukur, melaporkan, dan mengurangi jejak karbon mereka secara terstandarisasi.
 
 ---
 
-## 🛠️ Teknologi yang Digunakan
+## ✨ Fitur Unggulan
 
-* **Frontend:** [Next.js 14+](https://nextjs.org/) (App Router), React
-* **Backend & Auth:** [Supabase](https://supabase.com/) (PostgreSQL, Auth, Storage)
-* **Styling:** [Tailwind CSS](https://tailwindcss.com/)
-* **Maps/GIS:** Leaflet / React-Leaflet
-* **PDF Generation:** `jspdf` & `jspdf-autotable`
-* **Icons:** Lucide React / Heroicons
+### 1. 📊 Kalkulator Jejak Karbon Standar Global (IPCC)
+Sistem perhitungan emisi yang presisi dan transparan mencakup Scope 1, 2, dan 3:
+* **⚡ Listrik (Scope 2):** Menggunakan faktor emisi grid spesifik per provinsi di Indonesia.
+* **🔥 Energi & Transportasi (Scope 1):** Perhitungan berbasis liter bahan bakar dengan faktor emisi lengkap ($CO_2, CH_4, N_2O$).
+* **🗑️ Limbah (Scope 3):** Metodologi kompleks menggunakan standar **IPCC First Order Decay** untuk TPA, serta perhitungan spesifik untuk Insinerasi, Open Burning, dan Pengolahan Biologis (Kompos/Biogas). Input dalam kg, output otomatis terkonversi ke Ton $CO_2e$.
+
+### 2. 🗺️ Peta Sebaran & GIS Interaktif
+* **Landing Page Map:** Visualisasi data emisi nasional (Sumber: SIPONGI Kemenhut 2024) dan sebaran partisipan program (Hotel, Tur, Atraksi) di berbagai kota besar.
+* **Dashboard Map:** Peta analisis mendalam untuk pengguna terdaftar.
+
+### 3. 🏢 Dashboard Manajemen Terpadu
+* **User Dashboard:** Pantau tren penurunan emisi bulanan, kelola profil usaha, dan akses riwayat laporan.
+* **Sistem Notifikasi:** Fitur "Inbox" untuk menerima pengumuman broadcast dari admin atau pesan verifikasi personal.
+* **Auto-Save Draft:** Formulir cerdas yang menyimpan data input secara otomatis di browser (*local storage*), mencegah kehilangan data saat berpindah halaman.
+
+### 4. 🎓 Edukasi & Rantai Pasok
+* **Pusat Pembelajaran:** Modul video dan dokumen panduan teknis dekarbonisasi.
+* **Direktori Pemasok Hijau:** Database vendor penyedia solusi berkelanjutan (energi terbarukan, pengelolaan sampah) yang terverifikasi.
 
 ---
 
-## 📂 Struktur File & Komponen
+## 🛠️ Teknologi (Tech Stack)
 
-Berikut adalah dokumentasi mendalam mengenai struktur direktori dan fungsi dari setiap komponen utama dalam aplikasi ini:
+Aplikasi ini dibangun dengan arsitektur modern yang mengutamakan performa, keamanan, dan skalabilitas:
+
+* **Frontend:** [Next.js 15](https://nextjs.org/) (App Router) - Framework React mutakhir.
+* **Styling:** [Tailwind CSS v4](https://tailwindcss.com/) - Utility-first CSS framework.
+* **Backend & Auth:** [Supabase](https://supabase.com/) - Database PostgreSQL, Autentikasi, dan Storage.
+* **Peta & GIS:** [React Leaflet](https://react-leaflet.js.org/) & Leaflet.js.
+* **Visualisasi Data:** [Recharts](https://recharts.org/) - Grafik statistik interaktif.
+* **PDF Generation:** `jspdf` & `jspdf-autotable` untuk sertifikat dan laporan otomatis.
+* **Icons:** Kustom SVG Icons (Heroicons style).
+
+---
+
+## 📂 Struktur Folder Utama
+
+Berikut adalah gambaran struktur proyek untuk memudahkan navigasi pengembangan:
 
 ```bash
-osp-nextjs/
 ├── app/
-│   ├── components/                 # 🧩 PUSTAKA KOMPONEN (UI & LOGIC)
-│   │   ├── Account/Auth
-│   │   │   ├── AuthPage.jsx            # Halaman Login/Register dengan Supabase Auth
-│   │   │   ├── AccountPage.jsx         # Pengaturan akun pengguna
-│   │   │   ├── ProfilUsahaPage.jsx     # Form detail profil usaha pariwisata
-│   │   │
-│   │   ├── Dashboard (User)
-│   │   │   ├── Dashboard.jsx           # Layout utama dashboard user
-│   │   │   ├── DashboardSummary.jsx    # Card ringkasan statistik (Total Emisi, dll)
-│   │   │   ├── DashboardTrends.jsx     # Grafik garis tren emisi waktu ke waktu
-│   │   │   ├── DashboardPieChart.jsx   # Grafik lingkaran proporsi sumber emisi
-│   │   │
-│   │   ├── Dashboard (Admin)
-│   │   │   ├── AdminDashboardPage.jsx      # Halaman utama dashboard admin
-│   │   │   ├── AdminDashboardSummary.jsx   # Statistik global platform
-│   │   │   ├── AdminDashboardTrends.jsx    # Analisis tren data seluruh user
-│   │   │   ├── AdminVerificationPage.jsx   # Tabel verifikasi dokumen sertifikasi
-│   │   │
-│   │   ├── Carbon & Emissions
-│   │   │   ├── CarbonCalculator.jsx    # Form kompleks perhitungan jejak karbon
-│   │   │   ├── EmissionMap.jsx         # Peta interaktif (render GeoJSON provinsi)
-│   │   │   ├── EmissionHistory.jsx     # Tabel riwayat input emisi
-│   │   │   ├── EmissionReportPage.jsx  # Halaman detail laporan emisi
-│   │   │
-│   │   ├── Supply Chain
-│   │   │   ├── SupplyChainPage.jsx         # Halaman manajemen rantai pasok user
-│   │   │   ├── SupplierDetailModal.jsx     # Popup detail info supplier
-│   │   │   ├── AdminSupplyChainPage.jsx    # Manajemen master data supplier (Admin)
-│   │   │
-│   │   ├── Sustainability & Certs
-│   │   │   ├── SustainabilityPage.jsx      # Overview program keberlanjutan
-│   │   │   ├── SertifikasiPage.jsx         # Status dan pengajuan sertifikasi
-│   │   │   ├── AdminSustainabilityPage.jsx # CMS untuk konten sustainability
-│   │   │
-│   │   ├── Learning Center
-│   │   │   ├── PembelajaranPage.jsx    # Katalog modul pembelajaran
-│   │   │   ├── VideoDetailPage.jsx     # Player dan deskripsi konten video
-│   │   │   ├── PanduanPage.jsx         # Dokumentasi panduan teknis
-│   │   │   ├── AdminLearningPage.jsx   # CMS upload materi belajar
-│   │   │
-│   │   └── General UI
-│   │       ├── LandingPage.jsx         # Halaman muka (Public)
-│   │       ├── BerandaPage.jsx         # Halaman home setelah login
-│   │       ├── NotificationPage.jsx    # Pusat notifikasi user
-│   │       └── Icons.jsx               # Koleksi aset ikon SVG/Vector
+│   ├── components/         # 🧩 Komponen UI Reusable
+│   │   ├── CarbonCalculator.jsx    # Core Logic: Kalkulator Emisi (IPCC)
+│   │   ├── LandingPageMap.jsx      # Peta Publik (SIPONGI & Peserta)
+│   │   ├── Dashboard.jsx           # Layout Utama Dashboard User/Admin
+│   │   ├── EmissionMap.jsx         # Peta Analisis Internal
+│   │   └── ... (Komponen Halaman Lain)
 │   │
-│   ├── lib/                        # ⚙️ UTILITIES & HELPER FUNCTIONS
-│   │   ├── generatePdf.js                  # Helper dasar pembuatan PDF
-│   │   ├── generateCertificatePdf.js       # Logic khusus layout sertifikat WINZ
-│   │   ├── generateActivityReportPdf.js    # Logic generate laporan aktivitas user
-│   │   └── locationData.js                 # Data statis wilayah/lokasi
+│   ├── hooks/              # 🪝 Custom React Hooks
+│   │   └── usePersistedState.js    # Logika Auto-Save/Caching Form
 │   │
-│   ├── layout.js                   # Root Layout (Metadata, Font config)
-│   └── page.jsx                    # Entry point aplikasi
+│   ├── lib/                # ⚙️ Utilitas & Helper Functions
+│   │   ├── generatePdf.js          # Generator Laporan PDF
+│   │   └── locationData.js         # Data Statis Wilayah
+│   │
+│   ├── layout.js           # Root Layout (Font, Metadata)
+│   └── page.jsx            # Entry Point (Landing Page Wrapper)
 │
 ├── public/
-│   ├── data/                       # 💾 STATIC DATASETS
-│   │   ├── indonesia-provinces.json    # GeoJSON batas wilayah provinsi
-│   │   ├── emisiCO2.json & .csv        # Data faktor emisi atau dummy data
-│   │   └── akomodasi.json              # Data tipe akomodasi pariwisata
-│   └── ...                         # Aset Gambar & SVG
+│   ├── data/               # 💾 Dataset Statis
+│   │   ├── emisiCO2.json           # Data Emisi Provinsi (SIPONGI)
+│   │   ├── indonesia-provinces.json # Peta GeoJSON Indonesia
+│   │   └── ... 
 │
-└── tailwind.config.js              # Konfigurasi tema & warna design system
+└── tailwind.config.js      # Konfigurasi Desain & Warna WIDI
 ````
 
 -----
 
-## 💻 Cara Instalasi & Menjalankan
+## 🚀 Cara Instalasi & Menjalankan (Lokal)
 
-Ikuti langkah berikut untuk mengembangkan projek ini secara lokal:
+Ikuti langkah berikut untuk menjalankan proyek di komputer Anda:
 
 1.  **Clone Repositori:**
 
     ```bash
-    git clone [https://github.com/rahadianms/osp-nextjs.git](https://github.com/rahadianms/osp-nextjs.git)
+    git clone [https://github.com/username/osp-nextjs.git](https://github.com/username/osp-nextjs.git)
     cd osp-nextjs
     ```
 
@@ -134,23 +92,30 @@ Ikuti langkah berikut untuk mengembangkan projek ini secara lokal:
 
     ```bash
     npm install
+    # atau
+    yarn install
     ```
 
-3.  **Konfigurasi Environment Variable (.env.local):**
-    Buat file `.env.local` dan isi dengan kredensial Supabase Anda:
+3.  **Konfigurasi Environment Variable:**
+    Buat file `.env.local` di root folder dan isi kredensial Supabase Anda:
 
     ```env
     NEXT_PUBLIC_SUPABASE_URL=[https://your-project-id.supabase.co](https://your-project-id.supabase.co)
     NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-public-key
     ```
 
-4.  **Jalankan Development Server:**
+4.  **Jalankan Server Development:**
 
     ```bash
     npm run dev
     ```
 
-5.  **Akses Aplikasi:**
-    Buka `http://localhost:3000` di browser Anda.
+    Buka [http://localhost:3000](https://www.google.com/search?q=http://localhost:3000) di browser Anda.
 
 -----
+
+**Copyright © 2025 Wise Steps Consulting - Konsultan Pariwisata Indonesia.**
+*All Rights Reserved.*
+
+```
+```
