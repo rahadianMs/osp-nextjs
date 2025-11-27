@@ -11,7 +11,7 @@ WIDI Hub berfungsi sebagai pusat data, alat pengukuran (kalkulator), dan wadah k
 ### 1. 📊 Kalkulator Jejak Karbon Standar Global (IPCC)
 Sistem perhitungan emisi yang presisi dan transparan mencakup Scope 1, 2, dan 3:
 * **⚡ Listrik (Scope 2):** Menggunakan faktor emisi grid spesifik per provinsi di Indonesia.
-* **🔥 Energi & Transportasi (Scope 1):** Perhitungan berbasis liter bahan bakar dengan faktor emisi lengkap ($CO_2, CH_4, N_2O$).
+* **🔥 Energi & Transportasi (Scope 1):** Perhitungan berbasis liter bahan bakar dengan faktor emisi lengkap   ($CO_2, CH_4, N_2O$).
 * **🗑️ Limbah (Scope 3):** Metodologi kompleks menggunakan standar **IPCC First Order Decay** untuk TPA, serta perhitungan spesifik untuk Insinerasi, Open Burning, dan Pengolahan Biologis (Kompos/Biogas). Input dalam kg, output otomatis terkonversi ke Ton $CO_2e$.
 
 ### 2. 🗺️ Peta Sebaran & GIS Interaktif
@@ -116,6 +116,3 @@ Ikuti langkah berikut untuk menjalankan proyek di komputer Anda:
 
 **Copyright © 2025 Wise Steps Consulting - Konsultan Pariwisata Indonesia.**
 *All Rights Reserved.*
-
-```
-```
