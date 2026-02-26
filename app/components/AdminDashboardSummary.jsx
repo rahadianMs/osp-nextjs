@@ -1,12 +1,13 @@
 "use client";
 import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 
 // --- MODIFIKASI: Menggunakan ikon yang ada dari Icons.jsx ---
-import { 
+import {
     ChartPieIcon,      // Menggantikan ChartBarIcon
     BuildingOfficeIcon, // Menggantikan UsersIcon (untuk 'profil usaha')
     DocumentChartBarIcon // Menggantikan DocumentTextIcon (untuk 'laporan')
-} from './Icons.jsx'; 
+} from './Icons.jsx';
 // --- AKHIR MODIFIKASI ---
 
 
@@ -25,7 +26,7 @@ const StatCard = ({ title, value, icon, unit }) => (
     </div>
 );
 
-export default function AdminDashboardSummary({ supabase }) {
+export default function AdminDashboardSummary() {
     const [stats, setStats] = useState({ total_emissions: 0, total_users: 0, total_reports: 0 });
     const [loading, setLoading] = useState(true);
 
@@ -34,7 +35,7 @@ export default function AdminDashboardSummary({ supabase }) {
             try {
                 setLoading(true);
                 const { data, error } = await supabase.rpc('get_admin_summary_stats');
-                
+
                 if (error) throw error;
                 if (data && data.length > 0) {
                     setStats(data[0]);
@@ -46,7 +47,7 @@ export default function AdminDashboardSummary({ supabase }) {
             }
         };
         fetchStats();
-    }, [supabase]);
+    }, []);
 
     if (loading) {
         return (
@@ -63,22 +64,22 @@ export default function AdminDashboardSummary({ supabase }) {
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <StatCard 
-                title="Total Emisi Keseluruhan" 
+            <StatCard
+                title="Total Emisi Keseluruhan"
                 value={parseFloat(stats.total_emissions || 0).toLocaleString('id-ID', { maximumFractionDigits: 0 })}
                 unit="kg CO2e"
                 // --- MODIFIKASI: Ikon diganti ---
                 icon={<ChartPieIcon />}
             />
-            <StatCard 
-                title="Total Pengguna Terdaftar" 
+            <StatCard
+                title="Total Pengguna Terdaftar"
                 value={stats.total_users || 0}
                 unit="Pengguna"
                 // --- MODIFIKASI: Ikon diganti ---
                 icon={<BuildingOfficeIcon />}
             />
-            <StatCard 
-                title="Total Laporan Dibuat" 
+            <StatCard
+                title="Total Laporan Dibuat"
                 value={stats.total_reports || 0}
                 unit="Laporan"
                 // --- MODIFIKASI: Ikon diganti ---

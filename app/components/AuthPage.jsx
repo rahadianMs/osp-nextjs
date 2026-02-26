@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '../lib/supabase';
 
 const provinces = [
     { id: '11', name: 'ACEH' }, { id: '12', name: 'SUMATERA UTARA' },
@@ -26,13 +28,16 @@ const provinces = [
 ];
 
 
-export default function AuthPage({ supabase, setActivePage, isLogin, setIsLogin }) {
+export default function AuthPage() {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const [isLogin, setIsLogin] = useState(searchParams.get('mode') !== 'register');
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ type: '', content: '' });
     const [isExiting, setIsExiting] = useState(false);
     const [loginEmail, setLoginEmail] = useState('');
     const [loginPassword, setLoginPassword] = useState('');
-    
+
     const [formData, setFormData] = useState({
         business_name: '', nib: '', year_established: '', address_street: '',
         address_province: '', address_regency: '', pic_name: '', pic_position: '',
@@ -84,7 +89,7 @@ export default function AuthPage({ supabase, setActivePage, isLogin, setIsLogin 
                 const { data: urlData } = supabase.storage.from('logos').getPublicUrl(uploadData.path);
                 logoUrl = urlData.publicUrl;
             }
-            
+
             // PERBAIKAN UTAMA: Gunakan 'upsert' untuk membuat atau memperbarui profil
             const { error: profileError } = await supabase
                 .from('profiles')
@@ -117,7 +122,7 @@ export default function AuthPage({ supabase, setActivePage, isLogin, setIsLogin 
             setLoading(false);
         }
     };
-    
+
     const formVariants = {
         hidden: { opacity: 0, x: 50 },
         visible: { opacity: 1, x: 0 },
@@ -127,28 +132,28 @@ export default function AuthPage({ supabase, setActivePage, isLogin, setIsLogin 
     const inputClass = "w-full p-2 border border-slate-300 rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-[#22543d]";
 
     return (
-        <div 
-            id="auth-page" 
+        <div
+            id="auth-page"
             className="flex items-center justify-center min-h-screen bg-cover bg-center px-4"
             style={{ backgroundImage: "url('https://images.unsplash.com/photo-1608387371413-f2566ac510e0?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1170')" }}
         >
-            <motion.div 
+            <motion.div
                 className="relative w-full max-w-2xl"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
             >
-                <motion.div 
-                    layout 
+                <motion.div
+                    layout
                     className="relative bg-white/90 backdrop-blur-sm p-8 md:p-10 rounded-3xl shadow-2xl overflow-hidden"
                 >
-                    <button onClick={() => setActivePage('landing')} className="absolute top-6 left-6 text-slate-500 hover:text-slate-800 font-medium text-sm transition-colors z-10">
+                    <button onClick={() => router.push('/')} className="absolute top-6 left-6 text-slate-500 hover:text-slate-800 font-medium text-sm transition-colors z-10">
                         ← Kembali
                     </button>
 
                     <AnimatePresence mode="wait">
                         {isLogin ? (
                             <motion.div key="login" variants={formVariants} initial="hidden" animate="visible" exit="exit">
-                                <h2 className="text-center text-3xl font-bold mb-2 pt-8" style={{color: colors.brand}}>Selamat Datang</h2>
+                                <h2 className="text-center text-3xl font-bold mb-2 pt-8" style={{ color: colors.brand }}>Selamat Datang</h2>
                                 <p className="text-center text-zinc-500 mb-8">Masuk untuk melanjutkan ke dasbor Anda.</p>
                                 <form onSubmit={handleLogin} className="space-y-5 max-w-sm mx-auto">
                                     <div>
@@ -159,32 +164,32 @@ export default function AuthPage({ supabase, setActivePage, isLogin, setIsLogin 
                                         <label htmlFor="login-password" className="block mb-2 text-sm font-medium text-zinc-600">Password</label>
                                         <input type="password" id="login-password" placeholder="••••••••" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} required className={inputClass} />
                                     </div>
-                                    <button type="submit" disabled={loading} style={{backgroundColor: colors.brand}} className="w-full py-3 text-base font-semibold text-white rounded-lg hover:bg-[#1c4532] transition-colors disabled:bg-slate-400">
+                                    <button type="submit" disabled={loading} style={{ backgroundColor: colors.brand }} className="w-full py-3 text-base font-semibold text-white rounded-lg hover:bg-[#1c4532] transition-colors disabled:bg-slate-400">
                                         {loading ? 'Memproses...' : 'Masuk'}
                                     </button>
                                 </form>
-                                <p className="mt-6 text-sm text-center text-zinc-500">Belum punya akun? <button onClick={() => setIsLogin(false)} className="font-semibold" style={{color: colors.brand}}>Daftar di sini</button></p>
+                                <p className="mt-6 text-sm text-center text-zinc-500">Belum punya akun? <button onClick={() => setIsLogin(false)} className="font-semibold" style={{ color: colors.brand }}>Daftar di sini</button></p>
                             </motion.div>
                         ) : (
-                             <motion.div key="register" variants={formVariants} initial="hidden" animate="visible" exit="exit">
-                                <h2 className="text-center text-3xl font-bold mb-2 pt-8" style={{color: colors.brand}}>Buat Akun Baru</h2>
+                            <motion.div key="register" variants={formVariants} initial="hidden" animate="visible" exit="exit">
+                                <h2 className="text-center text-3xl font-bold mb-2 pt-8" style={{ color: colors.brand }}>Buat Akun Baru</h2>
                                 <p className="text-center text-zinc-500 mb-8">Mulai perjalanan bisnis berkelanjutan Anda.</p>
                                 <form onSubmit={handleRegister} className="space-y-6">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                                        <div className="md:col-span-2 font-bold text-lg border-b pb-2 mb-2" style={{color: colors.brand}}>Informasi Akun</div>
+                                        <div className="md:col-span-2 font-bold text-lg border-b pb-2 mb-2" style={{ color: colors.brand }}>Informasi Akun</div>
                                         <div>
                                             <label className="block mb-1 text-sm font-medium">Email</label>
-                                            <input name="email" type="email" value={formData.email} onChange={handleInputChange} required className={inputClass}/>
+                                            <input name="email" type="email" value={formData.email} onChange={handleInputChange} required className={inputClass} />
                                         </div>
                                         <div>
                                             <label className="block mb-1 text-sm font-medium">Password</label>
-                                            <input name="password" type="password" placeholder="Minimal 6 karakter" value={formData.password} onChange={handleInputChange} required className={inputClass}/>
+                                            <input name="password" type="password" placeholder="Minimal 6 karakter" value={formData.password} onChange={handleInputChange} required className={inputClass} />
                                         </div>
-                                        
-                                        <div className="md:col-span-2 font-bold text-lg border-b pb-2 mt-4 mb-2" style={{color: colors.brand}}>Profil Usaha</div>
+
+                                        <div className="md:col-span-2 font-bold text-lg border-b pb-2 mt-4 mb-2" style={{ color: colors.brand }}>Profil Usaha</div>
                                         <div>
                                             <label className="block mb-1 text-sm font-medium">Nama Usaha</label>
-                                            <input name="business_name" type="text" value={formData.business_name} onChange={handleInputChange} required className={inputClass}/>
+                                            <input name="business_name" type="text" value={formData.business_name} onChange={handleInputChange} required className={inputClass} />
                                         </div>
                                         <div>
                                             <label className="block mb-1 text-sm font-medium">Tipe Usaha</label>
@@ -197,15 +202,15 @@ export default function AuthPage({ supabase, setActivePage, isLogin, setIsLogin 
                                         </div>
                                         <div>
                                             <label className="block mb-1 text-sm font-medium">NIB (Nomor Induk Berusaha)</label>
-                                            <input name="nib" type="text" value={formData.nib} onChange={handleInputChange} required className={inputClass}/>
+                                            <input name="nib" type="text" value={formData.nib} onChange={handleInputChange} required className={inputClass} />
                                         </div>
                                         <div>
                                             <label className="block mb-1 text-sm font-medium">Tahun Berdiri</label>
-                                            <input name="year_established" type="number" placeholder="YYYY" value={formData.year_established} onChange={handleInputChange} required className={inputClass}/>
+                                            <input name="year_established" type="number" placeholder="YYYY" value={formData.year_established} onChange={handleInputChange} required className={inputClass} />
                                         </div>
                                         <div className="md:col-span-2">
                                             <label className="block mb-1 text-sm font-medium">Alamat Lengkap</label>
-                                            <input name="address_street" type="text" placeholder="Nama Jalan, Gedung, No. Rumah" value={formData.address_street} onChange={handleInputChange} required className={inputClass}/>
+                                            <input name="address_street" type="text" placeholder="Nama Jalan, Gedung, No. Rumah" value={formData.address_street} onChange={handleInputChange} required className={inputClass} />
                                         </div>
                                         <div>
                                             <label className="block mb-1 text-sm font-medium">Provinsi</label>
@@ -216,9 +221,9 @@ export default function AuthPage({ supabase, setActivePage, isLogin, setIsLogin 
                                         </div>
                                         <div>
                                             <label className="block mb-1 text-sm font-medium">Kabupaten/Kota</label>
-                                            <input name="address_regency" type="text" value={formData.address_regency} onChange={handleInputChange} required className={inputClass}/>
+                                            <input name="address_regency" type="text" value={formData.address_regency} onChange={handleInputChange} required className={inputClass} />
                                         </div>
-                                         <div>
+                                        <div>
                                             <label className="block mb-1 text-sm font-medium">Skala Usaha</label>
                                             <select name="business_scale" value={formData.business_scale} onChange={handleInputChange} required className={inputClass}>
                                                 <option value="" disabled>Pilih Skala</option>
@@ -230,31 +235,31 @@ export default function AuthPage({ supabase, setActivePage, isLogin, setIsLogin 
                                         </div>
                                         <div className="md:col-span-2">
                                             <label className="block mb-1 text-sm font-medium">Logo Usaha</label>
-                                            <input name="logo_file" type="file" onChange={handleInputChange} accept="image/*" className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"/>
+                                            <input name="logo_file" type="file" onChange={handleInputChange} accept="image/*" className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100" />
                                         </div>
 
-                                        <div className="md:col-span-2 font-bold text-lg border-b pb-2 mt-4 mb-2" style={{color: colors.brand}}>Kontak Utama (PIC)</div>
+                                        <div className="md:col-span-2 font-bold text-lg border-b pb-2 mt-4 mb-2" style={{ color: colors.brand }}>Kontak Utama (PIC)</div>
                                         <div>
                                             <label className="block mb-1 text-sm font-medium">Nama PIC</label>
-                                            <input name="pic_name" type="text" value={formData.pic_name} onChange={handleInputChange} required className={inputClass}/>
+                                            <input name="pic_name" type="text" value={formData.pic_name} onChange={handleInputChange} required className={inputClass} />
                                         </div>
                                         <div>
                                             <label className="block mb-1 text-sm font-medium">Jabatan</label>
-                                            <input name="pic_position" type="text" value={formData.pic_position} onChange={handleInputChange} required className={inputClass}/>
+                                            <input name="pic_position" type="text" value={formData.pic_position} onChange={handleInputChange} required className={inputClass} />
                                         </div>
                                         <div>
                                             <label className="block mb-1 text-sm font-medium">Email PIC</label>
-                                            <input name="pic_email" type="email" value={formData.pic_email} onChange={handleInputChange} required className={inputClass}/>
+                                            <input name="pic_email" type="email" value={formData.pic_email} onChange={handleInputChange} required className={inputClass} />
                                         </div>
                                         <div>
                                             <label className="block mb-1 text-sm font-medium">Nomor Telepon</label>
-                                            <input name="pic_phone" type="tel" value={formData.pic_phone} onChange={handleInputChange} required className={inputClass}/>
+                                            <input name="pic_phone" type="tel" value={formData.pic_phone} onChange={handleInputChange} required className={inputClass} />
                                         </div>
-                                        
-                                         <div className="md:col-span-2 font-bold text-lg border-b pb-2 mt-4 mb-2" style={{color: colors.brand}}>Informasi Tambahan (Opsional)</div>
+
+                                        <div className="md:col-span-2 font-bold text-lg border-b pb-2 mt-4 mb-2" style={{ color: colors.brand }}>Informasi Tambahan (Opsional)</div>
                                         <div className="md:col-span-2">
                                             <label className="block mb-1 text-sm font-medium">Website / Media Sosial</label>
-                                            <input name="website" type="text" placeholder="https://" value={formData.website} onChange={handleInputChange} className={inputClass}/>
+                                            <input name="website" type="text" placeholder="https://" value={formData.website} onChange={handleInputChange} className={inputClass} />
                                         </div>
                                         <div className="md:col-span-2">
                                             <label className="block mb-1 text-sm font-medium">Sertifikasi Keberlanjutan yang Dimiliki</label>
@@ -262,15 +267,15 @@ export default function AuthPage({ supabase, setActivePage, isLogin, setIsLogin 
                                         </div>
                                     </div>
 
-                                    <button type="submit" disabled={loading} style={{backgroundColor: colors.brand}} className="w-full py-3 text-base font-semibold text-white rounded-lg hover:bg-[#1c4532] transition-colors disabled:bg-slate-400">
+                                    <button type="submit" disabled={loading} style={{ backgroundColor: colors.brand }} className="w-full py-3 text-base font-semibold text-white rounded-lg hover:bg-[#1c4532] transition-colors disabled:bg-slate-400">
                                         {loading ? 'Mendaftarkan...' : 'Selesaikan Pendaftaran'}
                                     </button>
                                 </form>
-                                <p className="mt-6 text-sm text-center text-zinc-500">Sudah punya akun? <button onClick={() => setIsLogin(true)} className="font-semibold" style={{color: colors.brand}}>Masuk di sini</button></p>
+                                <p className="mt-6 text-sm text-center text-zinc-500">Sudah punya akun? <button onClick={() => setIsLogin(true)} className="font-semibold" style={{ color: colors.brand }}>Masuk di sini</button></p>
                             </motion.div>
                         )}
                     </AnimatePresence>
-                    
+
                     {message.content && (
                         <p className={`mt-6 text-sm text-center p-3 rounded-lg ${message.type === 'error' ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
                             {message.content}

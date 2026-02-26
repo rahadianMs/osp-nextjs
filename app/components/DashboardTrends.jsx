@@ -1,5 +1,6 @@
 "use client";
 
+import { supabase } from '../lib/supabase';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -101,7 +102,7 @@ const LineChart = ({ data, zoomCategory, maxValue }) => {
     );
 };
 
-export default function DashboardTrends({ supabase, user, dataVersion }) {
+export default function DashboardTrends({ user, dataVersion }) {
     const [monthlyData, setMonthlyData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -142,7 +143,7 @@ export default function DashboardTrends({ supabase, user, dataVersion }) {
         };
 
         fetchTrendData();
-    }, [user, supabase, dataVersion]);
+    }, [user, dataVersion]);
 
     const handleLegendClick = (key) => {
         setZoomCategory(prevZoom => (prevZoom === key ? null : key));

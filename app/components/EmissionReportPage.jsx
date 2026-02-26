@@ -1,23 +1,24 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 import CarbonCalculator from './CarbonCalculator';
 import EmissionHistory from './EmissionHistory';
-import ReportDetailModal from './ReportDetailModal'; // Impor komponen modal baru
+import ReportDetailModal from './ReportDetailModal';
 import { AnimatePresence } from 'framer-motion';
 
-export default function EmissionReportPage({ supabase, user, onDataUpdate }) {
+export default function EmissionReportPage({ user, onDataUpdate }) {
     const [entries, setEntries] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    
+
     // State baru untuk mengelola modal detail
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [selectedEntry, setSelectedEntry] = useState(null);
 
     // State untuk modal konfirmasi hapus
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    
+
     useEffect(() => {
         const fetchEntries = async () => {
             if (!user) return;
@@ -38,7 +39,7 @@ export default function EmissionReportPage({ supabase, user, onDataUpdate }) {
             setLoading(false);
         };
         fetchEntries();
-    }, [user, supabase, onDataUpdate]);
+    }, [user, onDataUpdate]);
 
     // --- Fungsi baru untuk mengelola modal detail ---
     const handleReportClick = (entry) => {
@@ -58,7 +59,7 @@ export default function EmissionReportPage({ supabase, user, onDataUpdate }) {
         setIsDetailModalOpen(false);
         setShowDeleteConfirm(true);
     };
-    
+
     const handleCancelDelete = () => {
         setShowDeleteConfirm(false);
         setSelectedEntry(null); // Clear selected entry
@@ -73,7 +74,7 @@ export default function EmissionReportPage({ supabase, user, onDataUpdate }) {
         if (error) {
             setError(`Gagal menghapus laporan: ${error.message}`);
         } else {
-            if (onDataUpdate) onDataUpdate(); 
+            if (onDataUpdate) onDataUpdate();
         }
         handleCancelDelete(); // Tutup modal konfirmasi
     };
@@ -81,11 +82,10 @@ export default function EmissionReportPage({ supabase, user, onDataUpdate }) {
     return (
         <div className="space-y-10">
             <CarbonCalculator
-                supabase={supabase}
                 user={user}
                 onReportSubmitted={onDataUpdate}
             />
-            
+
             <EmissionHistory
                 entries={entries}
                 loading={loading}
@@ -96,7 +96,7 @@ export default function EmissionReportPage({ supabase, user, onDataUpdate }) {
             {/* Render Modal Detail dengan Animasi */}
             <AnimatePresence>
                 {isDetailModalOpen && selectedEntry && (
-                    <ReportDetailModal 
+                    <ReportDetailModal
                         entry={selectedEntry}
                         onClose={handleCloseModal}
                         onDelete={handleDeleteRequest} // Teruskan fungsi untuk meminta hapus
@@ -111,7 +111,7 @@ export default function EmissionReportPage({ supabase, user, onDataUpdate }) {
                         <h2 className="text-xl font-bold mb-4">Konfirmasi Hapus</h2>
                         <p className="text-slate-600 mb-6">
                             Apakah Anda yakin ingin menghapus laporan untuk
-                            <span className="font-semibold"> {selectedEntry.calculation_title}?</span> 
+                            <span className="font-semibold"> {selectedEntry.calculation_title}?</span>
                             Tindakan ini tidak dapat dibatalkan.
                         </p>
                         <div className="flex justify-end gap-4">

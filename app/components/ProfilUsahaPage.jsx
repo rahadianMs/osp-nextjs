@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { HandshakeIcon } from './Icons'; 
+import Link from 'next/link';
+import { supabase } from '../lib/supabase';
+import { HandshakeIcon } from './Icons';
 
 // Ikon sederhana untuk informasi
 const InfoIcon = ({ icon, label, value }) => (
@@ -15,7 +17,7 @@ const InfoIcon = ({ icon, label, value }) => (
 );
 
 // Komponen untuk Halaman Profil Usaha
-export default function ProfilUsahaPage({ user, supabase, setActiveDashboardPage }) {
+export default function ProfilUsahaPage({ user }) {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -33,9 +35,9 @@ export default function ProfilUsahaPage({ user, supabase, setActiveDashboardPage
                     .select('*')
                     .eq('id', user.id)
                     .single();
-                
+
                 if (dbError && dbError.code !== 'PGRST116') throw dbError;
-                setProfile(data); 
+                setProfile(data);
             } catch (err) {
                 setError("Gagal memuat data profil.");
             } finally {
@@ -43,7 +45,7 @@ export default function ProfilUsahaPage({ user, supabase, setActiveDashboardPage
             }
         };
         fetchProfile();
-    }, [user, supabase]);
+    }, [user]);
 
     if (loading) {
         return <div className="text-center">Memuat profil usaha...</div>;
@@ -58,28 +60,28 @@ export default function ProfilUsahaPage({ user, supabase, setActiveDashboardPage
             <div className="text-center p-6 bg-white rounded-xl shadow-md border">
                 <h2 className="text-xl font-semibold">Profil Usaha Belum Lengkap</h2>
                 <p className="text-slate-600 mt-2">Data profil Anda tidak ditemukan.</p>
-                <button 
-                    onClick={() => setActiveDashboardPage('akun')} 
-                    className="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
+                <Link
+                    href="/dashboard/akun"
+                    className="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 inline-block">
                     Lengkapi Profil di Halaman Akun
-                </button>
+                </Link>
             </div>
         );
     }
-    
+
     return (
         <div className="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-md border relative">
-            <button 
-                onClick={() => setActiveDashboardPage('akun')} 
+            <Link
+                href="/dashboard/akun"
                 className="absolute top-4 right-4 p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600"
                 title="Edit Profil"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" /></svg>
-            </button>
+            </Link>
 
             <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
-                <img 
-                    src={profile.logo_url || 'https://via.placeholder.com/150'} 
+                <img
+                    src={profile.logo_url || 'https://via.placeholder.com/150'}
                     alt={`Logo ${profile.business_name}`}
                     className="w-40 h-40 rounded-full object-contain border-4 border-slate-200 bg-slate-50"
                 />
@@ -87,7 +89,7 @@ export default function ProfilUsahaPage({ user, supabase, setActiveDashboardPage
                     <p className="text-sm font-semibold text-emerald-600">{profile.business_type || "Tipe Usaha Belum Diatur"}</p>
                     <h1 className="text-4xl font-bold text-slate-800 mt-1">{profile.business_name || "Nama Usaha Belum Diatur"}</h1>
                     <p className="text-slate-500 mt-2">
-                        {profile.address_regency && profile.address_province 
+                        {profile.address_regency && profile.address_province
                             ? `${profile.address_regency}, ${profile.address_province}`
                             : "Alamat belum diatur"
                         }
@@ -95,13 +97,13 @@ export default function ProfilUsahaPage({ user, supabase, setActiveDashboardPage
                     {profile.website && <a href={profile.website} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:underline mt-2 inline-block">{profile.website}</a>}
                 </div>
             </div>
-            
+
             <div className="border-t my-8"></div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-6">
                     <h2 className="text-xl font-bold text-slate-700 border-b pb-2">Informasi Usaha</h2>
-                     <InfoIcon label="NIB" value={profile.nib} icon={<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" /></svg>} />
+                    <InfoIcon label="NIB" value={profile.nib} icon={<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" /></svg>} />
                     <InfoIcon label="Tahun Berdiri" value={profile.year_established} icon={<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0h18" /></svg>} />
                     {/* --- PERBAIKAN IKON DI SINI --- */}
                     <InfoIcon label="Skala Usaha" value={profile.business_scale} icon={<HandshakeIcon />} />

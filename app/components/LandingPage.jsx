@@ -2,80 +2,48 @@
 
 import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { BookOpenIcon, DashboardIcon, HandshakeIcon, IncentiveIcon, InstagramIcon, LinkedinIcon, FacebookIcon } from './Icons.jsx';
 
 // Dynamic import untuk komponen peta
-const EmissionMap = dynamic(() => import('./EmissionMap'), { 
+const EmissionMap = dynamic(() => import('./EmissionMap'), {
     ssr: false,
     loading: () => <div className="h-[500px] bg-zinc-200 rounded-lg animate-pulse flex items-center justify-center">Memuat Peta...</div>
 });
 
 // Import LandingPageMap baru
-const LandingPageMap = dynamic(() => import('./LandingPageMap'), { 
+const LandingPageMap = dynamic(() => import('./LandingPageMap'), {
     ssr: false,
     loading: () => <div className="h-[500px] bg-zinc-200 rounded-lg animate-pulse flex items-center justify-center">Memuat Peta...</div>
 });
 
-function FeatureCard({ icon, title, description, delay }) {
-    const cardRef = useRef(null);
-    const [style, setStyle] = useState({});
-
-    const scrollInTransition = `opacity 0.6s ease-out ${delay}s, transform 0.6s ease-out ${delay}s`;
-
-    const handleMouseMove = (e) => {
-        if (!cardRef.current) return;
-
-        const card = cardRef.current;
-        const { width, height, top, left } = card.getBoundingClientRect();
-        
-        const mouseX = e.clientX - left;
-        const mouseY = e.clientY - top;
-
-        const percX = (mouseX / width) - 0.5;
-        const percY = (mouseY / height) - 0.5;
-
-        const maxRotation = 8; 
-        const rotateY = percX * maxRotation;
-        const rotateX = -1 * percY * maxRotation; 
-
-        setStyle({
-            transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05) translateY(-4px)`,
-            transition: `opacity 0.6s ease-out ${delay}s, transform 0.1s ease-out 0s`
-        });
-    };
-
-    const handleMouseLeave = () => {
-        setStyle({
-            transform: 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1) translateY(0px)',
-            transition: `opacity 0.6s ease-out ${delay}s, transform 0.5s ease-in-out 0s`
-        });
-    };
-
+function FeatureCard({ icon, title, description, index }) {
     return (
-        <div 
-            ref={cardRef}
-            onMouseMove={handleMouseMove}
-            onMouseLeave={handleMouseLeave}
-            style={{ 
-                transition: scrollInTransition,
-                ...style 
-            }}
-            className="bg-white p-8 rounded-xl shadow-sm text-left border hover:shadow-lg transition-all duration-300 scroll-animate"
+        <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: 0.5, delay: index * 0.12, ease: 'easeOut' }}
+            whileHover={{ y: -6, scale: 1.03 }}
+            className="bg-white p-8 rounded-xl shadow-sm text-left border hover:shadow-lg transition-shadow duration-300"
         >
-            <div style={{color: '#22543d'}} className="mb-4">{icon}</div>
-            <h3 className={`text-xl font-bold mb-2 text-zinc-800`}>{title}</h3>
-            <p className={`text-zinc-600 leading-relaxed`}>{description}</p>
-        </div>
+            <div style={{ color: '#22543d' }} className="mb-4">{icon}</div>
+            <h3 className="text-xl font-bold mb-2 text-zinc-800">{title}</h3>
+            <p className="text-zinc-600 leading-relaxed">{description}</p>
+        </motion.div>
     );
 }
 
-export default function LandingPage({ setActivePage, setIsLogin }) {
+export default function LandingPage() {
+    const router = useRouter();
     const [isScrolled, setIsScrolled] = useState(false);
 
-    // URL Logo
-    const logoKemenparPutih = "https://bob.kemenparekraf.go.id/wp-content/uploads/2025/02/Kementerian-Pariwisata-RI_Bahasa-Indonesia-Putih.png";
-    const logoKemenparBerwarna = "https://upload.wikimedia.org/wikipedia/commons/f/fc/Lambang_Kementerian_Pariwisata_Republik_Indonesia_%282024%29.png";
-    const logoWiseSteps = "https://github.com/rahadianMs/gstc-fix/blob/main/asset/WSG_Masterfiles_Logo-02-1024x264.png?raw=true";
+    // Logo lokal
+    const logoWiseSteps = "/WSG_Masterfiles_Logo-02-1024x264 (1).png";
+    const logoKemenpar = "/Kementerian-Pariwisata-RI_Bahasa-Indonesia-Putih.png";
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -85,30 +53,8 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    useEffect(() => {
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('is-visible');
-                    observer.unobserve(entry.target); 
-                }
-            });
-        }, {
-            rootMargin: '0px',
-            threshold: 0.1 
-        });
-
-        const elements = document.querySelectorAll('.scroll-animate');
-        elements.forEach(el => observer.observe(el));
-
-        return () => {
-            elements.forEach(el => observer.unobserve(el));
-        };
-    }, []); 
-
     const handleGoToAuth = (showLogin) => {
-        setIsLogin(showLogin);
-        setActivePage('auth');
+        router.push(showLogin ? '/auth?mode=login' : '/auth?mode=register');
     };
 
     // Palet Warna Profesional Baru
@@ -136,7 +82,7 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
         { name: "Ekosistem Hotels", url: "https://images.glints.com/unsafe/glints-dashboard.oss-ap-southeast-1.aliyuncs.com/company-logo/f983fb3ffcdf2510d5529deafaccfc27.png", heightClass: "h-20" },
     ];
 
-     const scopeCards = [
+    const scopeCards = [
         { title: "Akomodasi", imageUrl: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?fm=jpg&q=60&w=3000&ixlib-rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8YmFsaSUyMGhvdGVsfGVufDB8fDB8fHww" },
         { title: "Operator Jasa Perjalanan", imageUrl: "https://images.unsplash.com/photo-1616895727759-dd84a2690433?q=80&w=1170&auto=format&fit=crop&ixlib-rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" },
         { title: "Pengelola Atraksi Wisata", imageUrl: "https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?q=80&w=1171&auto=format&fit=crop&ixlib-rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" }
@@ -157,6 +103,10 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
                 }
                 .logo-white {
                     filter: brightness(0) invert(1) grayscale(1);
+                }
+                /* Kemenpar white logo → green when scrolled */
+                .logo-green {
+                    filter: brightness(0) saturate(100%) invert(24%) sepia(30%) saturate(1200%) hue-rotate(100deg) brightness(0.7);
                 }
 
                 /* === ANIMASI PAGE LOAD (HANYA UNTUK HERO) === */
@@ -182,19 +132,6 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
                     animation-duration: 0.7s;
                     animation-timing-function: ease-out;
                 }
-                
-                /* === ANIMASI SCROLL DINAMIS (UNTUK KONTEN DI BAWAH) === */
-                .scroll-animate {
-                    opacity: 0;
-                    transform: translateY(20px);
-                    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-                    will-change: opacity, transform; 
-                }
-                
-                .scroll-animate.is-visible {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
 
                 /* Utility classes untuk delay */
                 .delay-100 { animation-delay: 0.1s; transition-delay: 0.1s; }
@@ -203,34 +140,59 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
                 .delay-500 { animation-delay: 0.5s; transition-delay: 0.5s; }
             `}</style>
             <div id="landing-page" className={`bg-white text-${colors.primary}`}>
-                
+
                 {/* MODIFIKASI Z-INDEX:
                     Mengubah 'z-50' menjadi 'z-[9999]' agar Header selalu di atas Peta (Leaflet z-index 400+) 
                 */}
-                <header className={`fixed top-0 left-0 z-[9999] w-full px-[5%] py-4 transition-all duration-300 ${isScrolled ? 'bg-white shadow-md' : 'bg-transparent'}`}>
+                <header className={`fixed top-0 left-0 z-[9999] w-full px-[5%] py-4 transition-all duration-300 ${isScrolled ? 'shadow-lg' : 'bg-transparent'}`} style={isScrolled ? { backgroundColor: '#22543d' } : {}}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                            <img 
-                                src={logoWiseSteps} 
-                                alt="Wise Steps Consulting Logo" 
-                                className={`h-8 md:h-9 transition-all duration-300 ${!isScrolled && 'logo-white'}`} 
+                            <img
+                                src={logoWiseSteps}
+                                alt="Wise Steps Consulting Logo"
+                                className="h-8 md:h-9 logo-white"
                             />
-                            <img 
-                                src={isScrolled ? logoKemenparBerwarna : logoKemenparPutih} 
-                                alt="Kemenparekraf Logo" 
-                                className="h-9 md:h-10" 
+                            <img
+                                src={logoKemenpar}
+                                alt="Kemenparekraf Logo"
+                                className="h-9 md:h-10"
                             />
                         </div>
                         <nav className="hidden md:flex items-center gap-8">
-                            <a href="#home" className={`font-medium transition-colors duration-200 ${isScrolled ? `text-${colors.secondary} hover:text-[${colors.brand}]` : 'text-white hover:opacity-80'}`}>Home</a>
-                            <a href="#about" className={`font-medium transition-colors duration-200 ${isScrolled ? `text-${colors.secondary} hover:text-[${colors.brand}]` : 'text-white hover:opacity-80'}`}>Tentang</a>
-                            <a href="#features" className={`font-medium transition-colors duration-200 ${isScrolled ? `text-${colors.secondary} hover:text-[${colors.brand}]` : 'text-white hover:opacity-80'}`}>Fitur</a>
-                            <a href="#map" className={`font-medium transition-colors duration-200 ${isScrolled ? `text-${colors.secondary} hover:text-[${colors.brand}]` : 'text-white hover:opacity-80'}`}>Peta</a>
-                            <button onClick={() => handleGoToAuth(true)} className={`px-5 py-2 font-semibold border-2 rounded-lg transition-all duration-300 ${isScrolled ? `text-[${colors.brand}] border-[${colors.brand}] hover:bg-green-50` : 'text-white border-white hover:bg-white/10'}`}>
+                            <a href="#home" className="font-medium text-white hover:opacity-80 transition-colors duration-200">Home</a>
+                            <a href="#about" className="font-medium text-white hover:opacity-80 transition-colors duration-200">Tentang</a>
+                            <a href="#features" className="font-medium text-white hover:opacity-80 transition-colors duration-200">Fitur</a>
+                            <a href="#map" className="font-medium text-white hover:opacity-80 transition-colors duration-200">Peta</a>
+                            <button onClick={() => handleGoToAuth(true)} className="px-5 py-2 font-semibold text-white border-2 border-white rounded-lg hover:bg-white/10 transition-all duration-300">
                                 Login
                             </button>
                         </nav>
+                        {/* Mobile hamburger */}
+                        <button
+                            className="md:hidden p-2 rounded-md"
+                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                            aria-label="Toggle menu"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                {mobileMenuOpen
+                                    ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                    : <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                                }
+                            </svg>
+                        </button>
                     </div>
+                    {/* Mobile nav menu */}
+                    {mobileMenuOpen && (
+                        <nav className="md:hidden mt-4 pb-4 flex flex-col gap-3 border-t border-white/20 pt-4">
+                            <a href="#home" onClick={() => setMobileMenuOpen(false)} className="font-medium text-white">Home</a>
+                            <a href="#about" onClick={() => setMobileMenuOpen(false)} className="font-medium text-white">Tentang</a>
+                            <a href="#features" onClick={() => setMobileMenuOpen(false)} className="font-medium text-white">Fitur</a>
+                            <a href="#map" onClick={() => setMobileMenuOpen(false)} className="font-medium text-white">Peta</a>
+                            <button onClick={() => { handleGoToAuth(true); setMobileMenuOpen(false); }} className="w-full py-2 font-semibold text-white border-2 border-white rounded-lg">
+                                Login
+                            </button>
+                        </nav>
+                    )}
                 </header>
 
                 <main id="home" className="relative flex items-center min-h-screen px-[5%] py-24 text-white bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1608387371413-f2566ac510e0?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1170')" }}>
@@ -247,13 +209,30 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
                 <section id="about" className="py-24 px-[5%]">
                     <div className="container mx-auto max-w-6xl">
                         <div className="text-center mb-16">
-                             <h2 className={`text-4xl md:text-5xl font-bold text-${colors.primary} scroll-animate`}>Tentang Wonderful Indonesia Decarbonization Initiative Hub</h2>
+                            <motion.h2
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.6 }}
+                                className={`text-4xl md:text-5xl font-bold text-${colors.primary}`}
+                            >Tentang Wonderful Indonesia Decarbonization Initiative Hub</motion.h2>
                         </div>
                         <div className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center">
-                            <div className="scroll-animate delay-200">
+                            <motion.div
+                                initial={{ opacity: 0, x: -40 }}
+                                whileInView={{ opacity: 1, x: 0 }}
+                                viewport={{ once: true, margin: '-50px' }}
+                                transition={{ duration: 0.7, ease: 'easeOut' }}
+                            >
                                 <img src="https://www.aman.com/sites/default/files/2021-03/Aman_Amanjiwo_Gallery_1.jpg" alt="Amanjiwo Resort" className="rounded-2xl shadow-lg w-full object-cover aspect-[4/3]" />
-                            </div>
-                            <div className="space-y-6 scroll-animate delay-300">
+                            </motion.div>
+                            <motion.div
+                                initial={{ opacity: 0, x: 40 }}
+                                whileInView={{ opacity: 1, x: 0 }}
+                                viewport={{ once: true, margin: '-50px' }}
+                                transition={{ duration: 0.7, delay: 0.15, ease: 'easeOut' }}
+                                className="space-y-6"
+                            >
                                 <div>
                                     <h3 className={`text-2xl font-bold text-${colors.primary} mb-3`}>Pariwisata Indonesia Menuju Net Zero Emissions</h3>
                                     <p className={`text-${colors.secondary} leading-relaxed text-justify`}>Program ini adalah inisiatif Kementerian Pariwisata Indonesia untuk mewujudkan komitmen sektor dalam Glasgow Declaration, yakni menuju Net Zero Emissions di 2060. Melalui program ini, Kementerian Pariwisata Indonesia berkomitmen untuk berkolaborasi bersama pelaku usaha pariwisata dalam mengukur dan mengurangi jejak karbon di sektor pariwisata.</p>
@@ -262,39 +241,59 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
                                     <h3 className={`text-2xl font-bold text-${colors.primary} mb-3`}>Berkenalan dengan WIDI</h3>
                                     <p className={`text-${colors.secondary} leading-relaxed text-justify`}>Wonderful Indonesia Decarbonization Initiative Hub "WIDI" adalah sebuah platform nasional yang dikembangkan untuk mendukung transformasi pariwisata Indonesia dalam mengurangi jejak karbon. WIDI berfungsi sebagai pusat data, wadah pengembangan upaya rendah emisi, dan kolaborasi lintas aktor dalam mengukur, melaporkan, serta mengurangi emisi karbon di sektor pariwisata.</p>
                                 </div>
-                            </div>
+                            </motion.div>
                         </div>
                         <div className="mt-24">
-                             <h3 className={`text-3xl font-bold text-${colors.primary} mb-12 text-center scroll-animate`}>Lingkup Usaha</h3>
-                             <div className="grid md:grid-cols-3 gap-8">
+                            <motion.h3
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.5 }}
+                                className={`text-3xl font-bold text-${colors.primary} mb-12 text-center`}
+                            >Lingkup Usaha</motion.h3>
+                            <div className="grid md:grid-cols-3 gap-8">
                                 {scopeCards.map((card, index) => (
-                                    <div 
-                                        key={card.title} 
-                                        className="relative rounded-xl overflow-hidden shadow-lg h-80 group scroll-animate"
-                                        style={{ transitionDelay: `${0.2 + index * 0.15}s` }} 
+                                    <motion.div
+                                        key={card.title}
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        whileInView={{ opacity: 1, scale: 1 }}
+                                        viewport={{ once: true, margin: '-30px' }}
+                                        transition={{ duration: 0.5, delay: index * 0.12 }}
+                                        className="relative rounded-xl overflow-hidden shadow-lg h-80 group"
                                     >
                                         <img src={card.imageUrl} alt={card.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
                                         <div className="absolute bottom-0 left-0 p-6">
                                             <h4 className="text-2xl font-bold text-white">{card.title}</h4>
                                         </div>
-                                    </div>
+                                    </motion.div>
                                 ))}
-                             </div>
+                            </div>
                         </div>
                     </div>
                 </section>
-                
+
                 <section id="map" className="py-24 px-[5%] bg-white">
                     <div className="container mx-auto max-w-6xl">
                         <div className="text-center mb-16">
-                            <h2 className={`text-4xl md:text-5xl font-bold text-${colors.primary} scroll-animate`}>Peta Sebaran Emisi Karbon</h2>
-                            <p className={`text-lg text-${colors.secondary} mt-4 max-w-3xl mx-auto scroll-animate delay-200`}>Visualisasi data emisi CO2 dari sektor pariwisata di berbagai provinsi di Indonesia.</p>
+                            <motion.h2
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.6 }}
+                                className={`text-4xl md:text-5xl font-bold text-${colors.primary}`}
+                            >Peta Sebaran Emisi Karbon</motion.h2>
+                            <motion.p
+                                initial={{ opacity: 0, y: 15 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.5, delay: 0.15 }}
+                                className={`text-lg text-${colors.secondary} mt-4 max-w-3xl mx-auto`}
+                            >Visualisasi data emisi CO2 dari sektor pariwisata di berbagai provinsi di Indonesia.</motion.p>
                         </div>
-                        
-                        {/* MENGGUNAKAN KOMPONEN PETA BARU */}
+
                         <LandingPageMap />
-                        
+
                         <div className="mt-4 text-center text-sm text-slate-500 italic">
                             Sumber: Sipongi Kemenhut 2024
                         </div>
@@ -303,31 +302,56 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
 
                 <section id="features" className="py-24 px-[5%] bg-zinc-50">
                     <div className="container mx-auto max-w-6xl text-center">
-                        <span className="font-semibold scroll-animate" style={{color: colors.brand}}>Fitur Utama</span>
-                        <h2 className={`text-4xl font-bold text-${colors.primary} mt-2 mb-16 scroll-animate delay-100`}>Semua yang Anda Butuhkan untuk Transformasi Hijau</h2>
+                        <motion.span
+                            initial={{ opacity: 0 }}
+                            whileInView={{ opacity: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5 }}
+                            className="font-semibold"
+                            style={{ color: colors.brand }}
+                        >Fitur Utama</motion.span>
+                        <motion.h2
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.6, delay: 0.1 }}
+                            className={`text-4xl font-bold text-${colors.primary} mt-2 mb-16`}
+                        >Semua yang Anda Butuhkan untuk Transformasi Hijau</motion.h2>
                         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
                             {featureCards.map((card, index) => (
-                                <FeatureCard 
-                                    key={card.title} 
+                                <FeatureCard
+                                    key={card.title}
                                     icon={card.icon}
                                     title={card.title}
                                     description={card.description}
-                                    delay={0.1 + index * 0.15} 
+                                    index={index}
                                 />
                             ))}
                         </div>
                     </div>
                 </section>
-                
+
                 <section id="participant-list-section" className="relative py-24 bg-center bg-cover" style={{ backgroundImage: "url('https://myoona.id/content/dam/oona/aem-images/blog/liburan-labuan-bajo-risiko-perjalanan-domestik-banner.webp')" }}>
                     <div className="absolute inset-0 bg-black opacity-70"></div>
                     <div className="relative z-10 container mx-auto text-center">
-                        <h2 className="text-4xl font-bold text-white mb-4 scroll-animate">Didukung dan Diikuti Oleh</h2>
-                        <p className="text-white/80 max-w-2xl mx-auto mb-16 scroll-animate delay-200">Bergabunglah dengan jaringan bisnis dan inisiatif pariwisata yang telah berkomitmen pada keberlanjutan.</p>
+                        <motion.h2
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.6 }}
+                            className="text-4xl font-bold text-white mb-4"
+                        >Didukung dan Diikuti Oleh</motion.h2>
+                        <motion.p
+                            initial={{ opacity: 0, y: 15 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5, delay: 0.15 }}
+                            className="text-white/80 max-w-2xl mx-auto mb-16"
+                        >Bergabunglah dengan jaringan bisnis dan inisiatif pariwisata yang telah berkomitmen pada keberlanjutan.</motion.p>
                         <div className="relative w-full overflow-hidden">
                             <div className="flex animate-marquee">
                                 {[...participantLogos, ...participantLogos].map((logo, index) => (
-                                    <div key={index} className="flex-shrink-0 w-64 flex justify-center items-center mx-4"> 
+                                    <div key={index} className="flex-shrink-0 w-64 flex justify-center items-center mx-4">
                                         <img src={logo.url} alt={logo.name} className={`${logo.heightClass} object-contain filter grayscale brightness-0 invert hover:grayscale-0 hover:brightness-100 hover:invert-0 transition-all duration-300`} />
                                     </div>
                                 ))}
@@ -337,25 +361,31 @@ export default function LandingPage({ setActivePage, setIsLogin }) {
                 </section>
 
                 <section id="glasgow-portal" className="py-20 px-[5%] bg-zinc-100">
-                    <div className="container mx-auto max-w-4xl bg-white p-10 rounded-2xl shadow-lg border flex flex-col md:flex-row items-center gap-8 text-center md:text-left scroll-animate">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6 }}
+                        className={`container mx-auto max-w-4xl bg-white p-10 rounded-2xl shadow-lg border flex flex-col md:flex-row items-center gap-8 text-center md:text-left`}
+                    >
                         <div className="flex-shrink-0">
                             <img src="https://kindlejourneys.com/files/Recurso-2-e1635510867617.png" alt="Glasgow Declaration Logo" className="h-24" />
                         </div>
                         <div>
                             <h3 className={`text-2xl font-bold text-${colors.primary}`}>Bagian dari Komitmen Global</h3>
                             <p className={`text-${colors.secondary} mt-2 mb-4`}>Program ini merupakan bagian dari komitmen Indonesia dalam 'Deklarasi Glasgow tentang Aksi Iklim di Sektor Pariwisata'. Pelajari lebih lanjut tentang inisiatif global ini.</p>
-                            <a href="https://www.glasgowdeclaration.org/" target="_blank" rel="noopener noreferrer" style={{backgroundColor: colors.brand}} className={`inline-block font-semibold text-white rounded-lg px-6 py-3 hover:bg-[${colors.brandHover}] transition-colors`}>
+                            <a href="https://www.glasgowdeclaration.org/" target="_blank" rel="noopener noreferrer" style={{ backgroundColor: colors.brand }} className={`inline-block font-semibold text-white rounded-lg px-6 py-3 hover:bg-[${colors.brandHover}] transition-colors`}>
                                 Kunjungi Portal Glasgow Declaration
                             </a>
                         </div>
-                    </div>
+                    </motion.div>
                 </section>
 
-                <footer style={{backgroundColor: colors.brand}} className="text-white/80 py-16 px-[5%]">
+                <footer style={{ backgroundColor: colors.brand }} className="text-white/80 py-16 px-[5%]">
                     <div className="container mx-auto max-w-6xl">
-                         <div className="grid md:grid-cols-12 gap-12">
+                        <div className="grid md:grid-cols-12 gap-12">
                             <div className="md:col-span-4">
-                                <img src={logoKemenparPutih} alt="Logo Kemenpar" className="h-16 mb-4"/>
+                                <img src={logoKemenpar} alt="Logo Kemenpar" className="h-16 mb-4" />
                                 <h3 className="text-white text-xl font-semibold mb-2">Kementerian Pariwisata Republik Indonesia</h3>
                                 <p className="text-sm max-w-sm">Jl. Medan Merdeka Barat No. 17, RT/RW 02/03, Gambir, Daerah Khusus Ibukota Jakarta 10110, Indonesia.</p>
                             </div>

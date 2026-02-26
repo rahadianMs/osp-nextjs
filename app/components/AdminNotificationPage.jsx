@@ -1,9 +1,11 @@
 "use client";
 
+import { supabase } from '../lib/supabase';
 import React, { useState, useEffect } from 'react';
+import { useAuth } from './AuthProvider';
 
 // --- MODIFIKASI: Komponen Riwayat Pesan dengan Lookup Manual ---
-const MessageHistory = ({ supabase }) => {
+const MessageHistory = () => {
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshKey, setRefreshKey] = useState(0);
@@ -28,7 +30,7 @@ const MessageHistory = ({ supabase }) => {
             setLoadingProfiles(false);
         };
         fetchProfiles();
-    }, [supabase]);
+    }, []);
 
     // Fungsi fetch riwayat (MODIFIKASI: Tanpa join)
     const fetchHistory = async () => {
@@ -60,8 +62,8 @@ const MessageHistory = ({ supabase }) => {
     // Trigger fetch saat profile siap ATAU saat refresh
     useEffect(() => {
         fetchHistory();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [supabase, refreshKey, loadingProfiles, profileMap]); // Tambahkan dependency
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [refreshKey, loadingProfiles, profileMap]); // Tambahkan dependency
 
     // Fungsi Hapus (Admin) (tetap sama)
     const handleDelete = async (id) => {
@@ -116,7 +118,8 @@ const MessageHistory = ({ supabase }) => {
 
 
 // Komponen utama (Form Kirim Pesan - Tidak berubah signifikan)
-export default function AdminNotificationPage({ supabase, user }) {
+export default function AdminNotificationPage() {
+    const { user } = useAuth();
     const [messageType, setMessageType] = useState('broadcast');
     const [recipientId, setRecipientId] = useState('');
     const [title, setTitle] = useState('');
@@ -139,7 +142,7 @@ export default function AdminNotificationPage({ supabase, user }) {
             };
             fetchUsers();
         }
-    }, [messageType, supabase]);
+    }, [messageType]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -169,7 +172,7 @@ export default function AdminNotificationPage({ supabase, user }) {
                 <h3 className="text-2xl font-bold text-slate-800 mb-6">Kirim Notifikasi</h3>
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {/* ... (isi form tidak berubah) ... */}
-                     <div>
+                    <div>
                         <label className="block text-sm font-medium text-slate-700">Tipe Pesan</label>
                         <select value={messageType} onChange={(e) => setMessageType(e.target.value)} className="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm" >
                             <option value="broadcast">Broadcast (Ke Semua User)</option>
@@ -204,7 +207,7 @@ export default function AdminNotificationPage({ supabase, user }) {
 
             {/* Bagian 2: Riwayat Pesan */}
             {/* Berikan key agar bisa di-refresh */}
-            <MessageHistory supabase={supabase} key={historyRefreshKey} />
+            <MessageHistory key={historyRefreshKey} />
         </div>
     );
 }

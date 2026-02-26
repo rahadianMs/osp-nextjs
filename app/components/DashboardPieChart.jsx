@@ -1,5 +1,6 @@
 "use client";
 
+import { supabase } from '../lib/supabase';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -65,7 +66,7 @@ const PieSlice = ({ item, radius, startAngle, endAngle }) => {
     );
 };
 
-export default function DashboardPieChart({ supabase, user, dataVersion }) {
+export default function DashboardPieChart({ user, dataVersion }) {
     const [allData, setAllData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -124,7 +125,7 @@ export default function DashboardPieChart({ supabase, user, dataVersion }) {
         };
 
         fetchAllData();
-    }, [user, supabase, dataVersion]);
+    }, [user, dataVersion]);
 
     const getChartData = () => {
         if (!allData) return [];

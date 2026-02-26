@@ -11,7 +11,7 @@
   "dependencies": {
     "@netlify/plugin-nextjs": "^5.13.4",
     "@supabase/supabase-js": "^2.58.0",
-    "framer-motion": "^12.23.22",
+    "framer-motion": "^12.34.3",
     "geist": "^1.5.1",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.3",

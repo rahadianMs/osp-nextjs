@@ -1,9 +1,12 @@
 "use client";
 import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
+import { useAuth } from './AuthProvider';
 import { generateCertificatePdf } from '../lib/generateCertificatePdf';
 
 // Komponen Halaman Sertifikasi
-export default function SertifikasiPage({ supabase, user }) {
+export default function SertifikasiPage() {
+    const { user } = useAuth();
     const [isEligible, setIsEligible] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isDownloading, setIsDownloading] = useState(false);
@@ -16,7 +19,7 @@ export default function SertifikasiPage({ supabase, user }) {
                 setIsLoading(false);
                 return;
             }
-            
+
             setIsLoading(true);
             try {
                 // 1. Ambil nama bisnis dari tabel profiles
@@ -27,7 +30,7 @@ export default function SertifikasiPage({ supabase, user }) {
                     .single();
 
                 if (profileError && profileError.code !== 'PGRST116') throw profileError;
-                
+
                 if (profileData?.business_name) {
                     setBusinessName(profileData.business_name);
                 } else if (user.user_metadata?.business_name) {
@@ -63,7 +66,7 @@ export default function SertifikasiPage({ supabase, user }) {
         };
 
         checkData();
-    }, [supabase, user]);
+    }, [user]);
 
     // Fungsi untuk memanggil pembuatan PDF
     const handleDownload = async () => {
@@ -87,16 +90,16 @@ export default function SertifikasiPage({ supabase, user }) {
                 <h1 className="text-4xl font-bold text-slate-800">Sertifikat Apresiasi</h1>
                 <p className="mt-2 text-lg text-slate-600">Dapatkan pengakuan atas komitmen Anda terhadap pariwisata ramah lingkungan.</p>
             </div>
-            
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
                 {/* Kolom Kiri: Pratinjau Sertifikat */}
                 <div className="bg-white p-4 aspect-[1/1.414] shadow-lg flex flex-col relative overflow-hidden">
                     <div className="absolute top-0 left-0 h-full w-12 bg-[#00A79D]"></div>
                     <div className="absolute top-0 right-0 h-16 w-full bg-[#E0F2F1]"></div>
-                    
+
                     <div className="relative z-10 p-8 flex-grow flex flex-col">
-                        <img 
-                            src="https://upload.wikimedia.org/wikipedia/commons/f/fc/Lambang_Kementerian_Pariwisata_Republik_Indonesia_%282024%29.png" 
+                        <img
+                            src="https://upload.wikimedia.org/wikipedia/commons/f/fc/Lambang_Kementerian_Pariwisata_Republik_Indonesia_%282024%29.png"
                             alt="Logo Kemenparekraf"
                             className="h-20 w-auto self-end"
                         />
@@ -114,9 +117,9 @@ export default function SertifikasiPage({ supabase, user }) {
                                 atas komitmennya terhadap keberlanjutan dengan mengukur jejak karbonnya. Dedikasi Anda berkontribusi untuk masa depan yang lebih hijau dan mendukung perjalanan Indonesia menuju Pariwisata Net Zero.
                             </p>
                         </div>
-                        
+
                         <div className="mt-auto text-sm text-slate-500">
-                             <p>Terima kasih telah menjadi bagian yang bertanggung jawab dari pariwisata berkelanjutan.</p>
+                            <p>Terima kasih telah menjadi bagian yang bertanggung jawab dari pariwisata berkelanjutan.</p>
                         </div>
                     </div>
                 </div>
@@ -127,16 +130,16 @@ export default function SertifikasiPage({ supabase, user }) {
                     <p className="text-slate-600">
                         Sertifikat ini adalah bukti nyata dari partisipasi dan komitmen Anda dalam program dekarbonisasi pariwisata. Untuk dapat mengunduh, Anda harus terlebih dahulu memiliki setidaknya satu laporan emisi yang sudah mencakup ketiga kategori: Listrik, Transportasi, dan Limbah.
                     </p>
-                    
+
                     <div className="relative w-full group">
-                        <button 
+                        <button
                             onClick={handleDownload}
                             disabled={!isEligible || isLoading || isDownloading}
                             className={`w-full py-4 text-lg font-semibold text-white rounded-lg transition-colors ${isEligible ? 'bg-[#22543d] hover:bg-[#1c4532]' : 'bg-slate-400 cursor-not-allowed'}`}
                         >
                             {isLoading ? 'Memeriksa Kelayakan...' : (isDownloading ? 'Membuat PDF...' : 'Unduh Sertifikat (.pdf)')}
                         </button>
-                        
+
                         {!isEligible && !isLoading && (
                             <div className="absolute bottom-full mb-2 w-full px-4 py-2 bg-slate-800 text-white text-sm rounded-lg text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
                                 Harap lengkapi laporan emisi (Listrik, Transportasi, dan Limbah) terlebih dahulu.

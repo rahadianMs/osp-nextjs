@@ -1,6 +1,7 @@
 // app/components/SustainabilityPage.jsx
 "use client";
 
+import { supabase } from '../lib/supabase';
 import { useState, useEffect } from "react";
 // --- MODIFIKASI: Impor 'ClockIcon' ---
 import {
@@ -73,7 +74,7 @@ const SmallSpinner = () => (
 );
 
 // --- KOMPONEN UTAMA ---
-export default function SustainabilityPage({ supabase, user }) {
+export default function SustainabilityPage({ user }) {
   // (Semua state Anda tidak berubah)
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');

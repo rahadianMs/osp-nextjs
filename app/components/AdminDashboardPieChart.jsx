@@ -1,6 +1,7 @@
 "use client";
 // --- MODIFIKASI: Impor useState ---
 import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 // Palet warna
@@ -26,11 +27,11 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, per
     const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
     return (
-        <text 
-            x={x} 
-            y={y} 
-            fill="white" 
-            textAnchor="middle" 
+        <text
+            x={x}
+            y={y}
+            fill="white"
+            textAnchor="middle"
             dominantBaseline="central"
             fontSize={12}
             fontWeight="bold"
@@ -49,16 +50,16 @@ const CustomLegend = ({ payload }) => {
     return (
         <ul className="flex justify-center items-center gap-4 list-none p-0 mt-4">
             {payload.map((entry, index) => (
-                <li 
+                <li
                     key={`item-${index}`}
                     // Tambahkan event handler mouse
                     onMouseEnter={() => setHoveredScope(entry.value)}
                     onMouseLeave={() => setHoveredScope(null)}
                     // Tambahkan position:relative untuk positioning tooltip
-                    className="flex items-center gap-2 relative" 
+                    className="flex items-center gap-2 relative"
                 >
                     {/* Kotak warna */}
-                    <span 
+                    <span
                         className="w-3 h-3 rounded-full"
                         style={{ backgroundColor: entry.color }}
                     ></span>
@@ -68,15 +69,15 @@ const CustomLegend = ({ payload }) => {
                     {/* --- INI ADALAH TOOLTIP KUSTOM --- */}
                     {/* Muncul hanya jika state hoveredScope cocok dengan item ini */}
                     {hoveredScope === entry.value && (
-                        <div 
+                        <div
                             className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 p-2 
                                        bg-slate-800 text-white text-xs 
                                        rounded-md shadow-lg w-60 z-10 
                                        pointer-events-none"
-                            // w-60 (width 240px), sesuaikan jika perlu
+                        // w-60 (width 240px), sesuaikan jika perlu
                         >
                             {SCOPE_DESCRIPTIONS[entry.value] || ''}
-                            
+
                             {/* Panah kecil di bawah tooltip */}
                             <div className="absolute top-full left-1/2 -translate-x-1/2 
                                         w-0 h-0 border-x-4 border-x-transparent 
@@ -93,7 +94,7 @@ const CustomLegend = ({ payload }) => {
 // --- AKHIR MODIFIKASI ---
 
 
-export default function AdminDashboardPieChart({ supabase }) {
+export default function AdminDashboardPieChart() {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -103,14 +104,14 @@ export default function AdminDashboardPieChart({ supabase }) {
                 setLoading(true);
                 const { data: rpcData, error } = await supabase.rpc('get_admin_pie_chart_data');
                 if (error) throw error;
-                
+
                 const formattedData = rpcData
                     .map(item => ({
                         name: item.scope,
                         value: parseFloat(item.total_emissions)
                     }))
-                    .filter(item => item.value > 0); 
-                
+                    .filter(item => item.value > 0);
+
                 setData(formattedData);
             } catch (error) {
                 console.error('Error fetching admin pie chart data:', error.message);
@@ -119,7 +120,7 @@ export default function AdminDashboardPieChart({ supabase }) {
             }
         };
         fetchPieData();
-    }, [supabase]);
+    }, []);
 
     if (loading) {
         return (
@@ -128,11 +129,11 @@ export default function AdminDashboardPieChart({ supabase }) {
             </div>
         );
     }
-    
+
     if (data.length === 0) {
         return (
-             <div className="p-6 bg-white rounded-xl shadow-md border h-96 flex flex-col items-center justify-center">
-                 <h3 className="text-xl font-bold text-slate-800 mb-6">Distribusi Emisi Keseluruhan (Scope 1, 2, 3)</h3>
+            <div className="p-6 bg-white rounded-xl shadow-md border h-96 flex flex-col items-center justify-center">
+                <h3 className="text-xl font-bold text-slate-800 mb-6">Distribusi Emisi Keseluruhan (Scope 1, 2, 3)</h3>
                 <p className="text-slate-500">Belum ada data emisi yang dilaporkan.</p>
             </div>
         );
@@ -151,12 +152,12 @@ export default function AdminDashboardPieChart({ supabase }) {
                             nameKey="name"
                             cx="50%"
                             cy="50%"
-                            innerRadius={70}     
-                            outerRadius={110}    
+                            innerRadius={70}
+                            outerRadius={110}
                             fill="#8884d8"
-                            paddingAngle={5}     
-                            cornerRadius={8}     
-                            labelLine={false}    
+                            paddingAngle={5}
+                            cornerRadius={8}
+                            labelLine={false}
                             label={renderCustomizedLabel}
                             isAnimationActive={false} // Perbaikan 'getar'
                         >
@@ -165,9 +166,9 @@ export default function AdminDashboardPieChart({ supabase }) {
                             ))}
                         </Pie>
 
-                        <Tooltip 
-                           formatter={(value) => `${value.toLocaleString('id-ID', {maximumFractionDigits: 1})} kg CO2e`}
-                           animationDuration={0} // Perbaikan 'getar'
+                        <Tooltip
+                            formatter={(value) => `${value.toLocaleString('id-ID', { maximumFractionDigits: 1 })} kg CO2e`}
+                            animationDuration={0} // Perbaikan 'getar'
                         />
                         {/* Menggunakan Legend Kustom */}
                         <Legend content={<CustomLegend />} verticalAlign="bottom" />

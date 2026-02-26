@@ -1,5 +1,6 @@
 "use client";
 
+import { supabase } from '../lib/supabase';
 import React, { useState, useEffect, useCallback } from 'react';
 
 // Impor ikon dan generator PDF
@@ -17,7 +18,7 @@ const SmallSpinner = () => (
 // Komponen kontrol paginasi (Tidak berubah)
 const PaginationControls = ({ currentPage, totalPages, onPageChange, pageSize, onPageSizeChange, totalUsers }) => {
     // ... (Isi komponen ini sama seperti file Anda)
-    const pageSizes = [5, 20, 25, 50, 100]; 
+    const pageSizes = [5, 20, 25, 50, 100];
     const from = (currentPage - 1) * pageSize + 1;
     const to = Math.min(currentPage * pageSize, totalUsers);
     if (totalUsers === 0) return null;
@@ -64,7 +65,7 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange, pageSize, o
     );
 };
 
-export default function AdminSustainabilityPage({ supabase }) {
+export default function AdminSustainabilityPage() {
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
@@ -146,11 +147,11 @@ export default function AdminSustainabilityPage({ supabase }) {
         } finally {
             setLoading(false);
         }
-    }, [supabase, currentPage, pageSize]);
+    }, [currentPage, pageSize]);
 
     useEffect(() => {
         fetchReports();
-    }, [fetchReports]); 
+    }, [fetchReports]);
 
     // (Fungsi paginasi tidak berubah)
     const handlePageChange = (page) => {
@@ -187,7 +188,7 @@ export default function AdminSustainabilityPage({ supabase }) {
 
                 if (error) throw error;
                 fetchReports(); // Refresh data
-                
+
             } catch (error) {
                 console.error("Gagal menghapus laporan:", error);
                 setError(`Gagal menghapus laporan: ${error.message}.`);
@@ -207,7 +208,7 @@ export default function AdminSustainabilityPage({ supabase }) {
                 .from('sustainability_reports')
                 .update({ is_verified: newStatus })
                 .eq('id', reportId);
-            
+
             if (error) throw error;
 
             // Update state lokal (UX lebih baik)
@@ -258,15 +259,15 @@ export default function AdminSustainabilityPage({ supabase }) {
                                         {report.title}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{formatDate(report.activity_date)}</td>
-                                    
+
                                     {/* Sel Status (Verifikasi) */}
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <button
                                             onClick={() => handleVerifyReport(report.id, report.is_verified)}
                                             disabled={verifyingId === report.id}
                                             className={`p-1.5 rounded-full disabled:opacity-50
-                                                ${report.is_verified 
-                                                    ? 'text-green-600' 
+                                                ${report.is_verified
+                                                    ? 'text-green-600'
                                                     : 'text-slate-400 hover:text-green-600 hover:bg-green-50'
                                                 }`}
                                             title={report.is_verified ? "Terverifikasi" : "Klik untuk Verifikasi"}
@@ -274,7 +275,7 @@ export default function AdminSustainabilityPage({ supabase }) {
                                             {verifyingId === report.id ? <SmallSpinner /> : <CheckBadgeIcon />}
                                         </button>
                                     </td>
-                                    
+
                                     {/* Sel Aksi (Unduh & Hapus) */}
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex gap-2">
                                         <button
@@ -296,7 +297,7 @@ export default function AdminSustainabilityPage({ supabase }) {
                                     </td>
                                 </tr>
                             ))}
-                            
+
                             {reports.length === 0 && !loading && (
                                 <tr>
                                     <td colSpan="5" className="text-center py-10 text-slate-500">
@@ -308,7 +309,7 @@ export default function AdminSustainabilityPage({ supabase }) {
                     </table>
                 </div>
             )}
-            
+
             <PaginationControls
                 currentPage={currentPage}
                 totalPages={totalPages}

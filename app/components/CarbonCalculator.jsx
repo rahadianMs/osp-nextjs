@@ -1,5 +1,6 @@
 "use client";
 
+import { supabase } from '../lib/supabase';
 import { useState } from 'react';
 import { LinkIcon, PlusCircleIcon, TrashIcon } from './Icons';
 
@@ -124,7 +125,7 @@ const WASTE_TREATMENTS = {
 
 const NON_BIOLOGICAL_TYPES = ['plastic', 'glass_metal', 'textile'];
 
-export default function CarbonCalculator({ supabase, user, onReportSubmitted }) {
+export default function CarbonCalculator({ user, onReportSubmitted }) {
     const [activeTab, setActiveTab] = useState('electricity');
     const [reportMonth, setReportMonth] = useState(new Date().toISOString().slice(0, 7));
     const [loading, setLoading] = useState(false);

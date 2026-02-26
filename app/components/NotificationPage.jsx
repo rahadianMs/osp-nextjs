@@ -1,12 +1,13 @@
 "use client";
 
+import { supabase } from '../lib/supabase';
 import React, { useState, useEffect } from 'react';
 // MODIFIKASI: Hapus import EnvelopeIcon, EnvelopeOpenIcon yang tidak ada
 // Ganti dengan ikon yang tersedia
 import { TrashIcon, BellIcon, BookOpenIcon } from './Icons.jsx';
 
 // Komponen Notifikasi (Halaman User - Inbox Style)
-export default function NotificationPage({ supabase, user }) {
+export default function NotificationPage({ user }) {
 
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -74,7 +75,7 @@ export default function NotificationPage({ supabase, user }) {
     useEffect(() => {
         fetchNotifications();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [supabase, user]);
+    }, [user]);
 
     // Fungsi tandai sudah dibaca (Dipanggil saat pesan diklik)
     const handleSelectMessage = async (notif) => {

@@ -1,9 +1,10 @@
 "use client";
 import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 // --- MODIFIKASI: Impor LineChart dan Line ---
-import { 
-    LineChart, Line, XAxis, YAxis, 
-    CartesianGrid, Tooltip, Legend, ResponsiveContainer 
+import {
+    LineChart, Line, XAxis, YAxis,
+    CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 
 // Helper untuk format bulan
@@ -14,7 +15,7 @@ const formatMonth = (monthStr) => {
     return date.toLocaleString('id-ID', { month: 'short', year: 'numeric' });
 };
 
-export default function AdminDashboardTrends({ supabase }) {
+export default function AdminDashboardTrends() {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -23,14 +24,14 @@ export default function AdminDashboardTrends({ supabase }) {
             try {
                 setLoading(true);
                 const { data: rpcData, error } = await supabase.rpc('get_admin_monthly_trends');
-                
+
                 if (error) throw error;
-                
+
                 const formattedData = rpcData.map(item => ({
                     name: formatMonth(item.report_month),
                     "Total Emisi": parseFloat(item.total_emissions),
                 }));
-                
+
                 setData(formattedData);
             } catch (error) {
                 console.error('Error fetching admin trends:', error.message);
@@ -39,7 +40,7 @@ export default function AdminDashboardTrends({ supabase }) {
             }
         };
         fetchTrends();
-    }, [supabase]);
+    }, []);
 
     if (loading) {
         return (
@@ -59,17 +60,17 @@ export default function AdminDashboardTrends({ supabase }) {
                         <CartesianGrid strokeDasharray="3 3" vertical={false} />
                         <XAxis dataKey="name" fontSize={12} />
                         <YAxis fontSize={12} tickFormatter={(val) => `${val.toLocaleString('id-ID')}`} />
-                        <Tooltip 
-                            formatter={(value) => [`${value.toLocaleString('id-ID', {maximumFractionDigits: 1})} kg CO2e`, "Total Emisi"]} 
+                        <Tooltip
+                            formatter={(value) => [`${value.toLocaleString('id-ID', { maximumFractionDigits: 1 })} kg CO2e`, "Total Emisi"]}
                         />
                         <Legend />
                         {/* --- MODIFIKASI: Gunakan Line --- */}
-                        <Line 
-                            type="monotone" 
-                            dataKey="Total Emisi" 
+                        <Line
+                            type="monotone"
+                            dataKey="Total Emisi"
                             stroke="#059669" // Warna hijau yang sama dengan dasbor user
-                            strokeWidth={2} 
-                            activeDot={{ r: 8 }} 
+                            strokeWidth={2}
+                            activeDot={{ r: 8 }}
                         />
                     </LineChart>
                 </ResponsiveContainer>

@@ -1,5 +1,6 @@
 "use client";
 
+import { supabase } from '../lib/supabase';
 import { useState, useEffect } from 'react';
 import { BoltIcon, TransportIcon, TrashCanIcon, FireIcon } from './Icons';
 
@@ -34,7 +35,7 @@ const ScopeSection = ({ title, description, totalValue, children }) => (
     </div>
 );
 
-export default function DashboardSummary({ supabase, user, dataVersion }) {
+export default function DashboardSummary({ user, dataVersion }) {
     const [summary, setSummary] = useState({
         total_electricity: 0,
         total_transport: 0,
@@ -81,7 +82,7 @@ export default function DashboardSummary({ supabase, user, dataVersion }) {
             }
         };
         fetchSummaryData();
-    }, [user, supabase, dataVersion]);
+    }, [user, dataVersion]);
     
     if (loading) {
         return <div className="animate-pulse h-64 bg-slate-200 rounded-xl"></div>

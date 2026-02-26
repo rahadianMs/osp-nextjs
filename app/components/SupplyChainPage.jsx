@@ -1,15 +1,16 @@
 // app/components/SupplyChainPage.jsx
 "use client";
 
+import { supabase } from '../lib/supabase';
 import { useState, useEffect } from 'react';
-import { 
-    PlusCircleIcon, 
+import {
+    PlusCircleIcon,
     EyeIcon,
 } from './Icons.jsx';
 // 1. Impor modal baru
 import SupplierDetailModal from './SupplierDetailModal';
 
-export default function SupplyChainPage({ supabase }) {
+export default function SupplyChainPage() {
     const [loading, setLoading] = useState(true);
     const [allSuppliers, setAllSuppliers] = useState([]);
     const [filteredSuppliers, setFilteredSuppliers] = useState([]);
@@ -27,7 +28,7 @@ export default function SupplyChainPage({ supabase }) {
                 const { data, error } = await supabase
                     .from('sustainable_suppliers')
                     .select('*')
-                    .order('provider_name', { ascending: true }); 
+                    .order('provider_name', { ascending: true });
 
                 if (error) throw error;
                 setAllSuppliers(data || []);
@@ -39,7 +40,7 @@ export default function SupplyChainPage({ supabase }) {
             }
         };
         fetchSuppliers();
-    }, [supabase]); 
+    }, []);
 
     const handleFilterChange = (e) => {
         const filterValue = e.target.value;
@@ -79,7 +80,7 @@ export default function SupplyChainPage({ supabase }) {
         // 3. Tambahkan <SupplierDetailModal> di sini
         <>
             {selectedSupplier && (
-                <SupplierDetailModal 
+                <SupplierDetailModal
                     supplier={selectedSupplier}
                     onClose={() => setSelectedSupplier(null)} // Fungsi untuk menutup modal
                 />
@@ -92,7 +93,7 @@ export default function SupplyChainPage({ supabase }) {
                     <p className="text-slate-600 mb-6 max-w-4xl">
                         Temukan penyedia solusi berkelanjutan untuk membantu mengurangi jejak karbon Anda.
                     </p>
-                    
+
                     <div>
                         <label htmlFor="emission-filter" className="block text-sm font-medium text-slate-700 mb-1">
                             Filter berdasarkan Solusi (Sumber Emisi):

@@ -1,6 +1,7 @@
 // app/components/AdminSupplyChainPage.jsx
 "use client";
 
+import { supabase } from '../lib/supabase';
 import { useState, useEffect } from 'react';
 
 const initialFormState = {
@@ -15,7 +16,7 @@ const initialFormState = {
     additional_info: ''
 };
 
-export default function AdminSupplyChainPage({ supabase }) {
+export default function AdminSupplyChainPage() {
     const [loading, setLoading] = useState(true);
     const [suppliers, setSuppliers] = useState([]);
     const [formData, setFormData] = useState(initialFormState);
@@ -45,7 +46,7 @@ export default function AdminSupplyChainPage({ supabase }) {
     // 2. Ambil data saat komponen dimuat
     useEffect(() => {
         fetchSuppliers();
-    }, [supabase]);
+    }, []);
 
     // 3. Fungsi untuk menangani input form
     const handleFormChange = (e) => {
@@ -56,7 +57,7 @@ export default function AdminSupplyChainPage({ supabase }) {
     // 4. Fungsi untuk submit form (membuat pemasok baru)
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         if (!formData.provider_name || !formData.emission_source) {
             setMessage({ type: 'error', text: 'Nama Penyedia dan Sumber Emisi wajib diisi.' });
             return;
@@ -109,15 +110,15 @@ export default function AdminSupplyChainPage({ supabase }) {
             <div className="bg-white p-8 rounded-xl shadow-md border">
                 <h2 className="text-2xl font-bold mb-6 text-slate-800">Tambah Pemasok Baru</h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label htmlFor="provider_name" className="block text-sm font-medium text-slate-700">Nama Penyedia (Wajib)</label>
-                            <input type="text" name="provider_name" id="provider_name" value={formData.provider_name} onChange={handleFormChange} required className="mt-1 w-full p-2 border border-slate-300 rounded-lg"/>
+                            <input type="text" name="provider_name" id="provider_name" value={formData.provider_name} onChange={handleFormChange} required className="mt-1 w-full p-2 border border-slate-300 rounded-lg" />
                         </div>
                         <div>
                             <label htmlFor="product_type" className="block text-sm font-medium text-slate-700">Jenis Produk</label>
-                            <input type="text" name="product_type" id="product_type" value={formData.product_type} onChange={handleFormChange} className="mt-1 w-full p-2 border border-slate-300 rounded-lg"/>
+                            <input type="text" name="product_type" id="product_type" value={formData.product_type} onChange={handleFormChange} className="mt-1 w-full p-2 border border-slate-300 rounded-lg" />
                         </div>
                     </div>
 
@@ -130,7 +131,7 @@ export default function AdminSupplyChainPage({ supabase }) {
                                 ))}
                             </select>
                         </div>
-                         <div>
+                        <div>
                             <label htmlFor="verification_type" className="block text-sm font-medium text-slate-700">Jenis Verifikasi</label>
                             <select name="verification_type" id="verification_type" value={formData.verification_type} onChange={handleFormChange} className="mt-1 w-full p-2 border border-slate-300 rounded-lg">
                                 <option value="admin">Verifikasi Admin</option>
@@ -139,22 +140,22 @@ export default function AdminSupplyChainPage({ supabase }) {
                         </div>
                         <div>
                             <label htmlFor="location" className="block text-sm font-medium text-slate-700">Lokasi</label>
-                            <input type="text" name="location" id="location" value={formData.location} onChange={handleFormChange} className="mt-1 w-full p-2 border border-slate-300 rounded-lg"/>
+                            <input type="text" name="location" id="location" value={formData.location} onChange={handleFormChange} className="mt-1 w-full p-2 border border-slate-300 rounded-lg" />
                         </div>
                     </div>
 
-                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label htmlFor="operation_scope" className="block text-sm font-medium text-slate-700">Cakupan Operasi</label>
-                            <input type="text" name="operation_scope" id="operation_scope" value={formData.operation_scope} onChange={handleFormChange} className="mt-1 w-full p-2 border border-slate-300 rounded-lg"/>
+                            <input type="text" name="operation_scope" id="operation_scope" value={formData.operation_scope} onChange={handleFormChange} className="mt-1 w-full p-2 border border-slate-300 rounded-lg" />
                         </div>
                         <div>
                             <label htmlFor="contact_website" className="block text-sm font-medium text-slate-700">Kontak / Website (URL)</label>
-                            <input type="url" name="contact_website" id="contact_website" value={formData.contact_website} onChange={handleFormChange} placeholder="https://..." className="mt-1 w-full p-2 border border-slate-300 rounded-lg"/>
+                            <input type="url" name="contact_website" id="contact_website" value={formData.contact_website} onChange={handleFormChange} placeholder="https://..." className="mt-1 w-full p-2 border border-slate-300 rounded-lg" />
                         </div>
                         <div>
                             <label htmlFor="document_url" className="block text-sm font-medium text-slate-700">Dokumen Penyedia (URL)</label>
-                            <input type="url" name="document_url" id="document_url" value={formData.document_url} onChange={handleFormChange} placeholder="https://..." className="mt-1 w-full p-2 border border-slate-300 rounded-lg"/>
+                            <input type="url" name="document_url" id="document_url" value={formData.document_url} onChange={handleFormChange} placeholder="https://..." className="mt-1 w-full p-2 border border-slate-300 rounded-lg" />
                         </div>
                     </div>
 
@@ -204,7 +205,7 @@ export default function AdminSupplyChainPage({ supabase }) {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-sm font-medium">
-                                            <button 
+                                            <button
                                                 onClick={() => handleDelete(supplier.id)}
                                                 className="text-red-600 hover:text-red-900 hover:underline"
                                             >

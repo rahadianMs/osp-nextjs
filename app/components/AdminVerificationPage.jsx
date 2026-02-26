@@ -1,5 +1,6 @@
 "use client";
 
+import { supabase } from '../lib/supabase';
 import { useState, useEffect } from 'react';
 import { EyeIcon, DocumentChartBarIcon } from './Icons'; // Pastikan ikon ini ada atau ganti dengan ikon lain
 import ReportDetailModal from './ReportDetailModal';
@@ -8,11 +9,10 @@ import ReportDetailModal from './ReportDetailModal';
 const TabButton = ({ active, onClick, label, count }) => (
     <button
         onClick={onClick}
-        className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
-            active 
-                ? 'border-[#348567] text-[#348567]' 
-                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
-        }`}
+        className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${active
+            ? 'border-[#348567] text-[#348567]'
+            : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+            }`}
     >
         {label}
         {count !== undefined && (
@@ -23,7 +23,7 @@ const TabButton = ({ active, onClick, label, count }) => (
     </button>
 );
 
-export default function AdminVerificationPage({ supabase }) {
+export default function AdminVerificationPage() {
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('unverified'); // State untuk Tab: 'unverified' | 'verified'
@@ -47,14 +47,14 @@ export default function AdminVerificationPage({ supabase }) {
 
             // 3. Ambil data Profil untuk mendapatkan Nama Bisnis
             const userIds = [...new Set(entries.map(e => e.user_id))];
-            
+
             let profilesMap = {};
             if (userIds.length > 0) {
                 const { data: profiles, error: profilesError } = await supabase
                     .from('profiles')
                     .select('id, business_name')
                     .in('id', userIds);
-                
+
                 if (!profilesError && profiles) {
                     profiles.forEach(p => { profilesMap[p.id] = p.business_name });
                 }
@@ -82,7 +82,7 @@ export default function AdminVerificationPage({ supabase }) {
 
     // Handler Verifikasi
     const handleVerify = async (id) => {
-        if(!confirm("Apakah Anda yakin data ini valid dan ingin memverifikasinya?")) return;
+        if (!confirm("Apakah Anda yakin data ini valid dan ingin memverifikasinya?")) return;
 
         try {
             const { error } = await supabase
@@ -93,7 +93,7 @@ export default function AdminVerificationPage({ supabase }) {
             if (error) throw error;
 
             alert("Laporan berhasil diverifikasi!");
-            setSelectedReport(null); 
+            setSelectedReport(null);
             fetchReports(); // Refresh list
 
         } catch (error) {
@@ -103,14 +103,14 @@ export default function AdminVerificationPage({ supabase }) {
 
     // Handler Hapus (Opsional: Untuk admin membersihkan data sampah di tab verified)
     const handleDelete = async (id) => {
-        if(!confirm("Hapus laporan ini secara permanen?")) return;
+        if (!confirm("Hapus laporan ini secara permanen?")) return;
         try {
             const { error } = await supabase
                 .from('carbon_entries')
                 .delete()
                 .eq('id', id);
             if (error) throw error;
-            
+
             setSelectedReport(null);
             fetchReports();
         } catch (error) {
@@ -129,15 +129,15 @@ export default function AdminVerificationPage({ supabase }) {
 
             {/* --- NAVIGATION TABS --- */}
             <div className="border-b border-slate-200 flex gap-2 mb-6">
-                <TabButton 
-                    label="Menunggu Verifikasi" 
-                    active={activeTab === 'unverified'} 
+                <TabButton
+                    label="Menunggu Verifikasi"
+                    active={activeTab === 'unverified'}
                     onClick={() => setActiveTab('unverified')}
-                    // count bisa ditambahkan jika Anda mau fetch count terpisah, tapi opsional
+                // count bisa ditambahkan jika Anda mau fetch count terpisah, tapi opsional
                 />
-                <TabButton 
-                    label="Riwayat Terverifikasi" 
-                    active={activeTab === 'verified'} 
+                <TabButton
+                    label="Riwayat Terverifikasi"
+                    active={activeTab === 'verified'}
                     onClick={() => setActiveTab('verified')}
                 />
             </div>
@@ -152,8 +152,8 @@ export default function AdminVerificationPage({ supabase }) {
                     <DocumentChartBarIcon className="w-12 h-12 text-slate-300 mb-3" />
                     <p className="text-lg font-medium">Tidak ada data.</p>
                     <p className="text-sm">
-                        {activeTab === 'unverified' 
-                            ? "Semua laporan telah diperiksa! 🎉" 
+                        {activeTab === 'unverified'
+                            ? "Semua laporan telah diperiksa! 🎉"
                             : "Belum ada laporan yang diverifikasi."}
                     </p>
                 </div>
@@ -193,15 +193,14 @@ export default function AdminVerificationPage({ supabase }) {
                                         )}
                                     </td>
                                     <td className="px-6 py-4 text-right">
-                                        <button 
+                                        <button
                                             onClick={() => setSelectedReport(report)}
-                                            className={`font-medium flex items-center justify-end gap-1 w-full ${
-                                                activeTab === 'unverified' 
-                                                    ? 'text-[#348567] hover:text-[#2A6A52]' 
-                                                    : 'text-slate-600 hover:text-slate-900'
-                                            }`}
+                                            className={`font-medium flex items-center justify-end gap-1 w-full ${activeTab === 'unverified'
+                                                ? 'text-[#348567] hover:text-[#2A6A52]'
+                                                : 'text-slate-600 hover:text-slate-900'
+                                                }`}
                                         >
-                                            <EyeIcon className="w-4 h-4" /> 
+                                            <EyeIcon className="w-4 h-4" />
                                             {activeTab === 'unverified' ? 'Tinjau' : 'Detail'}
                                         </button>
                                     </td>
@@ -214,17 +213,17 @@ export default function AdminVerificationPage({ supabase }) {
 
             {/* MODAL DETAIL */}
             {selectedReport && (
-                <ReportDetailModal 
+                <ReportDetailModal
                     entry={selectedReport}
                     onClose={() => setSelectedReport(null)}
-                    
+
                     // Logika Penting:
                     // Jika di tab 'unverified', aktifkan mode AdminVerification (tombol Verifikasi muncul)
                     // Jika di tab 'verified', matikan mode AdminVerification (hanya tombol Download & Hapus yg muncul)
-                    isAdminVerification={activeTab === 'unverified'} 
-                    
+                    isAdminVerification={activeTab === 'unverified'}
+
                     onVerify={() => handleVerify(selectedReport.id)}
-                    
+
                     // Jika di tab 'verified', kita mungkin ingin admin bisa menghapus jika ada kesalahan
                     onDelete={activeTab === 'verified' ? handleDelete : undefined}
                 />

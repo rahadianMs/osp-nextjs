@@ -1,12 +1,14 @@
 // app/components/AdminLearningPage.jsx
 "use client";
 
+import { supabase } from '../lib/supabase';
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 // Impor ikon yang ada
-import { 
-    PlayCircleIcon, DocumentTextIcon, VideoCameraIcon, BookOpenIcon, 
-    ArrowLeftIcon, PlusCircleIcon, PencilIcon, 
+import {
+    PlayCircleIcon, DocumentTextIcon, VideoCameraIcon, BookOpenIcon,
+    ArrowLeftIcon, PlusCircleIcon, PencilIcon,
     TrashCanIcon, UserCircleIcon // <-- 1. TAMBAHKAN UserCircleIcon
 } from './Icons';
 
@@ -27,7 +29,7 @@ const DEFAULT_DOCUMENT_THUMBNAIL = "https://images.unsplash.com/photo-1512820790
 
 
 // --- Komponen Form (Modal) ---
-const MaterialForm = ({ supabase, onSave, onCancel, initialData }) => {
+const MaterialForm = ({ onSave, onCancel, initialData }) => {
     const [formData, setFormData] = useState(
         initialData || {
             title: '',
@@ -93,7 +95,7 @@ const MaterialForm = ({ supabase, onSave, onCancel, initialData }) => {
                 <h2 className="text-2xl font-bold text-slate-800 mb-6">
                     {initialData ? 'Edit Materi' : 'Tambah Materi Baru'}
                 </h2>
-                
+
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label htmlFor="title" className="block text-sm font-medium text-slate-600 mb-1">Judul</label>
@@ -107,7 +109,7 @@ const MaterialForm = ({ supabase, onSave, onCancel, initialData }) => {
                             className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22543d]"
                         />
                     </div>
-                    
+
                     <div>
                         <label htmlFor="description" className="block text-sm font-medium text-slate-600 mb-1">Deskripsi Singkat</label>
                         <textarea
@@ -134,7 +136,7 @@ const MaterialForm = ({ supabase, onSave, onCancel, initialData }) => {
                                 <option value="document">Dokumen</option>
                             </select>
                         </div>
-                        
+
                         <div className="md:col-span-2">
                             <label htmlFor="category" className="block text-sm font-medium text-slate-600 mb-1">Kategori</label>
                             <select
@@ -154,8 +156,8 @@ const MaterialForm = ({ supabase, onSave, onCancel, initialData }) => {
                     <div>
                         <label htmlFor="content_url" className="block text-sm font-medium text-slate-600 mb-1">URL Konten</label>
                         <p className="text-xs text-slate-500 mb-1">
-                            {formData.type === 'video' 
-                                ? 'Link Youtube (misal: https://www.youtube.com/watch?v=XXXXXXXXXXX)' 
+                            {formData.type === 'video'
+                                ? 'Link Youtube (misal: https://www.youtube.com/watch?v=XXXXXXXXXXX)'
                                 : 'Link Google Drive/PDF (pastikan publik)'
                             }
                         </p>
@@ -182,7 +184,7 @@ const MaterialForm = ({ supabase, onSave, onCancel, initialData }) => {
                             className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22543d]"
                         />
                     </div>
-                    
+
                     {error && (
                         <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">
                             Error: {error}
@@ -251,19 +253,19 @@ const MaterialList = ({ resources, onEdit, onDelete, activeTab }) => {
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                    <button 
+                                    <button
                                         onClick={() => onEdit(resource)}
                                         className="p-1.5 text-blue-600 hover:text-blue-900 hover:bg-blue-100 rounded-md transition-colors"
                                         aria-label="Edit"
                                     >
                                         <PencilIcon />
                                     </button>
-                                    <button 
+                                    <button
                                         onClick={() => onDelete(resource.id)}
                                         className="p-1.5 text-red-600 hover:text-red-900 hover:bg-red-100 rounded-md transition-colors"
                                         aria-label="Hapus"
                                     >
-                                        <TrashCanIcon /> 
+                                        <TrashCanIcon />
                                     </button>
                                 </td>
                             </tr>
@@ -283,7 +285,7 @@ const MaterialList = ({ resources, onEdit, onDelete, activeTab }) => {
 
 
 // --- Komponen Utama Halaman Admin ---
-export default function AdminLearningPage({ supabase, setActiveDashboardPage }) {
+export default function AdminLearningPage() {
     const [resources, setResources] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
@@ -308,7 +310,7 @@ export default function AdminLearningPage({ supabase, setActiveDashboardPage }) 
 
     useEffect(() => {
         fetchResources();
-    }, [supabase]);
+    }, []);
 
     const handleSave = () => {
         setShowModal(false);
@@ -333,7 +335,7 @@ export default function AdminLearningPage({ supabase, setActiveDashboardPage }) 
 
     const handleDelete = async () => {
         if (!showConfirmDelete) return;
-        
+
         const { error } = await supabase
             .from('learning_materials')
             .delete()
@@ -350,13 +352,13 @@ export default function AdminLearningPage({ supabase, setActiveDashboardPage }) 
 
     return (
         <div className="max-w-7xl mx-auto space-y-8">
-            <button
-                onClick={() => setActiveDashboardPage('admin-dashboard')}
+            <Link
+                href="/dashboard/admin"
                 className="flex items-center gap-2 text-sm font-semibold text-[#22543d] hover:text-[#1c4532] transition-colors"
             >
                 <ArrowLeftIcon />
                 Kembali ke Dasbor Admin
-            </button>
+            </Link>
 
             {/* --- 2. BLOK TOMBOL HEADER DIPERBARUI --- */}
             <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
@@ -364,16 +366,16 @@ export default function AdminLearningPage({ supabase, setActiveDashboardPage }) 
                     <h1 className="text-4xl font-extrabold text-slate-900">Kelola Materi Pembelajaran</h1>
                     <p className="text-lg text-slate-600 mt-2">Lihat, tambah, edit, atau hapus materi.</p>
                 </div>
-                
-                <div className="flex-shrink-0 flex items-center gap-3"> 
+
+                <div className="flex-shrink-0 flex items-center gap-3">
                     {/* Tombol "Lihat Sisi User" BARU */}
-                    <button
-                        onClick={() => setActiveDashboardPage('pembelajaran')}
+                    <Link
+                        href="/dashboard/pembelajaran"
                         className="flex-shrink-0 flex items-center justify-center gap-2 px-5 py-3 text-sm font-semibold text-[#22543d] bg-white border border-[#22543d] rounded-lg hover:bg-green-50 transition-colors shadow-sm"
                     >
                         <UserCircleIcon />
                         Lihat Sisi User
-                    </button>
+                    </Link>
                     {/* Tombol "Tambah Materi Baru" yang sudah ada */}
                     <button
                         onClick={handleAddNew}
@@ -385,25 +387,24 @@ export default function AdminLearningPage({ supabase, setActiveDashboardPage }) 
                 </div>
             </div>
             {/* --- AKHIR BLOK TOMBOL HEADER --- */}
-            
+
             {/* Navigasi Tab Kategori */}
             <div className="flex flex-wrap items-center justify-center gap-2 p-1.5 bg-slate-100 rounded-xl">
                 {CATEGORIES.map(category => (
                     <button
                         key={category.id}
                         onClick={() => setActiveTab(category.id)}
-                        className={`flex items-center gap-2.5 px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
-                            activeTab === category.id
-                                ? 'bg-white text-[#22543d] shadow'
-                                : 'text-slate-600 hover:text-slate-900'
-                        }`}
+                        className={`flex items-center gap-2.5 px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${activeTab === category.id
+                            ? 'bg-white text-[#22543d] shadow'
+                            : 'text-slate-600 hover:text-slate-900'
+                            }`}
                     >
                         {/* Ikon sengaja tidak ditampilkan di admin untuk UI yang lebih bersih */}
                         <span>{category.name}</span>
                     </button>
                 ))}
             </div>
-            
+
             {/* List Materi */}
             {loading ? (
                 <div className="text-center py-10 text-slate-500">Memuat materi...</div>
@@ -415,12 +416,11 @@ export default function AdminLearningPage({ supabase, setActiveDashboardPage }) 
                     activeTab={activeTab}
                 />
             )}
-            
+
             {/* Modal Form */}
             <AnimatePresence>
                 {showModal && (
                     <MaterialForm
-                        supabase={supabase}
                         onSave={handleSave}
                         onCancel={handleCancel}
                         initialData={editingMaterial}

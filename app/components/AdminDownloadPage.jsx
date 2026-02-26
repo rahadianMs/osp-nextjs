@@ -1,11 +1,12 @@
 "use client";
 
+import { supabase } from '../lib/supabase';
 import React, { useState } from 'react';
 // 1. Impor library excel yang sudah Anda install
 import * as XLSX from 'xlsx';
 
-export default function AdminDownloadPage({ supabase }) {
-    
+export default function AdminDownloadPage() {
+
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState('');
 
@@ -13,7 +14,7 @@ export default function AdminDownloadPage({ supabase }) {
     const handleDownloadAllData = async () => {
         setLoading(true);
         setStatus('Sedang mengambil data dari database...');
-        
+
         try {
             // --- MODIFIKASI: Mengambil data secara terpisah dan join manual ---
 
@@ -51,13 +52,13 @@ export default function AdminDownloadPage({ supabase }) {
             if (carbonError) throw carbonError;
 
             if (!carbonEntriesData || carbonEntriesData.length === 0) {
-                 setStatus('Tidak ada data emisi untuk diunduh.');
-                 setLoading(false);
-                 return;
+                setStatus('Tidak ada data emisi untuk diunduh.');
+                setLoading(false);
+                return;
             }
 
             setStatus('3/3: Memformat data untuk Excel...');
-            
+
             // 3. Format data (Gabungkan/Join manual di JavaScript)
             const formattedData = carbonEntriesData.map(entry => {
                 // Cari profil yang cocok menggunakan 'user_id' dari entri karbon
@@ -85,11 +86,11 @@ export default function AdminDownloadPage({ supabase }) {
             const ws = XLSX.utils.json_to_sheet(formattedData);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Laporan Emisi Akomodasi");
-            
+
             // 5. Trigger download
             setStatus('Mengunduh file...');
             XLSX.writeFile(wb, "Laporan_Emisi_Semua_Akomodasi.xlsx");
-            
+
             setStatus('Berhasil diunduh!');
 
         } catch (error) {
@@ -110,15 +111,14 @@ export default function AdminDownloadPage({ supabase }) {
             <p className="text-slate-500 mb-6">
                 Klik tombol di bawah untuk mengunduh laporan total emisi karbon untuk semua akomodasi (user) dalam format `.xlsx`.
             </p>
-            
+
             <button
                 onClick={handleDownloadAllData}
                 disabled={loading}
-                className={`px-6 py-3 font-medium text-white rounded-lg transition-colors ${
-                    loading 
-                    ? 'bg-slate-400 cursor-not-allowed' 
+                className={`px-6 py-3 font-medium text-white rounded-lg transition-colors ${loading
+                    ? 'bg-slate-400 cursor-not-allowed'
                     : 'bg-green-700 hover:bg-green-800'
-                }`}
+                    }`}
             >
                 {loading ? 'Memproses...' : 'Unduh Laporan (Semua User)'}
             </button>

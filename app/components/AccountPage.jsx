@@ -1,5 +1,6 @@
 "use client";
 
+import { supabase } from '../lib/supabase';
 import { useState, useEffect } from 'react';
 
 // Data provinsi kita ambil langsung di sini
@@ -26,7 +27,7 @@ const provinces = [
 ];
 
 // Komponen untuk Halaman Akun
-export default function AccountPage({ user, supabase }) {
+export default function AccountPage({ user }) {
     const [loading, setLoading] = useState(true);
     const [profileMessage, setProfileMessage] = useState({ type: '', text: '' });
     const [passwordMessage, setPasswordMessage] = useState({ type: '', text: '' });
@@ -66,7 +67,7 @@ export default function AccountPage({ user, supabase }) {
             }
         };
         fetchProfile();
-    }, [user, supabase]);
+    }, [user]);
 
     const handleProfileChange = (e) => {
         const { name, value } = e.target;
